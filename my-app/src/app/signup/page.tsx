@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { auth, db } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
 
 export default function SignupPage() {
@@ -16,7 +17,25 @@ export default function SignupPage() {
     setError("");
 
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+
+      const user = userCredential.user;
+
+      await setDoc(doc(db, "users", user.uid), {
+        uid: user.uid,
+        email: user.email,
+        createdAt: serverTimestamp(),
+        progress: {
+          completedDrills: 0,
+          correctAnswers: 0,
+          studyingLanguages: [],
+        },
+      });
+
       router.push("/dashboard");
     } catch (err: any) {
       setError(err.message);
@@ -26,7 +45,10 @@ export default function SignupPage() {
   return (
     <main style={{ padding: "2rem" }}>
       <h1>新規登録</h1>
-      <form onSubmit={handleSignup} style={{ display: "grid", gap: "1rem", maxWidth: 400 }}>
+      <form
+        onSubmit={handleSignup}
+        style={{ display: "grid", gap: "1rem", maxWidth: 400 }}
+      >
         <input
           type="email"
           placeholder="メールアドレス"
