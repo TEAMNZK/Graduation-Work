@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import AuthGuard from "@/components/AuthGuard";
+import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 
 const startItems = [
   {
@@ -41,7 +43,85 @@ const continueItems = [
   },
 ];
 
+const STORAGE_KEY = "drill-java-session";
+
+type DrillSession = {
+  selectedTopics: string[];
+  currentIndex: number;
+  isInProgress: boolean;
+};
+
 export default function DrillJavaPage() {
+  const router = useRouter();
+  const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
+  const [hasResumeData, setHasResumeData] = useState(false);
+  const [resumeMessage, setResumeMessage] = useState("");
+
+  const allItems = useMemo(
+    () => [...startItems, ...continueItems],
+    []
+  );
+
+  useEffect(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (!saved) return;
+
+    try {
+      const parsed: DrillSession = JSON.parse(saved);
+      if (parsed.isInProgress && parsed.selectedTopics.length > 0) {
+        setHasResumeData(true);
+        setResumeMessage("前回中断した問題があります。");
+      }
+    } catch (error) {
+      console.error("保存データの読み込みに失敗しました:", error);
+    }
+  }, []);
+
+  const toggleTopic = (topic: string) => {
+    setSelectedTopics((prev) =>
+      prev.includes(topic)
+        ? prev.filter((item) => item !== topic)
+        : [...prev, topic]
+    );
+  };
+
+  const handleStart = () => {
+    if (selectedTopics.length === 0) {
+      alert("少なくとも1つ以上の小項目を選択してください。");
+      return;
+    }
+
+    const session: DrillSession = {
+      selectedTopics,
+      currentIndex: 0,
+      isInProgress: true,
+    };
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
+    router.push("/drill/java/start");
+  };
+
+  const handleResume = () => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (!saved) {
+      alert("再開できる問題がありません。");
+      return;
+    }
+
+    try {
+      const parsed: DrillSession = JSON.parse(saved);
+      if (!parsed.isInProgress || parsed.selectedTopics.length === 0) {
+        alert("再開できる問題がありません。");
+        return;
+      }
+
+      router.push("/drill/java/start");
+    } catch (error) {
+      console.error("保存データの読み込みに失敗しました:", error);
+      alert("保存データの読み込みに失敗しました。");
+    }
+  };
+
   return (
     <AuthGuard>
       <main className="min-h-screen bg-gray-100 text-gray-900">
@@ -85,20 +165,29 @@ export default function DrillJavaPage() {
         </header>
 
         <section className="mx-auto max-w-7xl px-6 py-8">
-          {/* 上部ボタンを横並び */}
+          {hasResumeData && (
+            <div className="mb-6 rounded-xl border border-yellow-300 bg-yellow-50 px-4 py-3 text-yellow-800">
+              {resumeMessage}
+            </div>
+          )}
+
           <div className="mb-6 flex flex-wrap gap-4">
-            <button className="rounded-xl border bg-white px-8 py-4 text-2xl font-bold shadow hover:bg-gray-50">
+            <button
+              onClick={handleStart}
+              className="rounded-xl border bg-white px-8 py-4 text-2xl font-bold shadow hover:bg-gray-50"
+            >
               出題開始
             </button>
-            <button className="rounded-xl border bg-white px-8 py-4 text-2xl font-bold shadow hover:bg-gray-50">
+            <button
+              onClick={handleResume}
+              className="rounded-xl border bg-white px-8 py-4 text-2xl font-bold shadow hover:bg-gray-50"
+            >
               続きから
             </button>
           </div>
 
-          {/* 背景を1つに統一 */}
           <div className="rounded-2xl bg-white p-6 shadow">
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-              {/* 左側 */}
               <div className="space-y-5">
                 {startItems.map((item) => (
                   <div
@@ -113,7 +202,12 @@ export default function DrillJavaPage() {
                           key={child}
                           className="flex items-center gap-3 rounded-lg border bg-white px-4 py-3 hover:bg-gray-50"
                         >
-                          <input type="checkbox" className="h-4 w-4" />
+                          <input
+                            type="checkbox"
+                            className="h-4 w-4"
+                            checked={selectedTopics.includes(child)}
+                            onChange={() => toggleTopic(child)}
+                          />
                           <span className="text-lg">{child}</span>
                         </label>
                       ))}
@@ -122,7 +216,6 @@ export default function DrillJavaPage() {
                 ))}
               </div>
 
-              {/* 右側 */}
               <div className="space-y-5">
                 {continueItems.map((item) => (
                   <div
@@ -137,7 +230,12 @@ export default function DrillJavaPage() {
                           key={child}
                           className="flex items-center gap-3 rounded-lg border bg-white px-4 py-3 hover:bg-gray-50"
                         >
-                          <input type="checkbox" className="h-4 w-4" />
+                          <input
+                            type="checkbox"
+                            className="h-4 w-4"
+                            checked={selectedTopics.includes(child)}
+                            onChange={() => toggleTopic(child)}
+                          />
                           <span className="text-lg">{child}</span>
                         </label>
                       ))}
