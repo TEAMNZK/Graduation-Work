@@ -13,9 +13,92 @@ type DrillSession = {
   isInProgress: boolean;
 };
 
+type ExecuteApiSuccessResponse = {
+  success: true;
+  stdout: string;
+  stderr: string;
+  exitCode: number;
+};
+
+type ExecuteApiErrorResponse = {
+  success: false;
+  error: string;
+};
+
+type ExecuteApiResponse = ExecuteApiSuccessResponse | ExecuteApiErrorResponse;
+
+const questionMap: Record<
+  string,
+  {
+    title: string;
+    description: string;
+    hint: string;
+    expectedOutput: string;
+    starterCode: string;
+  }
+> = {
+  "if文の基本": {
+    title: "if文の基本",
+    description:
+      "整数 x = 10 を宣言し、x が 5 より大きい場合に「big」と出力してください。",
+    hint: "if の条件式の中で x > 5 を使います。",
+    expectedOutput: "big",
+    starterCode: `public class Main {
+  public static void main(String[] args) {
+    
+  }
+}`,
+  },
+  "変数の宣言": {
+    title: "変数の宣言",
+    description:
+      "整数型の変数 score に 100 を代入し、その値を出力してください。",
+    hint: "int score = 100; の形で宣言し、System.out.println(score); を使います。",
+    expectedOutput: "100",
+    starterCode: `public class Main {
+  public static void main(String[] args) {
+    
+  }
+}`,
+  },
+  "データ型": {
+    title: "データ型",
+    description:
+      "文字列型の変数 name に \"Java\" を代入し、出力してください。",
+    hint: 'String name = "Java"; の形です。',
+    expectedOutput: "Java",
+    starterCode: `public class Main {
+  public static void main(String[] args) {
+    
+  }
+}`,
+  },
+  "代入": {
+    title: "代入",
+    description:
+      "整数型の変数 score に 100 を代入し、その値を出力してください。",
+    hint: "System.out.println(score); を使います。",
+    expectedOutput: "100",
+    starterCode: `public class Main {
+  public static void main(String[] args) {
+    
+  }
+}`,
+  },
+};
+
 export default function DrillJavaStartPage() {
   const router = useRouter();
   const [session, setSession] = useState<DrillSession | null>(null);
+  const [code, setCode] = useState("");
+  const [stdin, setStdin] = useState("");
+  const [showHint, setShowHint] = useState(false);
+  const [showAnswer, setShowAnswer] = useState(false);
+  const [output, setOutput] = useState("");
+  const [errorOutput, setErrorOutput] = useState("");
+  const [isRunning, setIsRunning] = useState(false);
+  const [isCorrect, setIsCorrect] = useState(false);
+  const [judgeMessage, setJudgeMessage] = useState("");
 
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -34,14 +117,114 @@ export default function DrillJavaStartPage() {
       }
 
       setSession(parsed);
+
+      const currentTopic = parsed.selectedTopics[parsed.currentIndex];
+      const currentQuestion = questionMap[currentTopic];
+
+      if (currentQuestion) {
+        setCode(currentQuestion.starterCode);
+      } else {
+        setCode(`public class Main {
+  public static void main(String[] args) {
+    
+  }
+}`);
+      }
     } catch (error) {
       console.error("保存データの読み込みに失敗しました:", error);
       router.push("/drill/java");
     }
   }, [router]);
 
+  if (!session) {
+    return (
+      <AuthGuard>
+        <main className="min-h-screen bg-gray-100 p-8">
+          <p>読み込み中...</p>
+        </main>
+      </AuthGuard>
+    );
+  }
+
+  const currentTopic = session.selectedTopics[session.currentIndex];
+  const currentQuestion = questionMap[currentTopic] ?? {
+    title: currentTopic,
+    description: `ここに「${currentTopic}」の問題文を表示します。`,
+    hint: "ここにヒントを表示します。",
+    expectedOutput: "ここに期待する出力",
+    starterCode: code,
+  };
+
+  const normalizeOutput = (text: string) => {
+    return text.replace(/\r\n/g, "\n").trim();
+  };
+
+  const handleRun = async () => {
+    setIsRunning(true);
+    setOutput("");
+    setErrorOutput("");
+    setIsCorrect(false);
+    setJudgeMessage("");
+
+    try {
+      const response = await fetch("/api/execute", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          language: "java",
+          code,
+          stdin,
+        }),
+      });
+
+      const data = (await response.json()) as ExecuteApiResponse;
+
+      if (!response.ok || !data.success) {
+        setErrorOutput(
+          data.success === false
+            ? data.error
+            : "コード実行に失敗しました。"
+        );
+        setJudgeMessage("不正解です。");
+        return;
+      }
+
+      const stdout = data.stdout || "";
+      const stderr = data.stderr || "";
+
+      setOutput(stdout);
+      setErrorOutput(stderr);
+
+      if (stderr) {
+        setIsCorrect(false);
+        setJudgeMessage("実行エラーがあります。");
+        return;
+      }
+
+      const actual = normalizeOutput(stdout);
+      const expected = normalizeOutput(currentQuestion.expectedOutput);
+
+      if (actual === expected) {
+        setIsCorrect(true);
+        setJudgeMessage("正解です。");
+      } else {
+        setIsCorrect(false);
+        setJudgeMessage("不正解です。出力結果を確認してください。");
+      }
+    } catch (error) {
+      console.error("実行API呼び出しエラー:", error);
+      setErrorOutput("コード実行APIの呼び出しに失敗しました。");
+      setIsCorrect(false);
+      setJudgeMessage("不正解です。");
+    } finally {
+      setIsRunning(false);
+    }
+  };
+
   const handleNext = () => {
-    if (!session) return;
+    if (!isCorrect) return;
 
     const nextIndex = session.currentIndex + 1;
 
@@ -66,11 +249,30 @@ export default function DrillJavaStartPage() {
 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedSession));
     setSession(updatedSession);
+
+    const nextTopic = updatedSession.selectedTopics[updatedSession.currentIndex];
+    const nextQuestion = questionMap[nextTopic];
+
+    setShowHint(false);
+    setShowAnswer(false);
+    setOutput("");
+    setErrorOutput("");
+    setStdin("");
+    setIsCorrect(false);
+    setJudgeMessage("");
+
+    if (nextQuestion) {
+      setCode(nextQuestion.starterCode);
+    } else {
+      setCode(`public class Main {
+  public static void main(String[] args) {
+    
+  }
+}`);
+    }
   };
 
   const handleInterrupt = () => {
-    if (!session) return;
-
     const interruptedSession: DrillSession = {
       ...session,
       isInProgress: true,
@@ -80,24 +282,12 @@ export default function DrillJavaStartPage() {
     router.push("/drill/java");
   };
 
-  if (!session) {
-    return (
-      <AuthGuard>
-        <main className="min-h-screen bg-gray-100 p-8">
-          <p>読み込み中...</p>
-        </main>
-      </AuthGuard>
-    );
-  }
-
-  const currentTopic = session.selectedTopics[session.currentIndex];
-
   return (
     <AuthGuard>
       <main className="min-h-screen bg-gray-100 text-gray-900">
         <header className="border-b bg-white shadow-sm">
           <div className="mx-auto max-w-7xl px-6 py-4">
-            <h1 className="text-2xl font-bold">Java ドリル出題画面</h1>
+            <h1 className="text-2xl font-bold">Java ドリル</h1>
           </div>
 
           <nav className="mx-auto flex max-w-7xl gap-2 px-6 pb-4">
@@ -110,34 +300,113 @@ export default function DrillJavaStartPage() {
           </nav>
         </header>
 
-        <section className="mx-auto max-w-4xl px-6 py-10">
-          <div className="rounded-2xl bg-white p-8 shadow">
-            <p className="mb-3 text-sm text-gray-500">
-              {session.currentIndex + 1} / {session.selectedTopics.length}
-            </p>
+        <section className="mx-auto max-w-7xl px-6 py-8">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-[320px_1fr]">
+            <div className="rounded-2xl bg-white p-6 shadow">
+              <h2 className="mb-4 text-2xl font-bold">問題文</h2>
+              <p className="mb-6 text-lg leading-8">{currentQuestion.description}</p>
 
-            <h2 className="mb-6 text-3xl font-bold">{currentTopic}</h2>
+              <div className="space-y-3">
+                <button
+                  onClick={() => setShowHint((prev) => !prev)}
+                  className="w-full rounded-xl border bg-gray-50 px-4 py-3 font-bold hover:bg-gray-100"
+                >
+                  ヒント
+                </button>
 
-            <div className="rounded-xl border bg-gray-50 p-6">
-              <p className="text-lg">
-                ここに「{currentTopic}」の問題文を表示します。
-              </p>
+                {showHint && (
+                  <div className="rounded-xl border bg-yellow-50 px-4 py-3 text-sm">
+                    {currentQuestion.hint}
+                  </div>
+                )}
+
+                <button
+                  onClick={() => setShowAnswer((prev) => !prev)}
+                  className="w-full rounded-xl border bg-gray-50 px-4 py-3 font-bold hover:bg-gray-100"
+                >
+                  解答
+                </button>
+
+                {showAnswer && (
+                  <div className="rounded-xl border bg-blue-50 px-4 py-3 text-sm">
+                    期待する出力: {currentQuestion.expectedOutput}
+                  </div>
+                )}
+
+                <button
+                  onClick={handleInterrupt}
+                  className="w-full rounded-xl border bg-gray-50 px-4 py-3 font-bold hover:bg-gray-100"
+                >
+                  中断
+                </button>
+              </div>
             </div>
 
-            <div className="mt-8 flex gap-4">
-              <button
-                onClick={handleNext}
-                className="rounded-xl border bg-white px-6 py-3 font-bold shadow hover:bg-gray-50"
-              >
-                次の問題へ
-              </button>
+            <div className="space-y-6">
+              <div className="rounded-2xl bg-white p-6 shadow">
+                <div className="mb-4 flex items-center justify-between">
+                  <h2 className="text-2xl font-bold">エディタ</h2>
+                  <button
+                    onClick={handleRun}
+                    disabled={isRunning}
+                    className="rounded-xl border bg-green-600 px-5 py-2 font-bold text-white hover:bg-green-700 disabled:opacity-60"
+                  >
+                    {isRunning ? "実行中..." : "実行"}
+                  </button>
+                </div>
 
-              <button
-                onClick={handleInterrupt}
-                className="rounded-xl border bg-white px-6 py-3 font-bold shadow hover:bg-gray-50"
-              >
-                中断して戻る
-              </button>
+                <textarea
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                  className="min-h-[320px] w-full rounded-xl border bg-gray-50 p-4 font-mono text-sm outline-none"
+                />
+              </div>
+
+              <div className="rounded-2xl bg-white p-6 shadow">
+                <h2 className="mb-4 text-2xl font-bold">標準入力</h2>
+                <textarea
+                  value={stdin}
+                  onChange={(e) => setStdin(e.target.value)}
+                  placeholder="必要なら標準入力を入力してください"
+                  className="min-h-[100px] w-full rounded-xl border bg-gray-50 p-4 font-mono text-sm outline-none"
+                />
+              </div>
+
+              <div className="rounded-2xl bg-white p-6 shadow">
+                <h2 className="mb-4 text-2xl font-bold">ターミナル</h2>
+
+                <div className="mb-4 min-h-[180px] whitespace-pre-wrap rounded-xl border bg-black p-4 font-mono text-sm text-green-400">
+                  {output && `実行結果:\n${output}`}
+                  {errorOutput && `エラー出力:\n${errorOutput}`}
+                  {!output && !errorOutput && "ここに実行結果が表示されます。"}
+                </div>
+
+                {judgeMessage && (
+                  <div
+                    className={`rounded-xl border px-4 py-3 font-bold ${
+                      isCorrect
+                        ? "border-green-300 bg-green-50 text-green-700"
+                        : "border-red-300 bg-red-50 text-red-700"
+                    }`}
+                  >
+                    {judgeMessage}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex gap-4">
+                <button
+                  onClick={handleNext}
+                  disabled={!isCorrect}
+                  className={`rounded-xl border px-6 py-3 font-bold shadow ${
+                    isCorrect
+                      ? "bg-white hover:bg-gray-50"
+                      : "cursor-not-allowed bg-gray-200 text-gray-400"
+                  }`}
+                >
+                  次の問題へ
+                </button>
+              </div>
             </div>
           </div>
         </section>
