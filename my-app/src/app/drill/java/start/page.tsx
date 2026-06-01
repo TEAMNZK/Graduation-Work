@@ -4,6 +4,7 @@ import Link from "next/link";
 import AuthGuard from "@/components/AuthGuard";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { javaQuestionMap } from "@/data/javaQuestions";
 
 const STORAGE_KEY = "drill-java-session";
 
@@ -26,66 +27,6 @@ type ExecuteApiErrorResponse = {
 };
 
 type ExecuteApiResponse = ExecuteApiSuccessResponse | ExecuteApiErrorResponse;
-
-const questionMap: Record<
-  string,
-  {
-    title: string;
-    description: string;
-    hint: string;
-    expectedOutput: string;
-    starterCode: string;
-  }
-> = {
-  "if文の基本": {
-    title: "if文の基本",
-    description:
-      "整数 x = 10 を宣言し、x が 5 より大きい場合に「big」と出力してください。",
-    hint: "if の条件式の中で x > 5 を使います。",
-    expectedOutput: "big",
-    starterCode: `public class Main {
-  public static void main(String[] args) {
-    
-  }
-}`,
-  },
-  "変数の宣言": {
-    title: "変数の宣言",
-    description:
-      "整数型の変数 score に 100 を代入し、その値を出力してください。",
-    hint: "int score = 100; の形で宣言し、System.out.println(score); を使います。",
-    expectedOutput: "100",
-    starterCode: `public class Main {
-  public static void main(String[] args) {
-    
-  }
-}`,
-  },
-  "データ型": {
-    title: "データ型",
-    description:
-      "文字列型の変数 name に \"Java\" を代入し、出力してください。",
-    hint: 'String name = "Java"; の形です。',
-    expectedOutput: "Java",
-    starterCode: `public class Main {
-  public static void main(String[] args) {
-    
-  }
-}`,
-  },
-  "代入": {
-    title: "代入",
-    description:
-      "整数型の変数 score に 100 を代入し、その値を出力してください。",
-    hint: "System.out.println(score); を使います。",
-    expectedOutput: "100",
-    starterCode: `public class Main {
-  public static void main(String[] args) {
-    
-  }
-}`,
-  },
-};
 
 export default function DrillJavaStartPage() {
   const router = useRouter();
@@ -119,7 +60,7 @@ export default function DrillJavaStartPage() {
       setSession(parsed);
 
       const currentTopic = parsed.selectedTopics[parsed.currentIndex];
-      const currentQuestion = questionMap[currentTopic];
+      const currentQuestion = javaQuestionMap[currentTopic];
 
       if (currentQuestion) {
         setCode(currentQuestion.starterCode);
@@ -147,7 +88,7 @@ export default function DrillJavaStartPage() {
   }
 
   const currentTopic = session.selectedTopics[session.currentIndex];
-  const currentQuestion = questionMap[currentTopic] ?? {
+  const currentQuestion = javaQuestionMap[currentTopic] ?? {
     title: currentTopic,
     description: `ここに「${currentTopic}」の問題文を表示します。`,
     hint: "ここにヒントを表示します。",
@@ -251,7 +192,7 @@ export default function DrillJavaStartPage() {
     setSession(updatedSession);
 
     const nextTopic = updatedSession.selectedTopics[updatedSession.currentIndex];
-    const nextQuestion = questionMap[nextTopic];
+    const nextQuestion = javaQuestionMap[nextTopic];
 
     setShowHint(false);
     setShowAnswer(false);
