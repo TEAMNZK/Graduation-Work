@@ -4,6 +4,8 @@ import Link from "next/link";
 import AuthGuard from "@/components/AuthGuard";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { doc, setDoc, increment, serverTimestamp } from "firebase/firestore";
+import { auth, db } from "@/lib/firebase";
 import { javaQuestionMap } from "@/data/javaQuestions";
 
 const STORAGE_KEY = "drill-java-session";
@@ -40,6 +42,7 @@ export default function DrillJavaStartPage() {
   const [isRunning, setIsRunning] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
   const [judgeMessage, setJudgeMessage] = useState("");
+  const [isProgressUpdated, setIsProgressUpdated] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -71,6 +74,8 @@ export default function DrillJavaStartPage() {
   }
 }`);
       }
+
+      setIsProgressUpdated(false);
     } catch (error) {
       console.error("保存データの読み込みに失敗しました:", error);
       router.push("/drill/java");
@@ -98,6 +103,29 @@ export default function DrillJavaStartPage() {
 
   const normalizeOutput = (text: string) => {
     return text.replace(/\r\n/g, "\n").trim();
+  };
+
+  const updateProgressInFirestore = async (topic: string) => {
+    const currentUser = auth.currentUser;
+    if (!currentUser) return;
+
+    const userRef = doc(db, "users", currentUser.uid);
+
+    await setDoc(
+      userRef,
+      {
+        uid: currentUser.uid,
+        email: currentUser.email ?? "",
+        progress: {
+          correctAnswers: increment(1),
+          completedDrills: increment(1),
+          lastSolvedTopic: topic,
+          lastSolvedLanguage: "java",
+          updatedAt: serverTimestamp(),
+        },
+      },
+      { merge: true }
+    );
   };
 
   const handleRun = async () => {
@@ -149,7 +177,19 @@ export default function DrillJavaStartPage() {
 
       if (actual === expected) {
         setIsCorrect(true);
-        setJudgeMessage("正解です。");
+
+        if (!isProgressUpdated) {
+          try {
+            await updateProgressInFirestore(currentTopic);
+            setIsProgressUpdated(true);
+            setJudgeMessage("正解です。進捗を保存しました。");
+          } catch (error) {
+            console.error("進捗の保存に失敗しました:", error);
+            setJudgeMessage("正解ですが、進捗の保存に失敗しました。");
+          }
+        } else {
+          setJudgeMessage("正解です。");
+        }
       } else {
         setIsCorrect(false);
         setJudgeMessage("不正解です。出力結果を確認してください。");
@@ -201,6 +241,7 @@ export default function DrillJavaStartPage() {
     setStdin("");
     setIsCorrect(false);
     setJudgeMessage("");
+    setIsProgressUpdated(false);
 
     if (nextQuestion) {
       setCode(nextQuestion.starterCode);

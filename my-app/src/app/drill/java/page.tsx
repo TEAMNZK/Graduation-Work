@@ -4,6 +4,7 @@ import Link from "next/link";
 import AuthGuard from "@/components/AuthGuard";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { javaQuestionMap } from "@/data/javaQuestions";
 
 const startItems = [
   {
@@ -12,7 +13,7 @@ const startItems = [
   },
   {
     title: "if",
-    children: ["if文の基本", "else", "else if"],
+    children: ["if文の基本"],
   },
   {
     title: "配列",
@@ -57,8 +58,8 @@ export default function DrillJavaPage() {
   const [hasResumeData, setHasResumeData] = useState(false);
   const [resumeMessage, setResumeMessage] = useState("");
 
-  const allItems = useMemo(
-    () => [...startItems, ...continueItems],
+  const validQuestionTitles = useMemo(
+    () => new Set(Object.keys(javaQuestionMap)),
     []
   );
 
@@ -91,8 +92,17 @@ export default function DrillJavaPage() {
       return;
     }
 
+    const filteredTopics = selectedTopics.filter((topic) =>
+      validQuestionTitles.has(topic)
+    );
+
+    if (filteredTopics.length === 0) {
+      alert("出題可能な問題が選択されていません。");
+      return;
+    }
+
     const session: DrillSession = {
-      selectedTopics,
+      selectedTopics: filteredTopics,
       currentIndex: 0,
       isInProgress: true,
     };
@@ -120,6 +130,48 @@ export default function DrillJavaPage() {
       console.error("保存データの読み込みに失敗しました:", error);
       alert("保存データの読み込みに失敗しました。");
     }
+  };
+
+  const renderTopicGroup = (
+    items: { title: string; children: string[] }[]
+  ) => {
+    return items.map((item) => (
+      <div
+        key={item.title}
+        className="rounded-2xl border bg-gray-50 p-5"
+      >
+        <h2 className="mb-4 text-2xl font-bold">{item.title}</h2>
+
+        <div className="space-y-3">
+          {item.children.map((child) => {
+            const exists = validQuestionTitles.has(child);
+
+            return (
+              <label
+                key={child}
+                className={`flex items-center gap-3 rounded-lg border px-4 py-3 ${
+                  exists
+                    ? "bg-white hover:bg-gray-50"
+                    : "bg-gray-100 text-gray-400"
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  className="h-4 w-4"
+                  checked={selectedTopics.includes(child)}
+                  onChange={() => toggleTopic(child)}
+                  disabled={!exists}
+                />
+                <span className="text-lg">{child}</span>
+                {!exists && (
+                  <span className="ml-auto text-sm">未実装</span>
+                )}
+              </label>
+            );
+          })}
+        </div>
+      </div>
+    ));
   };
 
   return (
@@ -188,61 +240,8 @@ export default function DrillJavaPage() {
 
           <div className="rounded-2xl bg-white p-6 shadow">
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-              <div className="space-y-5">
-                {startItems.map((item) => (
-                  <div
-                    key={item.title}
-                    className="rounded-2xl border bg-gray-50 p-5"
-                  >
-                    <h2 className="mb-4 text-2xl font-bold">{item.title}</h2>
-
-                    <div className="space-y-3">
-                      {item.children.map((child) => (
-                        <label
-                          key={child}
-                          className="flex items-center gap-3 rounded-lg border bg-white px-4 py-3 hover:bg-gray-50"
-                        >
-                          <input
-                            type="checkbox"
-                            className="h-4 w-4"
-                            checked={selectedTopics.includes(child)}
-                            onChange={() => toggleTopic(child)}
-                          />
-                          <span className="text-lg">{child}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="space-y-5">
-                {continueItems.map((item) => (
-                  <div
-                    key={item.title}
-                    className="rounded-2xl border bg-gray-50 p-5"
-                  >
-                    <h2 className="mb-4 text-2xl font-bold">{item.title}</h2>
-
-                    <div className="space-y-3">
-                      {item.children.map((child) => (
-                        <label
-                          key={child}
-                          className="flex items-center gap-3 rounded-lg border bg-white px-4 py-3 hover:bg-gray-50"
-                        >
-                          <input
-                            type="checkbox"
-                            className="h-4 w-4"
-                            checked={selectedTopics.includes(child)}
-                            onChange={() => toggleTopic(child)}
-                          />
-                          <span className="text-lg">{child}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <div className="space-y-5">{renderTopicGroup(startItems)}</div>
+              <div className="space-y-5">{renderTopicGroup(continueItems)}</div>
             </div>
           </div>
         </section>
