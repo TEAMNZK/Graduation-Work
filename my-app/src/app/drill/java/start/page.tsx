@@ -4,7 +4,14 @@ import Link from "next/link";
 import AuthGuard from "@/components/AuthGuard";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { doc, setDoc, increment, serverTimestamp } from "firebase/firestore";
+import {
+  arrayUnion,
+  doc,
+  getDoc,
+  increment,
+  serverTimestamp,
+  setDoc,
+} from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { javaQuestionMap } from "@/data/javaQuestions";
 
@@ -107,9 +114,21 @@ export default function DrillJavaStartPage() {
 
   const updateProgressInFirestore = async (topic: string) => {
     const currentUser = auth.currentUser;
-    if (!currentUser) return;
+    if (!currentUser) return false;
 
     const userRef = doc(db, "users", currentUser.uid);
+    const userSnap = await getDoc(userRef);
+
+    const solvedTopics =
+      userSnap.exists() && Array.isArray(userSnap.data()?.progress?.solvedTopics)
+        ? userSnap.data()?.progress?.solvedTopics
+        : [];
+
+    const alreadySolved = solvedTopics.includes(topic);
+
+    if (alreadySolved) {
+      return false;
+    }
 
     await setDoc(
       userRef,
@@ -122,10 +141,13 @@ export default function DrillJavaStartPage() {
           lastSolvedTopic: topic,
           lastSolvedLanguage: "java",
           updatedAt: serverTimestamp(),
+          solvedTopics: arrayUnion(topic),
         },
       },
       { merge: true }
     );
+
+    return true;
   };
 
   const handleRun = async () => {
@@ -152,9 +174,7 @@ export default function DrillJavaStartPage() {
 
       if (!response.ok || !data.success) {
         setErrorOutput(
-          data.success === false
-            ? data.error
-            : "コード実行に失敗しました。"
+          data.success === false ? data.error : "コード実行に失敗しました。"
         );
         setJudgeMessage("不正解です。");
         return;
@@ -180,9 +200,14 @@ export default function DrillJavaStartPage() {
 
         if (!isProgressUpdated) {
           try {
-            await updateProgressInFirestore(currentTopic);
+            const updated = await updateProgressInFirestore(currentTopic);
             setIsProgressUpdated(true);
-            setJudgeMessage("正解です。進捗を保存しました。");
+
+            if (updated) {
+              setJudgeMessage("正解です。進捗を保存しました。");
+            } else {
+              setJudgeMessage("正解です。すでに保存済みの問題です。");
+            }
           } catch (error) {
             console.error("進捗の保存に失敗しました:", error);
             setJudgeMessage("正解ですが、進捗の保存に失敗しました。");
@@ -286,7 +311,9 @@ export default function DrillJavaStartPage() {
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-[320px_1fr]">
             <div className="rounded-2xl bg-white p-6 shadow">
               <h2 className="mb-4 text-2xl font-bold">問題文</h2>
-              <p className="mb-6 text-lg leading-8">{currentQuestion.description}</p>
+              <p className="mb-6 text-lg leading-8">
+                {currentQuestion.description}
+              </p>
 
               <div className="space-y-3">
                 <button
