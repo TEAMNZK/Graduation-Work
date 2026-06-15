@@ -4,6 +4,11 @@ export type JavaQuestion = {
   hint: string;
   expectedOutput: string;
   starterCode: string;
+
+  // 追加: レベル3判定用
+  requiredPatterns?: string[];
+  forbiddenPatterns?: string[];
+  // 追加ここまで
 };
 
 export const javaQuestionMap: Record<string, JavaQuestion> = {
@@ -19,7 +24,12 @@ export const javaQuestionMap: Record<string, JavaQuestion> = {
 
   }
 }`,
+    // 追加: レベル3判定用
+    requiredPatterns: ["if", "x", "System.out.println"],
+    forbiddenPatterns: ['System.out.println("big");'],
+    // 追加ここまで
   },
+
   "変数の宣言": {
     title: "変数の宣言",
     description:
@@ -31,7 +41,12 @@ export const javaQuestionMap: Record<string, JavaQuestion> = {
 
   }
 }`,
+    // 追加: レベル3判定用
+    requiredPatterns: ["score", "System.out.println"],
+    forbiddenPatterns: ["System.out.println(100)"],
+    // 追加ここまで
   },
+
   "データ型": {
     title: "データ型",
     description:
@@ -43,7 +58,12 @@ export const javaQuestionMap: Record<string, JavaQuestion> = {
 
   }
 }`,
+    // 追加: レベル3判定用
+    requiredPatterns: ["String", "name", "System.out.println"],
+    forbiddenPatterns: ['System.out.println("Java")'],
+    // 追加ここまで
   },
+
   "代入": {
     title: "代入",
     description:
@@ -55,7 +75,12 @@ export const javaQuestionMap: Record<string, JavaQuestion> = {
 
   }
 }`,
+    // 追加: レベル3判定用
+    requiredPatterns: ["score", "100", "System.out.println"],
+    forbiddenPatterns: ["System.out.println(100)"],
+    // 追加ここまで
   },
+
   "for文の基本": {
     title: "for文の基本",
     description:
@@ -69,7 +94,16 @@ export const javaQuestionMap: Record<string, JavaQuestion> = {
 
   }
 }`,
+    // 追加: レベル3判定用
+    requiredPatterns: ["for", "System.out.println"],
+    forbiddenPatterns: [
+      "System.out.println(1);",
+      "System.out.println(2);",
+      "System.out.println(3);",
+    ],
+    // 追加ここまで
   },
+
   "while文の基本": {
     title: "while文の基本",
     description:
@@ -83,7 +117,16 @@ export const javaQuestionMap: Record<string, JavaQuestion> = {
 
   }
 }`,
+    // 追加: レベル3判定用
+    requiredPatterns: ["while", "System.out.println"],
+    forbiddenPatterns: [
+      "System.out.println(1);",
+      "System.out.println(2);",
+      "System.out.println(3);",
+    ],
+    // 追加ここまで
   },
+
   "配列の宣言": {
     title: "配列の宣言",
     description:
@@ -95,7 +138,12 @@ export const javaQuestionMap: Record<string, JavaQuestion> = {
 
   }
 }`,
+    // 追加: レベル3判定用
+    requiredPatterns: ["int[]", "numbers", "System.out.println"],
+    forbiddenPatterns: ["System.out.println(1)"],
+    // 追加ここまで
   },
+
   "要素の取得": {
     title: "要素の取得",
     description:
@@ -107,7 +155,12 @@ export const javaQuestionMap: Record<string, JavaQuestion> = {
 
   }
 }`,
+    // 追加: レベル3判定用
+    requiredPatterns: ["numbers", "[1]", "System.out.println"],
+    forbiddenPatterns: ["System.out.println(20)"],
+    // 追加ここまで
   },
+
   "要素の更新": {
     title: "要素の更新",
     description:
@@ -119,7 +172,12 @@ export const javaQuestionMap: Record<string, JavaQuestion> = {
 
   }
 }`,
+    // 追加: レベル3判定用
+    requiredPatterns: ["numbers", "[2]", "100", "System.out.println"],
+    forbiddenPatterns: ["System.out.println(100)"],
+    // 追加ここまで
   },
+
   "メソッド定義": {
     title: "メソッド定義",
     description:
@@ -131,7 +189,12 @@ export const javaQuestionMap: Record<string, JavaQuestion> = {
 
   }
 }`,
+    // 追加: レベル3判定用
+    requiredPatterns: ["hello(", "static", "hello();"],
+    forbiddenPatterns: [],
+    // 追加ここまで
   },
+
   "引数": {
     title: "引数",
     description:
@@ -143,7 +206,12 @@ export const javaQuestionMap: Record<string, JavaQuestion> = {
 
   }
 }`,
+    // 追加: レベル3判定用
+    requiredPatterns: ["printName(", "String", 'printName("Java")'],
+    forbiddenPatterns: ['System.out.println("Java")'],
+    // 追加ここまで
   },
+
   "戻り値": {
     title: "戻り値",
     description:
@@ -155,151 +223,9 @@ export const javaQuestionMap: Record<string, JavaQuestion> = {
 
   }
 }`,
-  },
-  "繰り返し回数": {
-    title: "繰り返し回数",
-    description:
-      "for文を使って Hello を 3 回出力してください。",
-    hint: 'System.out.println("Hello"); を 3 回繰り返します。',
-    expectedOutput: `Hello
-Hello
-Hello`,
-    starterCode: `public class Main {
-  public static void main(String[] args) {
-
-  }
-}`,
-  },
-  "ネスト": {
-    title: "ネスト",
-    description:
-      "二重ループを使って * を2行2列で出力してください。",
-    hint: "for文の中に for文を入れます。",
-    expectedOutput: `**
-**`,
-    starterCode: `public class Main {
-  public static void main(String[] args) {
-
-  }
-}`,
-  },
-  "条件式": {
-    title: "条件式",
-    description:
-      "整数 x = 3 を宣言し、x が 5 未満なら small と出力してください。",
-    hint: "if (x < 5) を使います。",
-    expectedOutput: "small",
-    starterCode: `public class Main {
-  public static void main(String[] args) {
-
-  }
-}`,
-  },
-  "無限ループ対策": {
-    title: "無限ループ対策",
-    description:
-      "while文を使って 1 から 3 まで出力してください。",
-    hint: "ループ内で変数を増やすのを忘れないようにします。",
-    expectedOutput: `1
-2
-3`,
-    starterCode: `public class Main {
-  public static void main(String[] args) {
-
-  }
-}`,
-  },
-  "クラス定義": {
-    title: "クラス定義",
-    description:
-      "Person クラスを定義し、main メソッドで Person 型の変数を作成してください。出力は 1 行で OK としてください。",
-    hint: 'class Person { } のように定義できます。',
-    expectedOutput: "OK",
-    starterCode: `class Person {
-}
-
-public class Main {
-  public static void main(String[] args) {
-
-  }
-}`,
-  },
-  "インスタンス生成": {
-    title: "インスタンス生成",
-    description:
-      "Person クラスのインスタンスを生成し、OK と出力してください。",
-    hint: "Person p = new Person(); のように生成します。",
-    expectedOutput: "OK",
-    starterCode: `class Person {
-}
-
-public class Main {
-  public static void main(String[] args) {
-
-  }
-}`,
-  },
-  "フィールド": {
-    title: "フィールド",
-    description:
-      "Person クラスに name フィールドを作り、\"Taro\" を代入して出力してください。",
-    hint: "フィールドはクラスの中に定義します。",
-    expectedOutput: "Taro",
-    starterCode: `class Person {
-}
-
-public class Main {
-  public static void main(String[] args) {
-
-  }
-}`,
-  },
-  "カプセル化": {
-    title: "カプセル化",
-    description:
-      "private フィールド score を持つクラスを作り、setter で 100 を代入して getter で出力してください。",
-    hint: "getter / setter メソッドを用意します。",
-    expectedOutput: "100",
-    starterCode: `class Player {
-}
-
-public class Main {
-  public static void main(String[] args) {
-
-  }
-}`,
-  },
-  "継承": {
-    title: "継承",
-    description:
-      'Animal クラスを継承した Dog クラスを作成し、OK と出力してください。',
-    hint: "class Dog extends Animal の形です。",
-    expectedOutput: "OK",
-    starterCode: `class Animal {
-}
-
-public class Main {
-  public static void main(String[] args) {
-
-  }
-}`,
-  },
-  "ポリモーフィズム": {
-    title: "ポリモーフィズム",
-    description:
-      "親クラス型の変数に子クラスのインスタンスを代入し、OK と出力してください。",
-    hint: "Animal a = new Dog(); のように書けます。",
-    expectedOutput: "OK",
-    starterCode: `class Animal {
-}
-
-class Dog extends Animal {
-}
-
-public class Main {
-  public static void main(String[] args) {
-
-  }
-}`,
+    // 追加: レベル3判定用
+    requiredPatterns: ["getNumber(", "return 10", "System.out.println"],
+    forbiddenPatterns: ["System.out.println(10)"],
+    // 追加ここまで
   },
 };

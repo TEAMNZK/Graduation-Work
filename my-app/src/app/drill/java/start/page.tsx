@@ -99,6 +99,10 @@ export default function DrillJavaStartPage() {
         hint: "ここにヒントを表示します。",
         expectedOutput: "ここに期待する出力",
         starterCode: code,
+        // 追加: フォールバック用
+        requiredPatterns: [],
+        forbiddenPatterns: [],
+        // 追加ここまで
       }
     : null;
 
@@ -113,6 +117,35 @@ export default function DrillJavaStartPage() {
   const normalizeOutput = (text: string) => {
     return text.replace(/\r\n/g, "\n").trim();
   };
+
+  // 追加: コード比較を少し安定させるための正規化
+  const normalizeCode = (text: string) => {
+    return text.replace(/\r\n/g, "\n");
+  };
+  // 追加ここまで
+
+  // 追加: required / forbidden の判定関数
+  const validateCodePatterns = (sourceCode: string) => {
+    const normalizedCode = normalizeCode(sourceCode);
+    const requiredPatterns = currentQuestion?.requiredPatterns ?? [];
+    const forbiddenPatterns = currentQuestion?.forbiddenPatterns ?? [];
+
+    const missingPatterns = requiredPatterns.filter(
+      (pattern) => !normalizedCode.includes(pattern)
+    );
+
+    const foundForbiddenPatterns = forbiddenPatterns.filter((pattern) =>
+      normalizedCode.includes(pattern)
+    );
+
+    return {
+      isValid:
+        missingPatterns.length === 0 && foundForbiddenPatterns.length === 0,
+      missingPatterns,
+      foundForbiddenPatterns,
+    };
+  };
+  // 追加ここまで
 
   const updateProgressInFirestore = async (topic: string) => {
     const currentUser = auth.currentUser;
@@ -211,7 +244,12 @@ export default function DrillJavaStartPage() {
       const actual = normalizeOutput(stdout);
       const expected = normalizeOutput(currentQuestion.expectedOutput);
 
-      if (actual === expected) {
+      // 追加: レベル3のコード判定
+      const codeValidation = validateCodePatterns(code);
+      // 追加ここまで
+
+      // 変更: 出力 + コードパターンの両方で判定
+      if (actual === expected && codeValidation.isValid) {
         setIsCorrect(true);
 
         if (!isProgressUpdated) {
@@ -233,6 +271,29 @@ export default function DrillJavaStartPage() {
         }
       } else {
         setIsCorrect(false);
+
+        // 追加: コードパターン違反のメッセージ
+        if (actual === expected && !codeValidation.isValid) {
+          if (codeValidation.missingPatterns.length > 0) {
+            setJudgeMessage(
+              `出力は正しいですが、必要なコード要素が不足しています: ${codeValidation.missingPatterns.join(
+                ", "
+              )}`
+            );
+            return;
+          }
+
+          if (codeValidation.foundForbiddenPatterns.length > 0) {
+            setJudgeMessage(
+              `出力は正しいですが、禁止された書き方が含まれています: ${codeValidation.foundForbiddenPatterns.join(
+                ", "
+              )}`
+            );
+            return;
+          }
+        }
+        // 追加ここまで
+
         setJudgeMessage("不正解です。出力結果を確認してください。");
       }
     } catch (error) {
@@ -303,21 +364,18 @@ export default function DrillJavaStartPage() {
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
 
-    // Ctrl + Enter -> 実行
     if (e.ctrlKey && e.key === "Enter") {
       e.preventDefault();
       await handleRun();
       return;
     }
 
-    // Ctrl + S -> 中断保存
     if (e.ctrlKey && (e.key === "s" || e.key === "S")) {
       e.preventDefault();
       handleInterrupt();
       return;
     }
 
-    // Ctrl + / -> コメント切り替え
     if (e.ctrlKey && e.key === "/") {
       e.preventDefault();
 
@@ -363,12 +421,10 @@ export default function DrillJavaStartPage() {
       return;
     }
 
-    // Tab / Shift+Tab -> 字下げ
     if (e.key !== "Tab") return;
 
     e.preventDefault();
 
-    // 選択なし -> カーソル位置にスペース2つ
     if (start === end) {
       if (e.shiftKey) return;
 
@@ -383,7 +439,6 @@ export default function DrillJavaStartPage() {
       return;
     }
 
-    // 選択あり -> 選択範囲の各行を対象
     const lineStart = value.lastIndexOf("\n", start - 1) + 1;
     const lineEndIndex = value.indexOf("\n", end);
     const blockEnd = lineEndIndex === -1 ? value.length : lineEndIndex;
