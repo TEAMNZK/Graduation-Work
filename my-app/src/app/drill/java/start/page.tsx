@@ -71,11 +71,11 @@ export default function DrillJavaStartPage() {
 
       setSession(parsed);
 
-      const currentTopic = parsed.selectedTopics[parsed.currentIndex];
-      const currentQuestion = javaQuestionMap[currentTopic];
+      const topic = parsed.selectedTopics[parsed.currentIndex] ?? "";
+      const question = topic ? javaQuestionMap[topic] : undefined;
 
-      if (currentQuestion) {
-        setCode(currentQuestion.starterCode);
+      if (question) {
+        setCode(question.starterCode);
       } else {
         setCode(`public class Main {
   public static void main(String[] args) {
@@ -91,18 +91,20 @@ export default function DrillJavaStartPage() {
     }
   }, [router]);
 
-  const currentTopic = session?.selectedTopics[session.currentIndex] ?? "";
+  const currentTopic: string = session?.selectedTopics[session.currentIndex] ?? "";
+
   const currentQuestion = currentTopic
     ? javaQuestionMap[currentTopic] ?? {
+        id: currentTopic,
+        no: "",
         title: currentTopic,
         description: `ここに「${currentTopic}」の問題文を表示します。`,
         hint: "ここにヒントを表示します。",
-        expectedOutput: "ここに期待する出力",
+        expectedOutput: "",
         starterCode: code,
-        // 追加: フォールバック用
         requiredPatterns: [],
         forbiddenPatterns: [],
-        // 追加ここまで
+        type: "lesson" as const,
       }
     : null;
 
@@ -118,13 +120,10 @@ export default function DrillJavaStartPage() {
     return text.replace(/\r\n/g, "\n").trim();
   };
 
-  // 追加: コード比較を少し安定させるための正規化
   const normalizeCode = (text: string) => {
     return text.replace(/\r\n/g, "\n");
   };
-  // 追加ここまで
 
-  // 追加: required / forbidden の判定関数
   const validateCodePatterns = (sourceCode: string) => {
     const normalizedCode = normalizeCode(sourceCode);
     const requiredPatterns = currentQuestion?.requiredPatterns ?? [];
@@ -145,7 +144,6 @@ export default function DrillJavaStartPage() {
       foundForbiddenPatterns,
     };
   };
-  // 追加ここまで
 
   const updateProgressInFirestore = async (topic: string) => {
     const currentUser = auth.currentUser;
@@ -198,7 +196,7 @@ export default function DrillJavaStartPage() {
   };
 
   const handleRun = async () => {
-    if (!currentQuestion) return;
+    if (!currentQuestion || !currentTopic) return;
 
     setIsRunning(true);
     setOutput("");
@@ -242,13 +240,9 @@ export default function DrillJavaStartPage() {
       }
 
       const actual = normalizeOutput(stdout);
-      const expected = normalizeOutput(currentQuestion.expectedOutput);
-
-      // 追加: レベル3のコード判定
+      const expected = normalizeOutput(currentQuestion.expectedOutput ?? "");
       const codeValidation = validateCodePatterns(code);
-      // 追加ここまで
 
-      // 変更: 出力 + コードパターンの両方で判定
       if (actual === expected && codeValidation.isValid) {
         setIsCorrect(true);
 
@@ -272,7 +266,6 @@ export default function DrillJavaStartPage() {
       } else {
         setIsCorrect(false);
 
-        // 追加: コードパターン違反のメッセージ
         if (actual === expected && !codeValidation.isValid) {
           if (codeValidation.missingPatterns.length > 0) {
             setJudgeMessage(
@@ -292,7 +285,6 @@ export default function DrillJavaStartPage() {
             return;
           }
         }
-        // 追加ここまで
 
         setJudgeMessage("不正解です。出力結果を確認してください。");
       }
@@ -333,8 +325,8 @@ export default function DrillJavaStartPage() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedSession));
     setSession(updatedSession);
 
-    const nextTopic = updatedSession.selectedTopics[updatedSession.currentIndex];
-    const nextQuestion = javaQuestionMap[nextTopic];
+    const nextTopic = updatedSession.selectedTopics[updatedSession.currentIndex] ?? "";
+    const nextQuestion = nextTopic ? javaQuestionMap[nextTopic] : undefined;
 
     setShowHint(false);
     setShowAnswer(false);
