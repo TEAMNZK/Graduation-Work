@@ -30,13 +30,13 @@ export const javaQuestionMap: Record<string, JavaQuestion> = {
     type: "lesson",
   },
 
-  "03-hello-world": {
+  "03-hello-world-basic": {
     id: "03-hello-world",
-    no: "03",
-    title: "Hello World",
-    description: "Hello World と出力してください。",
-    hint: 'System.out.println("Hello World"); を使います。',
-    expectedOutput: "Hello World",
+    no: "03-基礎",
+    title: "Hello World（基礎）",
+    description: "「Hello Java」と表示しなさい。",
+    hint: 'System.out.println("Hello Java"); を使います。',
+    expectedOutput: "Hello Java",
     starterCode: `public class Main {
   public static void main(String[] args) {
 
@@ -47,66 +47,70 @@ export const javaQuestionMap: Record<string, JavaQuestion> = {
     type: "lesson",
   },
 
-  "04-variables": {
-    id: "04-variables",
-    no: "04",
-    title: "変数",
-    description:
-      "整数型の変数 score に 100 を代入し、その値を出力してください。",
-    hint: "int score = 100; のように書きます。",
-    expectedOutput: "100",
-    starterCode: `public class Main {
-  public static void main(String[] args) {
-
-  }
-}`,
-    requiredPatterns: ["score", "System.out.println"],
-    forbiddenPatterns: ["System.out.println(100)"],
-    type: "lesson",
-  },
-
-  "05-data-types": {
-    id: "05-data-types",
-    no: "05",
-    title: "データ型",
-    description: '文字列型の変数 name に "Java" を代入し、出力してください。',
-    hint: 'String name = "Java"; を使います。',
-    expectedOutput: "Java",
+  "04-variables-basic": {
+    id: "04-variables-basic",
+    no: "04-基礎",
+    title: "変数（基礎）",
+    description: "nameという変数に自分の名前を入れて表示しなさい。",
+    hint: 'String name = "..." ; と書いて、System.out.println(name); を使います。',
+    expectedOutput: "Taro",
     starterCode: `public class Main {
   public static void main(String[] args) {
 
   }
 }`,
     requiredPatterns: ["String", "name", "System.out.println"],
-    forbiddenPatterns: ['System.out.println("Java")'],
+    forbiddenPatterns: ['System.out.println("Taro")'],
     type: "lesson",
   },
 
-  "06-operators": {
-    id: "06-operators",
-    no: "06",
-    title: "演算子",
-    description:
-      "10 + 5 の結果を変数 result に代入し、その値を出力してください。",
-    hint: "int result = 10 + 5; と書けます。",
-    expectedOutput: "15",
+  "05-data-types-basic": {
+    id: "05-data-types",
+    no: "05-基礎",
+    title: "データ型（基礎）",
+    description: "int型の変数 score に80を入れて表示しなさい。",
+    hint: "int score = 80; と書いて、System.out.println(score); を使います。",
+    expectedOutput: "80",
     starterCode: `public class Main {
   public static void main(String[] args) {
 
   }
 }`,
-    requiredPatterns: ["result", "+", "System.out.println"],
-    forbiddenPatterns: ["System.out.println(15)"],
+    requiredPatterns: ["int", "score", "System.out.println"],
+    forbiddenPatterns: ["System.out.println(80)"],
     type: "lesson",
   },
 
-  "07-input-output": {
+  "06-operators-basic": {
+    id: "06-operators",
+    no: "06-基礎",
+    title: "演算子（基礎）",
+    description:
+      "2つの整数 a = 10, b = 5 を変数に入れ、足し算、引き算、掛け算、割り算の結果をこの順に1行ずつ表示しなさい。",
+    hint: "a + b, a - b, a * b, a / b を使います。",
+    expectedOutput: `15
+5
+50
+2`,
+    starterCode: `public class Main {
+  public static void main(String[] args) {
+    int a = 10;
+    int b = 5;
+
+  }
+}`,
+    requiredPatterns: ["a", "b", "+", "-", "*", "/", "System.out.println"],
+    forbiddenPatterns: [],
+    type: "lesson",
+  },
+
+  "07-input-output-basic": {
     id: "07-input-output",
-    no: "07",
-    title: "入力と出力",
-    description: "整数を1つ入力し、その値をそのまま出力してください。",
-    hint: "Scanner と nextInt() を使います。",
-    expectedOutput: "10",
+    no: "07-基礎",
+    title: "入力と出力（基礎）",
+    description: '名前を入力し、「こんにちは、〇〇さん」と表示しなさい。',
+    hint: "Scanner と nextLine() を使います。",
+    expectedOutput: "こんにちは、太郎さん",
     starterCode: `import java.util.Scanner;
 
 public class Main {
@@ -114,59 +118,65 @@ public class Main {
 
   }
 }`,
-    requiredPatterns: ["Scanner", "nextInt", "System.out.println"],
+    requiredPatterns: ["Scanner", "nextLine", "System.out.println"],
     forbiddenPatterns: [],
     type: "lesson",
   },
 
-  "08-if": {
+  "08-if-basic": {
     id: "08-if",
-    no: "08",
-    title: "if文",
-    description:
-      '整数 x = 10 を宣言し、x が 5 より大きい場合に "big" と出力してください。',
-    hint: "if (x > 5) を使います。",
-    expectedOutput: "big",
-    starterCode: `public class Main {
+    no: "08-基礎",
+    title: "if文（基礎）",
+    description: '点数を入力し、60点以上なら「合格」と表示しなさい。',
+    hint: "if を使って score >= 60 を判定します。",
+    expectedOutput: "合格",
+    starterCode: `import java.util.Scanner;
+
+public class Main {
   public static void main(String[] args) {
-    int x = 10;
 
   }
 }`,
-    requiredPatterns: ["if", "x", "System.out.println"],
+    requiredPatterns: ["Scanner", "if", "System.out.println"],
     forbiddenPatterns: [],
     type: "lesson",
   },
 
-  "09-switch": {
+  "09-switch-basic": {
     id: "09-switch",
-    no: "09",
-    title: "switch文",
-    description:
-      "int num = 2; を宣言し、switch文を使って two と出力してください。",
-    hint: "switch (num) と case 2: を使います。",
-    expectedOutput: "two",
-    starterCode: `public class Main {
+    no: "09-基礎",
+    title: "switch文（基礎）",
+    description: "1〜7の数字を入力し、対応する曜日を表示しなさい。今回は 1 が入力されたとき「月曜日」と表示するものとします。",
+    hint: "switch と case を使います。",
+    expectedOutput: "月曜日",
+    starterCode: `import java.util.Scanner;
+
+public class Main {
   public static void main(String[] args) {
-    int num = 2;
 
   }
 }`,
-    requiredPatterns: ["switch", "case", "System.out.println"],
+    requiredPatterns: ["Scanner", "switch", "case", "System.out.println"],
     forbiddenPatterns: [],
     type: "lesson",
   },
 
-  "10-for": {
+  "10-for-basic": {
     id: "10-for",
-    no: "10",
-    title: "for文",
-    description:
-      "for文を使って 1 から 3 までの数字を1行ずつ出力してください。",
-    hint: "for (int i = 1; i <= 3; i++) を使います。",
+    no: "10-基礎",
+    title: "for文（基礎）",
+    description: "1から10まで表示しなさい。",
+    hint: "for文を使って 1 から 10 まで繰り返します。",
     expectedOutput: `1
 2
-3`,
+3
+4
+5
+6
+7
+8
+9
+10`,
     starterCode: `public class Main {
   public static void main(String[] args) {
 
@@ -177,52 +187,15 @@ public class Main {
       "System.out.println(1);",
       "System.out.println(2);",
       "System.out.println(3);",
+      "System.out.println(4);",
+      "System.out.println(5);",
+      "System.out.println(6);",
+      "System.out.println(7);",
+      "System.out.println(8);",
+      "System.out.println(9);",
+      "System.out.println(10);",
     ],
     type: "lesson",
-  },
-
-  "11-while": {
-    id: "11-while",
-    no: "11",
-    title: "while文",
-    description:
-      "while文を使って 1 から 3 までの数字を1行ずつ出力してください。",
-    hint: "繰り返し用の変数を使い、最後に増やします。",
-    expectedOutput: `1
-2
-3`,
-    starterCode: `public class Main {
-  public static void main(String[] args) {
-
-  }
-}`,
-    requiredPatterns: ["while", "System.out.println"],
-    forbiddenPatterns: [
-      "System.out.println(1);",
-      "System.out.println(2);",
-      "System.out.println(3);",
-    ],
-    type: "lesson",
-  },
-
-  "project-janken": {
-    id: "project-janken",
-    no: "演習",
-    title: "じゃんけんゲーム",
-    description:
-      "ユーザー入力と条件分岐を使って、簡単なじゃんけんゲームを作成してください。",
-    hint: "Scanner、Random、if文またはswitch文を組み合わせます。",
-    expectedOutput: "",
-    starterCode: `import java.util.Random;
-import java.util.Scanner;
-
-public class Main {
-  public static void main(String[] args) {
-
-  }
-}`,
-    requiredPatterns: ["Scanner", "Random"],
-    forbiddenPatterns: [],
-    type: "mini_project",
   },
 };
+
