@@ -1,48 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import AuthGuard from "@/components/AuthGuard";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { javaQuestionMap } from "@/data/javaQuestions";
-
-const startItems = [
-  {
-    title: "変数",
-    children: ["変数の宣言", "データ型", "代入"],
-  },
-  {
-    title: "if",
-    children: ["if文の基本"],
-  },
-  {
-    title: "配列",
-    children: ["配列の宣言", "要素の取得", "要素の更新"],
-  },
-  {
-    title: "メソッド",
-    children: ["メソッド定義", "引数", "戻り値"],
-  },
-];
-
-const continueItems = [
-  {
-    title: "for",
-    children: ["for文の基本", "繰り返し回数", "ネスト"],
-  },
-  {
-    title: "while",
-    children: ["while文の基本", "条件式", "無限ループ対策"],
-  },
-  {
-    title: "クラス",
-    children: ["クラス定義", "インスタンス生成", "フィールド"],
-  },
-  {
-    title: "オブジェクト指向",
-    children: ["カプセル化", "継承", "ポリモーフィズム"],
-  },
-];
+import AuthGuard from "@/components/AuthGuard";
+import { javaCurriculum } from "@/data/javaCurriculum";
 
 const STORAGE_KEY = "drill-java-session";
 
@@ -54,55 +16,61 @@ type DrillSession = {
 
 export default function DrillJavaPage() {
   const router = useRouter();
-  const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
-  const [hasResumeData, setHasResumeData] = useState(false);
-  const [resumeMessage, setResumeMessage] = useState("");
 
-  const validQuestionTitles = useMemo(
-    () => new Set(Object.keys(javaQuestionMap)),
-    []
-  );
+  const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
+  const [hasInterruptedSession, setHasInterruptedSession] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
-    if (!saved) return;
 
-    try {
-      const parsed: DrillSession = JSON.parse(saved);
-      if (parsed.isInProgress && parsed.selectedTopics.length > 0) {
-        setHasResumeData(true);
-        setResumeMessage("前回中断した問題があります。");
+    if (saved) {
+      try {
+        const parsed: DrillSession = JSON.parse(saved);
+        if (parsed.isInProgress && parsed.selectedTopics.length > 0) {
+          setHasInterruptedSession(true);
+        }
+      } catch (error) {
+        console.error("保存データの読み込みに失敗しました:", error);
       }
-    } catch (error) {
-      console.error("保存データの読み込みに失敗しました:", error);
     }
+
+    setIsLoaded(true);
   }, []);
 
-  const toggleTopic = (topic: string) => {
-    setSelectedTopics((prev) =>
-      prev.includes(topic)
-        ? prev.filter((item) => item !== topic)
-        : [...prev, topic]
+  const lessonItems = useMemo(() => {
+    return javaCurriculum.flatMap((section) =>
+      section.items.filter((item) => item.type === "lesson")
     );
+  }, []);
+
+  const lessonCount = lessonItems.length;
+  const selectedCount = selectedTopics.length;
+
+  const toggleTopic = (topicId: string) => {
+    setSelectedTopics((prev) =>
+      prev.includes(topicId)
+        ? prev.filter((id) => id !== topicId)
+        : [...prev, topicId]
+    );
+  };
+
+  const handleSelectAll = () => {
+    setSelectedTopics(lessonItems.map((item) => item.id));
+  };
+
+  const handleClearAll = () => {
+    setSelectedTopics([]);
   };
 
   const handleStart = () => {
     if (selectedTopics.length === 0) {
-      alert("少なくとも1つ以上の小項目を選択してください。");
-      return;
-    }
-
-    const filteredTopics = selectedTopics.filter((topic) =>
-      validQuestionTitles.has(topic)
-    );
-
-    if (filteredTopics.length === 0) {
-      alert("出題可能な問題が選択されていません。");
+      alert("少なくとも1つ問題を選択してください。");
       return;
     }
 
     const session: DrillSession = {
-      selectedTopics: filteredTopics,
+      selectedTopics,
       currentIndex: 0,
       isInProgress: true,
     };
@@ -111,138 +79,266 @@ export default function DrillJavaPage() {
     router.push("/drill/java/start");
   };
 
-  const handleResume = () => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (!saved) {
-      alert("再開できる問題がありません。");
-      return;
-    }
-
-    try {
-      const parsed: DrillSession = JSON.parse(saved);
-      if (!parsed.isInProgress || parsed.selectedTopics.length === 0) {
-        alert("再開できる問題がありません。");
-        return;
-      }
-
-      router.push("/drill/java/start");
-    } catch (error) {
-      console.error("保存データの読み込みに失敗しました:", error);
-      alert("保存データの読み込みに失敗しました。");
-    }
+  const handleContinue = () => {
+    router.push("/drill/java/start");
   };
 
-  const renderTopicGroup = (
-    items: { title: string; children: string[] }[]
-  ) => {
-    return items.map((item) => (
-      <div
-        key={item.title}
-        className="rounded-2xl border bg-gray-50 p-5"
-      >
-        <h2 className="mb-4 text-2xl font-bold">{item.title}</h2>
+  const getItemBadge = (type: "lesson" | "mini_project" | "final_project") => {
+    if (type === "lesson") {
+      return "border-blue-200 bg-blue-50 text-blue-700";
+    }
 
-        <div className="space-y-3">
-          {item.children.map((child) => {
-            const exists = validQuestionTitles.has(child);
+    if (type === "mini_project") {
+      return "border-emerald-200 bg-emerald-50 text-emerald-700";
+    }
 
-            return (
-              <label
-                key={child}
-                className={`flex items-center gap-3 rounded-lg border px-4 py-3 ${
-                  exists
-                    ? "bg-white hover:bg-gray-50"
-                    : "bg-gray-100 text-gray-400"
-                }`}
-              >
-                <input
-                  type="checkbox"
-                  className="h-4 w-4"
-                  checked={selectedTopics.includes(child)}
-                  onChange={() => toggleTopic(child)}
-                  disabled={!exists}
-                />
-                <span className="text-lg">{child}</span>
-                {!exists && (
-                  <span className="ml-auto text-sm">未実装</span>
-                )}
-              </label>
-            );
-          })}
-        </div>
-      </div>
-    ));
+    return "border-purple-200 bg-purple-50 text-purple-700";
   };
+
+  const getItemLabel = (type: "lesson" | "mini_project" | "final_project") => {
+    if (type === "lesson") return "通常問題";
+    if (type === "mini_project") return "ミニ制作";
+    return "総合演習";
+  };
+
+  if (!isLoaded) {
+    return (
+      <AuthGuard>
+        <main className="min-h-screen bg-gray-100 p-8">
+          <p>読み込み中...</p>
+        </main>
+      </AuthGuard>
+    );
+  }
 
   return (
     <AuthGuard>
       <main className="min-h-screen bg-gray-100 text-gray-900">
-        <header className="border-b bg-white shadow-sm">
-          <div className="mx-auto max-w-7xl px-6 py-4">
-            <h1 className="text-2xl font-bold">ドリル - Java</h1>
-          </div>
+        {/* ヘッダー */}
+        <header className="border-b border-gray-200 bg-white">
+          <div className="mx-auto max-w-7xl px-6 py-5">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <p className="text-sm font-bold tracking-widest text-blue-600">
+                  CODE LORD NOTE
+                </p>
+                <h1 className="mt-1 text-3xl font-bold">ドリル - Java</h1>
+                <p className="mt-2 text-sm text-gray-600">
+                  章ごとに問題を選んで、順番に演習を進めます。
+                </p>
+              </div>
 
-          <nav className="mx-auto flex max-w-7xl gap-2 px-6 pb-4">
-            <Link
-              href="/dashboard"
-              className="rounded-t-lg border border-b-0 bg-gray-50 px-5 py-2 font-medium hover:bg-gray-100"
-            >
-              戻る
-            </Link>
-            <Link
-              href="/textbook"
-              className="rounded-t-lg border border-b-0 bg-gray-50 px-5 py-2 font-medium hover:bg-gray-100"
-            >
-              教科書
-            </Link>
-            <Link
-              href="/drill"
-              className="rounded-t-lg border border-b-0 bg-white px-5 py-2 font-medium"
-            >
-              ドリル
-            </Link>
-            <Link
-              href="/articles"
-              className="rounded-t-lg border border-b-0 bg-gray-50 px-5 py-2 font-medium hover:bg-gray-100"
-            >
-              記事
-            </Link>
-            <Link
-              href="/typing"
-              className="rounded-t-lg border border-b-0 bg-gray-50 px-5 py-2 font-medium hover:bg-gray-100"
-            >
-              タイピング練習
-            </Link>
-          </nav>
+              <div className="flex flex-wrap gap-2">
+                <Link
+                  href="/dashboard"
+                  className="rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-medium hover:bg-gray-50"
+                >
+                  戻る
+                </Link>
+                <Link
+                  href="/textbook"
+                  className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-2 text-sm font-medium hover:bg-gray-100"
+                >
+                  教科書
+                </Link>
+                <Link
+                  href="/drill"
+                  className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-bold text-blue-700"
+                >
+                  ドリル
+                </Link>
+                <Link
+                  href="/articles"
+                  className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-2 text-sm font-medium hover:bg-gray-100"
+                >
+                  記事
+                </Link>
+                <Link
+                  href="/typing"
+                  className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-2 text-sm font-medium hover:bg-gray-100"
+                >
+                  タイピング練習
+                </Link>
+              </div>
+            </div>
+          </div>
         </header>
 
         <section className="mx-auto max-w-7xl px-6 py-8">
-          {hasResumeData && (
-            <div className="mb-6 rounded-xl border border-yellow-300 bg-yellow-50 px-4 py-3 text-yellow-800">
-              {resumeMessage}
+          {/* 上部サマリー */}
+          <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-[1.3fr_1fr]">
+            <div className="rounded-2xl border border-blue-100 bg-blue-50 p-6">
+              <p className="text-sm text-gray-500">Javaドリルの進め方</p>
+              <h2 className="mt-2 text-2xl font-bold">
+                学びたい問題を選んで出題を開始します
+              </h2>
+              <p className="mt-3 text-sm leading-7 text-gray-700">
+                基礎文法から総合演習まで、章ごとに整理されています。
+                まずは通常問題を選択し、必要に応じてミニ制作へ進んでください。
+              </p>
+            </div>
+
+            <div className="rounded-2xl bg-white p-6 shadow-sm">
+              <h3 className="text-lg font-bold">選択状況</h3>
+
+              <div className="mt-5 grid grid-cols-2 gap-4">
+                <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                  <p className="text-sm text-gray-500">選択中</p>
+                  <p className="mt-2 text-3xl font-bold text-blue-600">
+                    {selectedCount}
+                  </p>
+                </div>
+
+                <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                  <p className="text-sm text-gray-500">通常問題数</p>
+                  <p className="mt-2 text-3xl font-bold">{lessonCount}</p>
+                </div>
+              </div>
+
+              <div className="mt-5 flex flex-wrap gap-3">
+                <button
+                  onClick={handleSelectAll}
+                  className="rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-medium hover:bg-gray-50"
+                >
+                  すべて選択
+                </button>
+
+                <button
+                  onClick={handleClearAll}
+                  className="rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-medium hover:bg-gray-50"
+                >
+                  選択解除
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* 続きから */}
+          {hasInterruptedSession && (
+            <div className="mb-6 rounded-2xl border border-yellow-300 bg-yellow-50 p-5">
+              <p className="text-sm font-bold text-yellow-800">
+                前回中断した問題があります。
+              </p>
+              <p className="mt-1 text-sm text-yellow-700">
+                続きから再開することも、新しく選び直して始めることもできます。
+              </p>
+
+              <div className="mt-4 flex flex-wrap gap-3">
+                <button
+                  onClick={handleContinue}
+                  className="rounded-xl bg-blue-600 px-5 py-3 font-bold text-white hover:bg-blue-700"
+                >
+                  続きから
+                </button>
+              </div>
             </div>
           )}
 
-          <div className="mb-6 flex flex-wrap gap-4">
-            <button
-              onClick={handleStart}
-              className="rounded-xl border bg-white px-8 py-4 text-2xl font-bold shadow hover:bg-gray-50"
-            >
-              出題開始
-            </button>
-            <button
-              onClick={handleResume}
-              className="rounded-xl border bg-white px-8 py-4 text-2xl font-bold shadow hover:bg-gray-50"
-            >
-              続きから
-            </button>
+          {/* 出題開始バー */}
+          <div className="sticky top-0 z-10 mb-6 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <p className="text-sm text-gray-500">出題準備</p>
+                <p className="mt-1 font-bold">
+                  {selectedCount === 0
+                    ? "問題を選択してください"
+                    : `${selectedCount}件の問題が選択されています`}
+                </p>
+              </div>
+
+              <div className="flex flex-wrap gap-3">
+                <button
+                  onClick={handleStart}
+                  className="rounded-xl bg-blue-600 px-6 py-3 font-bold text-white hover:bg-blue-700"
+                >
+                  出題開始
+                </button>
+
+                {hasInterruptedSession && (
+                  <button
+                    onClick={handleContinue}
+                    className="rounded-xl border border-gray-300 bg-white px-6 py-3 font-bold hover:bg-gray-50"
+                  >
+                    続きから
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
 
-          <div className="rounded-2xl bg-white p-6 shadow">
-            <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-              <div className="space-y-5">{renderTopicGroup(startItems)}</div>
-              <div className="space-y-5">{renderTopicGroup(continueItems)}</div>
-            </div>
+          {/* カリキュラム一覧 */}
+          <div className="space-y-6">
+            {javaCurriculum.map((section) => (
+              <section
+                key={section.id}
+                className="rounded-2xl bg-white p-6 shadow-sm"
+              >
+                <div className="mb-5 flex flex-col gap-2 border-b border-gray-100 pb-4">
+                  <h2 className="text-2xl font-bold">{section.sectionTitle}</h2>
+                  <p className="text-sm text-gray-600">{section.description}</p>
+                </div>
+
+                <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+                  {section.items.map((item) => {
+                    const isLesson = item.type === "lesson";
+                    const isChecked = selectedTopics.includes(item.id);
+
+                    return (
+                      <div
+                        key={item.id}
+                        className={`rounded-2xl border p-4 transition ${
+                          isLesson && isChecked
+                            ? "border-blue-300 bg-blue-50"
+                            : "border-gray-200 bg-gray-50"
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex min-w-0 items-start gap-3">
+                            {isLesson ? (
+                              <input
+                                type="checkbox"
+                                checked={isChecked}
+                                onChange={() => toggleTopic(item.id)}
+                                className="mt-1 h-5 w-5 rounded border-gray-300"
+                              />
+                            ) : (
+                              <div className="mt-1 h-5 w-5 rounded-full border border-gray-300 bg-white" />
+                            )}
+
+                            <div className="min-w-0">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span className="text-sm font-bold text-gray-500">
+                                  {item.no}
+                                </span>
+                                <h3 className="text-lg font-bold">
+                                  {item.title}
+                                </h3>
+                              </div>
+
+                              <p className="mt-2 text-sm text-gray-600">
+                                {isLesson
+                                  ? "基礎理解のための通常問題です。"
+                                  : item.type === "mini_project"
+                                  ? "ここまでの内容を使って小作品を作る演習です。"
+                                  : "これまでの学習をまとめる総合演習です。"}
+                              </p>
+                            </div>
+                          </div>
+
+                          <span
+                            className={`shrink-0 rounded-full border px-3 py-1 text-xs font-bold ${getItemBadge(
+                              item.type
+                            )}`}
+                          >
+                            {getItemLabel(item.type)}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+            ))}
           </div>
         </section>
       </main>

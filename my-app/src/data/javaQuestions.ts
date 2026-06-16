@@ -1,22 +1,131 @@
 export type JavaQuestion = {
+  id: string;
+  no: string;
   title: string;
   description: string;
   hint: string;
-  expectedOutput: string;
+  expectedOutput?: string;
   starterCode: string;
-
-  // 追加: レベル3判定用
   requiredPatterns?: string[];
   forbiddenPatterns?: string[];
-  // 追加ここまで
+  type: "lesson" | "mini_project" | "final_project";
 };
 
 export const javaQuestionMap: Record<string, JavaQuestion> = {
-  "if文の基本": {
-    title: "if文の基本",
+  "02-how-to-run": {
+    id: "02-how-to-run",
+    no: "02",
+    title: "アプリ上での実行方法",
     description:
-      "整数 x = 10 を宣言し、x が 5 より大きい場合に「big」と出力してください。",
-    hint: "if の条件式の中で x > 5 を使います。",
+      "このアプリ上でコードを実行する練習です。Start と出力してください。",
+    hint: 'System.out.println("Start"); を使います。',
+    expectedOutput: "Start",
+    starterCode: `public class Main {
+  public static void main(String[] args) {
+
+  }
+}`,
+    requiredPatterns: ["System.out.println"],
+    forbiddenPatterns: [],
+    type: "lesson",
+  },
+
+  "03-hello-world": {
+    id: "03-hello-world",
+    no: "03",
+    title: "Hello World",
+    description: "Hello World と出力してください。",
+    hint: 'System.out.println("Hello World"); を使います。',
+    expectedOutput: "Hello World",
+    starterCode: `public class Main {
+  public static void main(String[] args) {
+
+  }
+}`,
+    requiredPatterns: ["System.out.println"],
+    forbiddenPatterns: [],
+    type: "lesson",
+  },
+
+  "04-variables": {
+    id: "04-variables",
+    no: "04",
+    title: "変数",
+    description:
+      "整数型の変数 score に 100 を代入し、その値を出力してください。",
+    hint: "int score = 100; のように書きます。",
+    expectedOutput: "100",
+    starterCode: `public class Main {
+  public static void main(String[] args) {
+
+  }
+}`,
+    requiredPatterns: ["score", "System.out.println"],
+    forbiddenPatterns: ["System.out.println(100)"],
+    type: "lesson",
+  },
+
+  "05-data-types": {
+    id: "05-data-types",
+    no: "05",
+    title: "データ型",
+    description: '文字列型の変数 name に "Java" を代入し、出力してください。',
+    hint: 'String name = "Java"; を使います。',
+    expectedOutput: "Java",
+    starterCode: `public class Main {
+  public static void main(String[] args) {
+
+  }
+}`,
+    requiredPatterns: ["String", "name", "System.out.println"],
+    forbiddenPatterns: ['System.out.println("Java")'],
+    type: "lesson",
+  },
+
+  "06-operators": {
+    id: "06-operators",
+    no: "06",
+    title: "演算子",
+    description:
+      "10 + 5 の結果を変数 result に代入し、その値を出力してください。",
+    hint: "int result = 10 + 5; と書けます。",
+    expectedOutput: "15",
+    starterCode: `public class Main {
+  public static void main(String[] args) {
+
+  }
+}`,
+    requiredPatterns: ["result", "+", "System.out.println"],
+    forbiddenPatterns: ["System.out.println(15)"],
+    type: "lesson",
+  },
+
+  "07-input-output": {
+    id: "07-input-output",
+    no: "07",
+    title: "入力と出力",
+    description: "整数を1つ入力し、その値をそのまま出力してください。",
+    hint: "Scanner と nextInt() を使います。",
+    expectedOutput: "10",
+    starterCode: `import java.util.Scanner;
+
+public class Main {
+  public static void main(String[] args) {
+
+  }
+}`,
+    requiredPatterns: ["Scanner", "nextInt", "System.out.println"],
+    forbiddenPatterns: [],
+    type: "lesson",
+  },
+
+  "08-if": {
+    id: "08-if",
+    no: "08",
+    title: "if文",
+    description:
+      '整数 x = 10 を宣言し、x が 5 より大きい場合に "big" と出力してください。',
+    hint: "if (x > 5) を使います。",
     expectedOutput: "big",
     starterCode: `public class Main {
   public static void main(String[] args) {
@@ -24,65 +133,34 @@ export const javaQuestionMap: Record<string, JavaQuestion> = {
 
   }
 }`,
-    // 追加: レベル3判定用
     requiredPatterns: ["if", "x", "System.out.println"],
-    forbiddenPatterns: ['System.out.println("big");'],
-    // 追加ここまで
+    forbiddenPatterns: [],
+    type: "lesson",
   },
 
-  "変数の宣言": {
-    title: "変数の宣言",
+  "09-switch": {
+    id: "09-switch",
+    no: "09",
+    title: "switch文",
     description:
-      "整数型の変数 score に 100 を代入し、その値を出力してください。",
-    hint: "int score = 100; の形で宣言し、System.out.println(score); を使います。",
-    expectedOutput: "100",
+      "int num = 2; を宣言し、switch文を使って two と出力してください。",
+    hint: "switch (num) と case 2: を使います。",
+    expectedOutput: "two",
     starterCode: `public class Main {
   public static void main(String[] args) {
+    int num = 2;
 
   }
 }`,
-    // 追加: レベル3判定用
-    requiredPatterns: ["score", "System.out.println"],
-    forbiddenPatterns: ["System.out.println(100)"],
-    // 追加ここまで
+    requiredPatterns: ["switch", "case", "System.out.println"],
+    forbiddenPatterns: [],
+    type: "lesson",
   },
 
-  "データ型": {
-    title: "データ型",
-    description:
-      '文字列型の変数 name に "Java" を代入し、出力してください。',
-    hint: 'String name = "Java"; の形です。',
-    expectedOutput: "Java",
-    starterCode: `public class Main {
-  public static void main(String[] args) {
-
-  }
-}`,
-    // 追加: レベル3判定用
-    requiredPatterns: ["String", "name", "System.out.println"],
-    forbiddenPatterns: ['System.out.println("Java")'],
-    // 追加ここまで
-  },
-
-  "代入": {
-    title: "代入",
-    description:
-      "整数型の変数 score に 100 を代入し、その値を出力してください。",
-    hint: "System.out.println(score); を使います。",
-    expectedOutput: "100",
-    starterCode: `public class Main {
-  public static void main(String[] args) {
-
-  }
-}`,
-    // 追加: レベル3判定用
-    requiredPatterns: ["score", "100", "System.out.println"],
-    forbiddenPatterns: ["System.out.println(100)"],
-    // 追加ここまで
-  },
-
-  "for文の基本": {
-    title: "for文の基本",
+  "10-for": {
+    id: "10-for",
+    no: "10",
+    title: "for文",
     description:
       "for文を使って 1 から 3 までの数字を1行ずつ出力してください。",
     hint: "for (int i = 1; i <= 3; i++) を使います。",
@@ -94,21 +172,22 @@ export const javaQuestionMap: Record<string, JavaQuestion> = {
 
   }
 }`,
-    // 追加: レベル3判定用
     requiredPatterns: ["for", "System.out.println"],
     forbiddenPatterns: [
       "System.out.println(1);",
       "System.out.println(2);",
       "System.out.println(3);",
     ],
-    // 追加ここまで
+    type: "lesson",
   },
 
-  "while文の基本": {
-    title: "while文の基本",
+  "11-while": {
+    id: "11-while",
+    no: "11",
+    title: "while文",
     description:
       "while文を使って 1 から 3 までの数字を1行ずつ出力してください。",
-    hint: "初期値、条件式、増加処理の3つを意識します。",
+    hint: "繰り返し用の変数を使い、最後に増やします。",
     expectedOutput: `1
 2
 3`,
@@ -117,115 +196,33 @@ export const javaQuestionMap: Record<string, JavaQuestion> = {
 
   }
 }`,
-    // 追加: レベル3判定用
     requiredPatterns: ["while", "System.out.println"],
     forbiddenPatterns: [
       "System.out.println(1);",
       "System.out.println(2);",
       "System.out.println(3);",
     ],
-    // 追加ここまで
+    type: "lesson",
   },
 
-  "配列の宣言": {
-    title: "配列の宣言",
+  "project-janken": {
+    id: "project-janken",
+    no: "演習",
+    title: "じゃんけんゲーム",
     description:
-      "int型の配列 numbers を宣言し、1, 2, 3 を入れてください。その後、numbers[0] を出力してください。",
-    hint: "int[] numbers = {1, 2, 3}; の形で書けます。",
-    expectedOutput: "1",
-    starterCode: `public class Main {
+      "ユーザー入力と条件分岐を使って、簡単なじゃんけんゲームを作成してください。",
+    hint: "Scanner、Random、if文またはswitch文を組み合わせます。",
+    expectedOutput: "",
+    starterCode: `import java.util.Random;
+import java.util.Scanner;
+
+public class Main {
   public static void main(String[] args) {
 
   }
 }`,
-    // 追加: レベル3判定用
-    requiredPatterns: ["int[]", "numbers", "System.out.println"],
-    forbiddenPatterns: ["System.out.println(1)"],
-    // 追加ここまで
-  },
-
-  "要素の取得": {
-    title: "要素の取得",
-    description:
-      "int型の配列 numbers = {10, 20, 30}; を宣言し、2番目の要素を出力してください。",
-    hint: "配列の添字は 0 から始まります。",
-    expectedOutput: "20",
-    starterCode: `public class Main {
-  public static void main(String[] args) {
-
-  }
-}`,
-    // 追加: レベル3判定用
-    requiredPatterns: ["numbers", "[1]", "System.out.println"],
-    forbiddenPatterns: ["System.out.println(20)"],
-    // 追加ここまで
-  },
-
-  "要素の更新": {
-    title: "要素の更新",
-    description:
-      "int型の配列 numbers = {1, 2, 3}; を宣言し、3番目の要素を 100 に変更して出力してください。",
-    hint: "numbers[2] = 100; のように代入できます。",
-    expectedOutput: "100",
-    starterCode: `public class Main {
-  public static void main(String[] args) {
-
-  }
-}`,
-    // 追加: レベル3判定用
-    requiredPatterns: ["numbers", "[2]", "100", "System.out.println"],
-    forbiddenPatterns: ["System.out.println(100)"],
-    // 追加ここまで
-  },
-
-  "メソッド定義": {
-    title: "メソッド定義",
-    description:
-      'hello という名前のメソッドを作成し、その中で "Hello" と出力してください。main メソッドから呼び出してください。',
-    hint: "static void hello() { ... } の形で定義できます。",
-    expectedOutput: "Hello",
-    starterCode: `public class Main {
-  public static void main(String[] args) {
-
-  }
-}`,
-    // 追加: レベル3判定用
-    requiredPatterns: ["hello(", "static", "hello();"],
+    requiredPatterns: ["Scanner", "Random"],
     forbiddenPatterns: [],
-    // 追加ここまで
-  },
-
-  "引数": {
-    title: "引数",
-    description:
-      '引数として文字列を受け取り、その文字列を出力するメソッドを作成してください。main メソッドから "Java" を渡してください。',
-    hint: "static void printName(String name) のように定義します。",
-    expectedOutput: "Java",
-    starterCode: `public class Main {
-  public static void main(String[] args) {
-
-  }
-}`,
-    // 追加: レベル3判定用
-    requiredPatterns: ["printName(", "String", 'printName("Java")'],
-    forbiddenPatterns: ['System.out.println("Java")'],
-    // 追加ここまで
-  },
-
-  "戻り値": {
-    title: "戻り値",
-    description:
-      "整数 10 を返すメソッドを作成し、その戻り値を main メソッドで出力してください。",
-    hint: "static int getNumber() のように定義します。",
-    expectedOutput: "10",
-    starterCode: `public class Main {
-  public static void main(String[] args) {
-
-  }
-}`,
-    // 追加: レベル3判定用
-    requiredPatterns: ["getNumber(", "return 10", "System.out.println"],
-    forbiddenPatterns: ["System.out.println(10)"],
-    // 追加ここまで
+    type: "mini_project",
   },
 };
