@@ -4,6 +4,7 @@ export type JavaQuestion = {
   title: string;
   description: string;
   hint: string;
+  sampleInput?: string;
   expectedOutput?: string;
   starterCode: string;
   requiredPatterns?: string[];
@@ -106,6 +107,7 @@ export const javaQuestionMap: Record<string, JavaQuestion> = {
     title: "入力と出力",
     description: "整数を1つ入力し、その値をそのまま出力してください。",
     hint: "Scanner と nextInt() を使います。",
+    sampleInput: "10",
     expectedOutput: "10",
     starterCode: `import java.util.Scanner;
 
