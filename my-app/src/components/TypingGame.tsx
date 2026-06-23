@@ -28,6 +28,14 @@ function shuffleQuestions(items: Question[]) {
   return copied;
 }
 
+function getRank(score: number) {
+  if (score >= 250) return "S";
+  if (score >= 180) return "A";
+  if (score >= 120) return "B";
+  if (score >= 60) return "C";
+  return "D";
+}
+
 export default function TypingGame({ questions }: TypingGameProps) {
   const [shuffledQuestions, setShuffledQuestions] = useState<Question[]>(() =>
     shuffleQuestions(questions)
@@ -54,6 +62,7 @@ export default function TypingGame({ questions }: TypingGameProps) {
   }, [correctChars, totalMistakes]);
 
   const score = Math.round(solvedCount * accuracy);
+  const rank = getRank(score);
 
   const timerProgress = timeLeft / GAME_TIME;
   const timerDashOffset =
@@ -64,6 +73,8 @@ export default function TypingGame({ questions }: TypingGameProps) {
     if (timeLeft <= 30) return "#f59e0b";
     return "#16a34a";
   }, [timeLeft]);
+
+  const isDangerTime = timeLeft <= 10 && !isFinished;
 
   useEffect(() => {
     setShuffledQuestions(shuffleQuestions(questions));
@@ -144,6 +155,10 @@ export default function TypingGame({ questions }: TypingGameProps) {
     }
   };
 
+  const finishGame = () => {
+    setIsFinished(true);
+  };
+
   const resetGame = () => {
     setShuffledQuestions(shuffleQuestions(questions));
     setQuestionIndex(0);
@@ -180,7 +195,11 @@ export default function TypingGame({ questions }: TypingGameProps) {
         </div>
 
         <div className="flex flex-col items-center">
-          <div className="relative h-28 w-28">
+          <div
+            className={`relative h-28 w-28 ${
+              isDangerTime ? "animate-pulse" : ""
+            }`}
+          >
             <svg
               className="h-28 w-28 -rotate-90"
               viewBox="0 0 100 100"
@@ -206,13 +225,18 @@ export default function TypingGame({ questions }: TypingGameProps) {
                 strokeDashoffset={timerDashOffset}
                 style={{
                   transition: "stroke-dashoffset 1s linear, stroke 0.3s ease",
+                  filter: isDangerTime
+                    ? "drop-shadow(0 0 6px rgba(220, 38, 38, 0.6))"
+                    : "none",
                 }}
               />
             </svg>
 
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <span
-                className="text-2xl font-bold"
+                className={`text-2xl font-bold ${
+                  isDangerTime ? "animate-pulse" : ""
+                }`}
                 style={{ color: timerColor }}
               >
                 {timeLeft}
@@ -220,7 +244,13 @@ export default function TypingGame({ questions }: TypingGameProps) {
               <span className="text-xs text-gray-500">sec</span>
             </div>
           </div>
-          <p className="mt-2 text-sm font-medium text-gray-700">残り時間</p>
+          <p
+            className={`mt-2 text-sm font-medium ${
+              isDangerTime ? "text-red-600" : "text-gray-700"
+            }`}
+          >
+            残り時間
+          </p>
         </div>
       </div>
 
@@ -240,22 +270,60 @@ export default function TypingGame({ questions }: TypingGameProps) {
       </div>
 
       {isFinished ? (
-        <div className="space-y-2 rounded-xl bg-white p-6 shadow">
-          <h2 className="text-2xl font-bold">ゲーム終了</h2>
-          <p>スコア: {score}</p>
-          <p>解いた問題数: {solvedCount}</p>
-          <p>ミス数: {totalMistakes}</p>
-          <p>正確率: {accuracy}%</p>
-          <button
-            onClick={resetGame}
-            className="mt-3 rounded bg-black px-4 py-2 text-white"
-          >
-            もう一度遊ぶ
-          </button>
+        <div className="rounded-2xl bg-white p-8 shadow">
+          <div className="mb-8 text-center">
+            <p className="mb-2 text-sm font-medium text-gray-500">RESULT</p>
+            <h2 className="text-3xl font-bold">ゲーム終了</h2>
+          </div>
+
+          <div className="mb-8 grid gap-6 md:grid-cols-2">
+            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-6 text-center">
+              <p className="mb-2 text-sm font-medium text-gray-500">スコア</p>
+              <p className="text-5xl font-extrabold text-blue-600">{score}</p>
+            </div>
+
+            <div className="rounded-2xl border border-gray-200 bg-gray-50 p-6 text-center">
+              <p className="mb-2 text-sm font-medium text-gray-500">ランク</p>
+              <p className="text-5xl font-extrabold text-amber-500">{rank}</p>
+            </div>
+          </div>
+
+          <div className="mb-8 grid gap-4 sm:grid-cols-3">
+            <div className="rounded-xl border border-gray-200 p-4 text-center">
+              <p className="text-sm text-gray-500">解いた問題数</p>
+              <p className="mt-1 text-2xl font-bold">{solvedCount}</p>
+            </div>
+            <div className="rounded-xl border border-gray-200 p-4 text-center">
+              <p className="text-sm text-gray-500">ミス数</p>
+              <p className="mt-1 text-2xl font-bold">{totalMistakes}</p>
+            </div>
+            <div className="rounded-xl border border-gray-200 p-4 text-center">
+              <p className="text-sm text-gray-500">正確率</p>
+              <p className="mt-1 text-2xl font-bold">{accuracy}%</p>
+            </div>
+          </div>
+
+          <div className="flex justify-center">
+            <button
+              onClick={resetGame}
+              className="rounded-xl bg-black px-6 py-3 text-white transition hover:bg-gray-800"
+            >
+              もう一度遊ぶ
+            </button>
+          </div>
         </div>
       ) : (
         <div className="rounded-xl bg-white p-6 shadow">
-          <p className="mb-2">問題 {questionIndex + 1}</p>
+          <div className="mb-4 flex items-center justify-between gap-4">
+            <p>問題 {questionIndex + 1}</p>
+
+            <button
+              onClick={finishGame}
+              className="rounded-lg border border-red-300 bg-red-50 px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-100"
+            >
+              終了する
+            </button>
+          </div>
 
           <div className="mb-4 rounded-xl border bg-white p-5 font-mono text-2xl leading-relaxed break-words">
             {targetText.split("").map((char, index) => {
