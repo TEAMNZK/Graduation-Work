@@ -17,7 +17,21 @@ const TIMER_RADIUS = 42;
 const TIMER_STROKE = 8;
 const TIMER_CIRCUMFERENCE = 2 * Math.PI * TIMER_RADIUS;
 
+function shuffleQuestions(items: Question[]) {
+  const copied = [...items];
+
+  for (let i = copied.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copied[i], copied[j]] = [copied[j], copied[i]];
+  }
+
+  return copied;
+}
+
 export default function TypingGame({ questions }: TypingGameProps) {
+  const [shuffledQuestions, setShuffledQuestions] = useState<Question[]>(() =>
+    shuffleQuestions(questions)
+  );
   const [questionIndex, setQuestionIndex] = useState(0);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [mistakeIndex, setMistakeIndex] = useState<number | null>(null);
@@ -31,7 +45,7 @@ export default function TypingGame({ questions }: TypingGameProps) {
 
   const hiddenInputRef = useRef<HTMLInputElement | null>(null);
 
-  const currentQuestion = questions[questionIndex];
+  const currentQuestion = shuffledQuestions[questionIndex];
   const targetText = currentQuestion?.text ?? "";
   const solvedCount = questionIndex;
 
@@ -50,6 +64,10 @@ export default function TypingGame({ questions }: TypingGameProps) {
     if (timeLeft <= 30) return "#f59e0b";
     return "#16a34a";
   }, [timeLeft]);
+
+  useEffect(() => {
+    setShuffledQuestions(shuffleQuestions(questions));
+  }, [questions]);
 
   useEffect(() => {
     hiddenInputRef.current?.focus();
@@ -81,7 +99,7 @@ export default function TypingGame({ questions }: TypingGameProps) {
   const moveToNextQuestion = () => {
     const nextIndex = questionIndex + 1;
 
-    if (nextIndex >= questions.length) {
+    if (nextIndex >= shuffledQuestions.length) {
       setIsFinished(true);
       return;
     }
@@ -127,6 +145,7 @@ export default function TypingGame({ questions }: TypingGameProps) {
   };
 
   const resetGame = () => {
+    setShuffledQuestions(shuffleQuestions(questions));
     setQuestionIndex(0);
     setCurrentIndex(0);
     setMistakeIndex(null);
