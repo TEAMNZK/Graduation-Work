@@ -3,7 +3,12 @@
 import Link from "next/link";
 import AuthGuard from "@/components/AuthGuard";
 
-const languages = ["Java", "Python", "C", "JavaScript"];
+const languages = [
+  { label: "Java", value: "java" },
+  { label: "Python", value: "python" },
+  { label: "C", value: "c" },
+  { label: "JavaScript", value: "javascript" },
+];
 
 export default function TypingPage() {
   return (
@@ -52,11 +57,11 @@ export default function TypingPage() {
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {languages.map((language) => (
               <Link
-                key={language}
-                href={`/typing/${language.toLowerCase()}`}
+                key={language.value}
+                href={`/typing/${language.value}`}
                 className="rounded-2xl bg-white p-8 text-center text-2xl font-bold shadow transition hover:bg-gray-50 hover:shadow-md"
               >
-                {language}
+                {language.label}
               </Link>
             ))}
           </div>
