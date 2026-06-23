@@ -6,22 +6,22 @@ export type Question = {
 };
 
 export const questionsByLanguage: Record<string, Question[]> = {
-  javascript: [
+  java: [
     {
       id: 1,
-      language: "JavaScript",
-      text: "console.log('Hello World');",
+      language: "Java",
+      text: 'System.out.println("Hello World");',
       level: 1,
     },
     {
       id: 2,
-      language: "JavaScript",
-      text: "let score = 0;",
+      language: "Java",
+      text: "int score = 0;",
       level: 1,
     },
     {
       id: 3,
-      language: "JavaScript",
+      language: "Java",
       text: "if (x > 10) { return x; }",
       level: 2,
     },
@@ -42,16 +42,48 @@ export const questionsByLanguage: Record<string, Question[]> = {
     {
       id: 3,
       language: "Python",
-      text: "if x > 10:\n    print(x)",
+      text: "if x > 10:",
       level: 2,
     },
   ],
-  java: [
+  c: [
     {
       id: 1,
-      language: "Java",
-      text: "System.out.println(\"Hello World\");",
+      language: "C",
+      text: 'printf("Hello World");',
       level: 1,
+    },
+    {
+      id: 2,
+      language: "C",
+      text: "int score = 0;",
+      level: 1,
+    },
+    {
+      id: 3,
+      language: "C",
+      text: "if (x > 10) { return x; }",
+      level: 2,
+    },
+  ],
+  javascript: [
+    {
+      id: 1,
+      language: "JavaScript",
+      text: "console.log('Hello World');",
+      level: 1,
+    },
+    {
+      id: 2,
+      language: "JavaScript",
+      text: "let score = 0;",
+      level: 1,
+    },
+    {
+      id: 3,
+      language: "JavaScript",
+      text: "if (x > 10) { return x; }",
+      level: 2,
     },
   ],
 };
