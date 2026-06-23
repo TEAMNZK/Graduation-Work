@@ -6,6 +6,7 @@ import { signOut, onAuthStateChanged, User } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import AuthGuard from "@/components/AuthGuard";
+import AppHeader from "@/components/AppHeader";
 import { javaQuestionMap } from "@/data/javaQuestions";
 
 type UserProgress = {
@@ -91,8 +92,11 @@ export default function DashboardPage() {
   const correctAnswers = progress?.correctAnswers ?? 0;
   const completedDrills = progress?.completedDrills ?? 0;
   const solvedCount = progress?.solvedTopics?.length ?? 0;
-  const solvedTopics = progress?.solvedTopics ?? [];
   const currentLanguage = progress?.lastSolvedLanguage ?? "まだありません";
+
+  const solvedTopics = useMemo(() => {
+    return progress?.solvedTopics ?? [];
+  }, [progress?.solvedTopics]);
 
   const displayUserName = useMemo(() => {
     if (userData?.userName && userData.userName.trim() !== "") {
@@ -158,50 +162,17 @@ export default function DashboardPage() {
   return (
     <AuthGuard>
       <main className="min-h-screen bg-gray-100 text-gray-900">
-        <header className="border-b border-gray-200 bg-white">
-          <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
-            <div>
-              <p className="text-sm font-bold tracking-widest text-blue-600">
-                CODE LORD NOTE
-              </p>
-              <h1 className="mt-1 text-2xl font-bold">ダッシュボード</h1>
-            </div>
-
+        <AppHeader
+          title="ダッシュボード"
+          action={
             <button
               onClick={handleLogout}
-              className="rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-medium hover:bg-gray-50"
+              className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-bold hover:bg-gray-50"
             >
               ログアウト
             </button>
-          </div>
-
-          <nav className="mx-auto flex max-w-7xl gap-2 px-6 pb-4">
-            <Link
-              href="/textbook"
-              className="rounded-xl border border-gray-200 bg-gray-50 px-5 py-2 font-medium hover:bg-gray-100"
-            >
-              教科書
-            </Link>
-            <Link
-              href="/drill"
-              className="rounded-xl border border-gray-200 bg-gray-50 px-5 py-2 font-medium hover:bg-gray-100"
-            >
-              ドリル
-            </Link>
-            <Link
-              href="/articles"
-              className="rounded-xl border border-gray-200 bg-gray-50 px-5 py-2 font-medium hover:bg-gray-100"
-            >
-              記事
-            </Link>
-            <Link
-              href="/typing"
-              className="rounded-xl border border-gray-200 bg-gray-50 px-5 py-2 font-medium hover:bg-gray-100"
-            >
-              タイピング練習
-            </Link>
-          </nav>
-        </header>
+          }
+        />
 
         <section className="mx-auto max-w-7xl px-6 py-8">
           <div className="mb-6 rounded-2xl border border-blue-100 bg-blue-50 p-6">

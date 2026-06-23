@@ -4,6 +4,7 @@ export type JavaQuestion = {
   title: string;
   description: string;
   hint: string;
+  sampleInput?: string;
   expectedOutput?: string;
   starterCode: string;
   requiredPatterns?: string[];
@@ -43,7 +44,7 @@ export const javaQuestionMap: Record<string, JavaQuestion> = {
 
   }
 }`,
-    requiredPatterns: ["System.out.println"],
+    requiredPatterns: ["System.out.print"],
     forbiddenPatterns: [],
     type: "lesson",
   },
@@ -675,4 +676,5 @@ public class Main {
     type: "final_project",
   },
 };
+
 

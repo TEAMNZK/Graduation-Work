@@ -63,28 +63,43 @@ export default function DrillJavaStartPage() {
 
     try {
       const parsed: DrillSession = JSON.parse(saved);
+      const validTopics = parsed.selectedTopics.filter(
+        (topicId) => javaQuestionMap[topicId]
+      );
 
-      if (!parsed.selectedTopics || parsed.selectedTopics.length === 0) {
+      if (!parsed.selectedTopics || validTopics.length === 0) {
         router.push("/drill/java");
         return;
       }
 
-      setSession(parsed);
+      const safeIndex =
+        parsed.currentIndex >= 0 && parsed.currentIndex < validTopics.length
+          ? parsed.currentIndex
+          : 0;
 
-      const topic = parsed.selectedTopics[parsed.currentIndex] ?? "";
+      const safeSession: DrillSession = {
+        selectedTopics: validTopics,
+        currentIndex: safeIndex,
+        isInProgress: parsed.isInProgress,
+      };
+
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(safeSession));
+
+      const topic = safeSession.selectedTopics[safeSession.currentIndex] ?? "";
       const question = topic ? javaQuestionMap[topic] : undefined;
 
-      if (question) {
-        setCode(question.starterCode);
-      } else {
-        setCode(`public class Main {
-  public static void main(String[] args) {
-    
-  }
-}`);
-      }
+      const timerId = window.setTimeout(() => {
+        setSession(safeSession);
 
-      setIsProgressUpdated(false);
+        if (question) {
+          setCode(question.starterCode);
+          setStdin(question.sampleInput ?? "");
+        }
+
+        setIsProgressUpdated(false);
+      }, 0);
+
+      return () => window.clearTimeout(timerId);
     } catch (error) {
       console.error("保存データの読み込みに失敗しました:", error);
       router.push("/drill/java");
@@ -93,20 +108,7 @@ export default function DrillJavaStartPage() {
 
   const currentTopic: string = session?.selectedTopics[session.currentIndex] ?? "";
 
-  const currentQuestion = currentTopic
-    ? javaQuestionMap[currentTopic] ?? {
-        id: currentTopic,
-        no: "",
-        title: currentTopic,
-        description: `ここに「${currentTopic}」の問題文を表示します。`,
-        hint: "ここにヒントを表示します。",
-        expectedOutput: "",
-        starterCode: code,
-        requiredPatterns: [],
-        forbiddenPatterns: [],
-        type: "lesson" as const,
-      }
-    : null;
+  const currentQuestion = currentTopic ? javaQuestionMap[currentTopic] ?? null : null;
 
   const totalCount = session?.selectedTopics.length ?? 0;
   const currentNumber = session ? session.currentIndex + 1 : 0;
@@ -339,12 +341,7 @@ export default function DrillJavaStartPage() {
 
     if (nextQuestion) {
       setCode(nextQuestion.starterCode);
-    } else {
-      setCode(`public class Main {
-  public static void main(String[] args) {
-    
-  }
-}`);
+      setStdin(nextQuestion.sampleInput ?? "");
     }
   };
 
@@ -409,6 +406,45 @@ export default function DrillJavaStartPage() {
       requestAnimationFrame(() => {
         textarea.selectionStart = lineStart;
         textarea.selectionEnd = lineStart + newBlock.length;
+      });
+      return;
+    }
+
+    if (e.key === "Enter") {
+      e.preventDefault();
+
+      const indentUnit = "  ";
+      const lineStart = value.lastIndexOf("\n", start - 1) + 1;
+      const currentLineBeforeCursor = value.slice(lineStart, start);
+      const currentIndent = currentLineBeforeCursor.match(/^\s*/)?.[0] ?? "";
+      const beforeCursor = value.slice(0, start);
+      const afterCursor = value.slice(end);
+      const opensBlock = currentLineBeforeCursor.trimEnd().endsWith("{");
+      const closesBlockNext = afterCursor.trimStart().startsWith("}");
+
+      if (opensBlock && closesBlockNext) {
+        const insertedText = `\n${currentIndent}${indentUnit}\n${currentIndent}`;
+        setCode(beforeCursor + insertedText + afterCursor);
+
+        requestAnimationFrame(() => {
+          const cursorPosition =
+            start + 1 + currentIndent.length + indentUnit.length;
+          textarea.selectionStart = cursorPosition;
+          textarea.selectionEnd = cursorPosition;
+        });
+        return;
+      }
+
+      const nextIndent = opensBlock
+        ? currentIndent + indentUnit
+        : currentIndent;
+      const insertedText = `\n${nextIndent}`;
+      setCode(beforeCursor + insertedText + afterCursor);
+
+      requestAnimationFrame(() => {
+        const cursorPosition = start + insertedText.length;
+        textarea.selectionStart = cursorPosition;
+        textarea.selectionEnd = cursorPosition;
       });
       return;
     }
@@ -479,9 +515,9 @@ export default function DrillJavaStartPage() {
   return (
     <AuthGuard>
       <main className="min-h-screen bg-slate-100 text-slate-900">
-        <header className="border-b bg-white shadow-sm">
-          <div className="mx-auto flex max-w-[1600px] items-center justify-between px-4 py-3">
-            <div className="flex items-center gap-3 text-sm text-slate-600">
+        <header className="border-b border-slate-200 bg-white">
+          <div className="mx-auto flex max-w-[1600px] flex-col gap-3 px-4 py-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-wrap items-center gap-2 text-sm text-slate-600">
               <Link href="/dashboard" className="font-medium hover:underline">
                 Java 学習レッスン
               </Link>
@@ -510,11 +546,16 @@ export default function DrillJavaStartPage() {
         </header>
 
         <section className="mx-auto max-w-[1600px] px-4 py-4">
-          <div className="grid grid-cols-1 gap-4 xl:grid-cols-[340px_1fr_380px]">
-            <aside className="rounded-2xl bg-white shadow-sm">
+          <div className="grid grid-cols-1 gap-4 xl:grid-cols-[340px_minmax(0,1fr)_380px]">
+            <aside className="rounded-lg border border-slate-200 bg-white shadow-sm">
               <div className="border-b px-5 py-4">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-bold">手順</h2>
+                  <div>
+                    <p className="text-xs font-bold text-slate-500">
+                      問題 {currentQuestion.no}
+                    </p>
+                    <h2 className="mt-1 text-xl font-bold">手順</h2>
+                  </div>
                   <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-700">
                     Java
                   </span>
@@ -522,7 +563,7 @@ export default function DrillJavaStartPage() {
               </div>
 
               <div className="space-y-4 p-5">
-                <div className="rounded-2xl border bg-sky-50 p-4">
+                <div className="rounded-lg border border-sky-100 bg-sky-50 p-4">
                   <p className="mb-3 text-sm font-semibold text-slate-500">
                     Main.java
                   </p>
@@ -533,28 +574,28 @@ export default function DrillJavaStartPage() {
 
                 <button
                   onClick={() => setShowHint((prev) => !prev)}
-                  className="w-full rounded-xl border bg-white px-4 py-3 text-left font-bold hover:bg-slate-50"
+                  className="w-full rounded-lg border bg-white px-4 py-3 text-left font-bold hover:bg-slate-50"
                 >
                   ヒントを表示
                 </button>
 
                 {showHint && (
-                  <div className="rounded-2xl border bg-yellow-50 p-4 text-sm leading-7">
+                  <div className="rounded-lg border border-yellow-200 bg-yellow-50 p-4 text-sm leading-7">
                     {currentQuestion.hint}
                   </div>
                 )}
 
                 <button
                   onClick={() => setShowAnswer((prev) => !prev)}
-                  className="w-full rounded-xl border bg-white px-4 py-3 text-left font-bold hover:bg-slate-50"
+                  className="w-full rounded-lg border bg-white px-4 py-3 text-left font-bold hover:bg-slate-50"
                 >
                   見本を表示
                 </button>
 
                 {showAnswer && (
-                  <div className="rounded-2xl border bg-blue-50 p-4 text-sm leading-7">
+                  <div className="rounded-lg border border-blue-100 bg-blue-50 p-4 text-sm leading-7">
                     期待する出力:
-                    <pre className="mt-2 whitespace-pre-wrap rounded-lg bg-white p-3 font-mono text-sm">
+                    <pre className="mt-2 whitespace-pre-wrap rounded-md bg-white p-3 font-mono text-sm">
                       {currentQuestion.expectedOutput}
                     </pre>
                   </div>
@@ -562,23 +603,23 @@ export default function DrillJavaStartPage() {
 
                 <button
                   onClick={handleInterrupt}
-                  className="w-full rounded-xl border bg-white px-4 py-3 font-bold hover:bg-slate-50"
+                  className="w-full rounded-lg border bg-white px-4 py-3 font-bold hover:bg-slate-50"
                 >
                   中断する
                 </button>
               </div>
             </aside>
 
-            <div className="rounded-2xl bg-white shadow-sm">
+            <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
               <div className="flex items-center justify-between border-b bg-slate-800 px-5 py-3 text-white">
-                <div className="rounded-t-xl bg-slate-700 px-4 py-2 font-bold">
+                <div className="rounded-md bg-slate-700 px-4 py-2 font-bold">
                   Main.java
                 </div>
 
                 <button
                   onClick={handleRun}
                   disabled={isRunning}
-                  className="rounded-xl bg-emerald-500 px-5 py-2 text-sm font-bold text-white hover:bg-emerald-600 disabled:opacity-60"
+                  className="rounded-lg bg-emerald-500 px-5 py-2 text-sm font-bold text-white hover:bg-emerald-600 disabled:opacity-60"
                 >
                   {isRunning ? "実行中..." : "実行"}
                 </button>
@@ -590,14 +631,14 @@ export default function DrillJavaStartPage() {
                   value={code}
                   onChange={(e) => setCode(e.target.value)}
                   onKeyDown={handleEditorKeyDown}
-                  className="min-h-[620px] w-full rounded-xl border bg-slate-900 p-4 font-mono text-sm text-slate-100 outline-none"
+                  className="min-h-[520px] w-full rounded-lg border bg-slate-900 p-4 font-mono text-sm leading-6 text-slate-100 outline-none xl:min-h-[620px]"
                   spellCheck={false}
                 />
               </div>
             </div>
 
             <aside className="space-y-4">
-              <div className="rounded-2xl bg-white shadow-sm">
+              <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
                 <div className="flex items-center justify-between border-b px-4 py-3">
                   <h2 className="text-lg font-bold">コンソール</h2>
                 </div>
@@ -611,11 +652,16 @@ export default function DrillJavaStartPage() {
                       value={stdin}
                       onChange={(e) => setStdin(e.target.value)}
                       placeholder="必要な場合だけ入力してください"
-                      className="min-h-[100px] w-full rounded-xl border bg-slate-50 p-3 font-mono text-sm outline-none"
+                      className="min-h-[100px] w-full rounded-lg border bg-slate-50 p-3 font-mono text-sm outline-none focus:border-blue-300 focus:bg-white"
                     />
+                    {currentQuestion.sampleInput && (
+                      <p className="mt-2 text-xs text-slate-500">
+                        この問題ではサンプル入力を自動で入れています。
+                      </p>
+                    )}
                   </div>
 
-                  <div className="min-h-[260px] whitespace-pre-wrap rounded-xl border bg-[#031b22] p-4 font-mono text-sm text-emerald-300">
+                  <div className="min-h-[260px] whitespace-pre-wrap rounded-lg border bg-[#031b22] p-4 font-mono text-sm text-emerald-300">
                     {output && `実行結果:\n${output}`}
                     {errorOutput && `エラー出力:\n${errorOutput}`}
                     {!output && !errorOutput && "ここに実行結果が表示されます。"}
@@ -623,19 +669,19 @@ export default function DrillJavaStartPage() {
                 </div>
               </div>
 
-              <div className="rounded-2xl bg-white shadow-sm">
+              <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
                 <div className="flex items-center justify-between border-b px-4 py-3">
                   <h2 className="text-lg font-bold">見本</h2>
                 </div>
 
                 <div className="p-4">
-                  <div className="min-h-[180px] whitespace-pre-wrap rounded-xl border bg-[#031b22] p-4 font-mono text-sm text-white">
+                  <div className="min-h-[180px] whitespace-pre-wrap rounded-lg border bg-[#031b22] p-4 font-mono text-sm text-white">
                     {currentQuestion.expectedOutput}
                   </div>
 
                   {judgeMessage && (
                     <div
-                      className={`mt-4 rounded-xl border px-4 py-3 font-bold ${
+                      className={`mt-4 rounded-lg border px-4 py-3 font-bold ${
                         isCorrect
                           ? "border-emerald-300 bg-emerald-50 text-emerald-700"
                           : "border-red-300 bg-red-50 text-red-700"
@@ -648,7 +694,7 @@ export default function DrillJavaStartPage() {
                   <button
                     onClick={handleNext}
                     disabled={!isCorrect}
-                    className={`mt-4 w-full rounded-xl px-4 py-3 font-bold shadow-sm ${
+                    className={`mt-4 w-full rounded-lg px-4 py-3 font-bold shadow-sm ${
                       isCorrect
                         ? "border bg-emerald-500 text-white hover:bg-emerald-600"
                         : "cursor-not-allowed border bg-slate-200 text-slate-400"
@@ -661,7 +707,7 @@ export default function DrillJavaStartPage() {
             </aside>
           </div>
 
-          <div className="mt-4 rounded-2xl bg-white px-5 py-4 shadow-sm">
+          <div className="mt-4 rounded-lg border border-slate-200 bg-white px-5 py-4 shadow-sm">
             <div className="mb-2 flex items-center justify-between text-sm text-slate-600">
               <span>進捗</span>
               <span>
