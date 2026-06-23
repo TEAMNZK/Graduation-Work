@@ -1,6 +1,7 @@
+import AuthGuard from "@/components/AuthGuard";
+import TypingGame from "@/components/TypingGame";
 import { questionsByLanguage } from "@/lib/questions";
 import { notFound } from "next/navigation";
-import AuthGuard from "@/components/AuthGuard";
 
 type TypingLanguagePageProps = {
   params: {
