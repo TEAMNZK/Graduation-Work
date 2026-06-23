@@ -55,7 +55,7 @@ export default function SignupPage() {
       });
 
       router.push("/dashboard");
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError("新規登録に失敗しました。入力内容を確認してください。");
       console.error(err);
     } finally {

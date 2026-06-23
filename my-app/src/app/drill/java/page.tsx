@@ -1,10 +1,11 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import AuthGuard from "@/components/AuthGuard";
+import AppHeader from "@/components/AppHeader";
 import { javaCurriculum } from "@/data/javaCurriculum";
+import { javaQuestionMap } from "@/data/javaQuestions";
 
 const STORAGE_KEY = "drill-java-session";
 
@@ -23,19 +24,29 @@ export default function DrillJavaPage() {
 
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
+    let hasSavedSession = false;
 
     if (saved) {
       try {
         const parsed: DrillSession = JSON.parse(saved);
-        if (parsed.isInProgress && parsed.selectedTopics.length > 0) {
-          setHasInterruptedSession(true);
+        const validTopics = parsed.selectedTopics.filter(
+          (topicId) => javaQuestionMap[topicId]
+        );
+
+        if (parsed.isInProgress && validTopics.length > 0) {
+          hasSavedSession = true;
         }
       } catch (error) {
         console.error("保存データの読み込みに失敗しました:", error);
       }
     }
 
-    setIsLoaded(true);
+    const timerId = window.setTimeout(() => {
+      setHasInterruptedSession(hasSavedSession);
+      setIsLoaded(true);
+    }, 0);
+
+    return () => window.clearTimeout(timerId);
   }, []);
 
   const lessonItems = useMemo(() => {
@@ -44,7 +55,12 @@ export default function DrillJavaPage() {
     );
   }, []);
 
+  const selectableLessonItems = useMemo(() => {
+    return lessonItems.filter((item) => javaQuestionMap[item.id]);
+  }, [lessonItems]);
+
   const lessonCount = lessonItems.length;
+  const selectableLessonCount = selectableLessonItems.length;
   const selectedCount = selectedTopics.length;
 
   const toggleTopic = (topicId: string) => {
@@ -56,21 +72,53 @@ export default function DrillJavaPage() {
   };
 
   const handleSelectAll = () => {
-    setSelectedTopics(lessonItems.map((item) => item.id));
+    setSelectedTopics(selectableLessonItems.map((item) => item.id));
   };
 
   const handleClearAll = () => {
     setSelectedTopics([]);
   };
 
+  const getSelectableSectionItems = (
+    items: (typeof javaCurriculum)[number]["items"]
+  ) => {
+    return items.filter(
+      (item) => item.type === "lesson" && javaQuestionMap[item.id]
+    );
+  };
+
+  const handleSelectSection = (
+    items: (typeof javaCurriculum)[number]["items"]
+  ) => {
+    const sectionTopicIds = getSelectableSectionItems(items).map(
+      (item) => item.id
+    );
+
+    setSelectedTopics((prev) => Array.from(new Set([...prev, ...sectionTopicIds])));
+  };
+
+  const handleClearSection = (
+    items: (typeof javaCurriculum)[number]["items"]
+  ) => {
+    const sectionTopicIds = new Set(
+      getSelectableSectionItems(items).map((item) => item.id)
+    );
+
+    setSelectedTopics((prev) => prev.filter((id) => !sectionTopicIds.has(id)));
+  };
+
   const handleStart = () => {
-    if (selectedTopics.length === 0) {
+    const validSelectedTopics = selectedTopics.filter(
+      (topicId) => javaQuestionMap[topicId]
+    );
+
+    if (validSelectedTopics.length === 0) {
       alert("少なくとも1つ問題を選択してください。");
       return;
     }
 
     const session: DrillSession = {
-      selectedTopics,
+      selectedTopics: validSelectedTopics,
       currentIndex: 0,
       isInProgress: true,
     };
@@ -114,98 +162,61 @@ export default function DrillJavaPage() {
   return (
     <AuthGuard>
       <main className="min-h-screen bg-gray-100 text-gray-900">
-        {/* ヘッダー */}
-        <header className="border-b border-gray-200 bg-white">
-          <div className="mx-auto max-w-7xl px-6 py-5">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-              <div>
-                <p className="text-sm font-bold tracking-widest text-blue-600">
-                  CODE LORD NOTE
-                </p>
-                <h1 className="mt-1 text-3xl font-bold">ドリル - Java</h1>
-                <p className="mt-2 text-sm text-gray-600">
-                  章ごとに問題を選んで、順番に演習を進めます。
-                </p>
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                <Link
-                  href="/dashboard"
-                  className="rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-medium hover:bg-gray-50"
-                >
-                  戻る
-                </Link>
-                <Link
-                  href="/textbook"
-                  className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-2 text-sm font-medium hover:bg-gray-100"
-                >
-                  教科書
-                </Link>
-                <Link
-                  href="/drill"
-                  className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-bold text-blue-700"
-                >
-                  ドリル
-                </Link>
-                <Link
-                  href="/articles"
-                  className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-2 text-sm font-medium hover:bg-gray-100"
-                >
-                  記事
-                </Link>
-                <Link
-                  href="/typing"
-                  className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-2 text-sm font-medium hover:bg-gray-100"
-                >
-                  タイピング練習
-                </Link>
-              </div>
-            </div>
-          </div>
-        </header>
+        <AppHeader
+          title="ドリル - Java"
+          description="章ごとに問題を選んで、順番に演習を進めます。"
+          activeKey="drill"
+          showBack
+        />
 
         <section className="mx-auto max-w-7xl px-6 py-8">
           {/* 上部サマリー */}
           <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-[1.3fr_1fr]">
-            <div className="rounded-2xl border border-blue-100 bg-blue-50 p-6">
+            <div className="rounded-lg border border-blue-100 bg-blue-50 p-6">
               <p className="text-sm text-gray-500">Javaドリルの進め方</p>
               <h2 className="mt-2 text-2xl font-bold">
-                学びたい問題を選んで出題を開始します
+                実装済みの問題を選んで出題を開始します
               </h2>
               <p className="mt-3 text-sm leading-7 text-gray-700">
                 基礎文法から総合演習まで、章ごとに整理されています。
-                まずは通常問題を選択し、必要に応じてミニ制作へ進んでください。
+                現在選択できるのは、コード実行と採点に対応した通常問題です。
               </p>
             </div>
 
-            <div className="rounded-2xl bg-white p-6 shadow-sm">
+            <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
               <h3 className="text-lg font-bold">選択状況</h3>
 
               <div className="mt-5 grid grid-cols-2 gap-4">
-                <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
                   <p className="text-sm text-gray-500">選択中</p>
                   <p className="mt-2 text-3xl font-bold text-blue-600">
                     {selectedCount}
                   </p>
                 </div>
 
-                <div className="rounded-xl border border-gray-200 bg-gray-50 p-4">
-                  <p className="text-sm text-gray-500">通常問題数</p>
-                  <p className="mt-2 text-3xl font-bold">{lessonCount}</p>
+                <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
+                  <p className="text-sm text-gray-500">選択可能</p>
+                  <p className="mt-2 text-3xl font-bold">
+                    {selectableLessonCount}
+                  </p>
                 </div>
               </div>
+
+              <p className="mt-4 text-xs leading-6 text-gray-500">
+                カリキュラム内の通常問題 {lessonCount} 件中、問題データがあるものだけを選択できます。
+              </p>
 
               <div className="mt-5 flex flex-wrap gap-3">
                 <button
                   onClick={handleSelectAll}
-                  className="rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-medium hover:bg-gray-50"
+                  className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium hover:bg-gray-50"
                 >
                   すべて選択
                 </button>
 
                 <button
                   onClick={handleClearAll}
-                  className="rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-medium hover:bg-gray-50"
+                  className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium hover:bg-gray-50"
                 >
                   選択解除
                 </button>
@@ -215,7 +226,7 @@ export default function DrillJavaPage() {
 
           {/* 続きから */}
           {hasInterruptedSession && (
-            <div className="mb-6 rounded-2xl border border-yellow-300 bg-yellow-50 p-5">
+            <div className="mb-6 rounded-lg border border-yellow-300 bg-yellow-50 p-5">
               <p className="text-sm font-bold text-yellow-800">
                 前回中断した問題があります。
               </p>
@@ -226,7 +237,7 @@ export default function DrillJavaPage() {
               <div className="mt-4 flex flex-wrap gap-3">
                 <button
                   onClick={handleContinue}
-                  className="rounded-xl bg-blue-600 px-5 py-3 font-bold text-white hover:bg-blue-700"
+                  className="rounded-lg bg-blue-600 px-5 py-3 font-bold text-white hover:bg-blue-700"
                 >
                   続きから
                 </button>
@@ -235,7 +246,7 @@ export default function DrillJavaPage() {
           )}
 
           {/* 出題開始バー */}
-          <div className="sticky top-0 z-10 mb-6 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+          <div className="sticky top-0 z-10 mb-6 rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div>
                 <p className="text-sm text-gray-500">出題準備</p>
@@ -249,7 +260,7 @@ export default function DrillJavaPage() {
               <div className="flex flex-wrap gap-3">
                 <button
                   onClick={handleStart}
-                  className="rounded-xl bg-blue-600 px-6 py-3 font-bold text-white hover:bg-blue-700"
+                  className="rounded-lg bg-blue-600 px-6 py-3 font-bold text-white hover:bg-blue-700"
                 >
                   出題開始
                 </button>
@@ -257,7 +268,7 @@ export default function DrillJavaPage() {
                 {hasInterruptedSession && (
                   <button
                     onClick={handleContinue}
-                    className="rounded-xl border border-gray-300 bg-white px-6 py-3 font-bold hover:bg-gray-50"
+                    className="rounded-lg border border-gray-300 bg-white px-6 py-3 font-bold hover:bg-gray-50"
                   >
                     続きから
                   </button>
@@ -271,30 +282,80 @@ export default function DrillJavaPage() {
             {javaCurriculum.map((section) => (
               <section
                 key={section.id}
-                className="rounded-2xl bg-white p-6 shadow-sm"
+                className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
               >
-                <div className="mb-5 flex flex-col gap-2 border-b border-gray-100 pb-4">
-                  <h2 className="text-2xl font-bold">{section.sectionTitle}</h2>
-                  <p className="text-sm text-gray-600">{section.description}</p>
+                <div className="mb-5 flex flex-col gap-4 border-b border-gray-100 pb-4 lg:flex-row lg:items-start lg:justify-between">
+                  <div>
+                    <h2 className="text-2xl font-bold">{section.sectionTitle}</h2>
+                    <p className="mt-2 text-sm text-gray-600">
+                      {section.description}
+                    </p>
+                  </div>
+
+                  {(() => {
+                    const selectableSectionItems = getSelectableSectionItems(
+                      section.items
+                    );
+                    const selectableSectionIds = selectableSectionItems.map(
+                      (item) => item.id
+                    );
+                    const selectedSectionCount = selectableSectionIds.filter((id) =>
+                      selectedTopics.includes(id)
+                    ).length;
+                    const hasSelectableItems = selectableSectionItems.length > 0;
+
+                    return (
+                      <div className="shrink-0 rounded-lg border border-gray-200 bg-gray-50 p-3">
+                        <p className="text-xs font-bold text-gray-500">
+                          章内の選択
+                        </p>
+                        <p className="mt-1 text-sm font-bold">
+                          {selectedSectionCount}/{selectableSectionItems.length}
+                          件
+                        </p>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleSelectSection(section.items)}
+                            disabled={!hasSelectableItems}
+                            className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs font-bold hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            章を選択
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleClearSection(section.items)}
+                            disabled={!hasSelectableItems || selectedSectionCount === 0}
+                            className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs font-bold hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            解除
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
                   {section.items.map((item) => {
                     const isLesson = item.type === "lesson";
+                    const isAvailable = Boolean(javaQuestionMap[item.id]);
                     const isChecked = selectedTopics.includes(item.id);
 
                     return (
                       <div
                         key={item.id}
-                        className={`rounded-2xl border p-4 transition ${
-                          isLesson && isChecked
+                        className={`rounded-lg border p-4 transition ${
+                          isLesson && isAvailable && isChecked
                             ? "border-blue-300 bg-blue-50"
-                            : "border-gray-200 bg-gray-50"
+                            : isAvailable
+                            ? "border-gray-200 bg-gray-50"
+                            : "border-gray-200 bg-gray-100 opacity-75"
                         }`}
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex min-w-0 items-start gap-3">
-                            {isLesson ? (
+                            {isLesson && isAvailable ? (
                               <input
                                 type="checkbox"
                                 checked={isChecked}
@@ -316,7 +377,9 @@ export default function DrillJavaPage() {
                               </div>
 
                               <p className="mt-2 text-sm text-gray-600">
-                                {isLesson
+                                {isLesson && !isAvailable
+                                  ? "問題データを準備中です。公開後に選択できます。"
+                                  : isLesson
                                   ? "基礎理解のための通常問題です。"
                                   : item.type === "mini_project"
                                   ? "ここまでの内容を使って小作品を作る演習です。"
@@ -330,7 +393,9 @@ export default function DrillJavaPage() {
                               item.type
                             )}`}
                           >
-                            {getItemLabel(item.type)}
+                            {isLesson && !isAvailable
+                              ? "準備中"
+                              : getItemLabel(item.type)}
                           </span>
                         </div>
                       </div>

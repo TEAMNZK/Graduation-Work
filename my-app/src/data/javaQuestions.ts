@@ -4,6 +4,7 @@ export type JavaQuestion = {
   title: string;
   description: string;
   hint: string;
+  sampleInput?: string;
   expectedOutput?: string;
   starterCode: string;
   requiredPatterns?: string[];
@@ -43,7 +44,7 @@ export const javaQuestionMap: Record<string, JavaQuestion> = {
 
   }
 }`,
-    requiredPatterns: ["System.out.println"],
+    requiredPatterns: ["System.out.print"],
     forbiddenPatterns: [],
     type: "lesson",
   },
@@ -130,6 +131,7 @@ export const javaQuestionMap: Record<string, JavaQuestion> = {
     description:
       '名前を入力し、「こんにちは、〇〇さん」と表示しなさい。',
     hint: "Scanner と nextLine() を使います。",
+    sampleInput: "太郎",
     expectedOutput: "こんにちは、太郎さん",
     starterCode: `import java.util.Scanner;
 
@@ -150,6 +152,7 @@ public class Main {
     description:
       '点数を入力し、60点以上なら「合格」と表示しなさい。',
     hint: "if を使って score >= 60 を判定します。",
+    sampleInput: "60",
     expectedOutput: "合格",
     starterCode: `import java.util.Scanner;
 
@@ -170,6 +173,7 @@ public class Main {
     description:
       "1〜7の数字を入力し、対応する曜日を表示しなさい。今回は 1 が入力されたとき「月曜日」と表示するものとします。",
     hint: "switch と case を使います。",
+    sampleInput: "1",
     expectedOutput: "月曜日",
     starterCode: `import java.util.Scanner;
 
@@ -263,7 +267,6 @@ public class Main {
     forbiddenPatterns: [],
     type: "mini_project",
   },
-
   "12-array": {
     id: "12-array",
     no: "12",
@@ -464,6 +467,7 @@ public class Main {
   }
 }`,
     requiredPatterns: ["import", "Scanner"],
+    sampleInput: "10",
     forbiddenPatterns: [],
     type: "lesson",
   },
@@ -675,4 +679,3 @@ public class Main {
     type: "final_project",
   },
 };
-
