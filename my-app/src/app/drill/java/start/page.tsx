@@ -410,6 +410,45 @@ export default function DrillJavaStartPage() {
       return;
     }
 
+    if (e.key === "Enter") {
+      e.preventDefault();
+
+      const indentUnit = "  ";
+      const lineStart = value.lastIndexOf("\n", start - 1) + 1;
+      const currentLineBeforeCursor = value.slice(lineStart, start);
+      const currentIndent = currentLineBeforeCursor.match(/^\s*/)?.[0] ?? "";
+      const beforeCursor = value.slice(0, start);
+      const afterCursor = value.slice(end);
+      const opensBlock = currentLineBeforeCursor.trimEnd().endsWith("{");
+      const closesBlockNext = afterCursor.trimStart().startsWith("}");
+
+      if (opensBlock && closesBlockNext) {
+        const insertedText = `\n${currentIndent}${indentUnit}\n${currentIndent}`;
+        setCode(beforeCursor + insertedText + afterCursor);
+
+        requestAnimationFrame(() => {
+          const cursorPosition =
+            start + 1 + currentIndent.length + indentUnit.length;
+          textarea.selectionStart = cursorPosition;
+          textarea.selectionEnd = cursorPosition;
+        });
+        return;
+      }
+
+      const nextIndent = opensBlock
+        ? currentIndent + indentUnit
+        : currentIndent;
+      const insertedText = `\n${nextIndent}`;
+      setCode(beforeCursor + insertedText + afterCursor);
+
+      requestAnimationFrame(() => {
+        const cursorPosition = start + insertedText.length;
+        textarea.selectionStart = cursorPosition;
+        textarea.selectionEnd = cursorPosition;
+      });
+      return;
+    }
+
     if (e.key !== "Tab") return;
 
     e.preventDefault();

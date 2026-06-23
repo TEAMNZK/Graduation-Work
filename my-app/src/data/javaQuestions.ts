@@ -26,7 +26,7 @@ export const javaQuestionMap: Record<string, JavaQuestion> = {
 
   }
 }`,
-    requiredPatterns: ["System.out.println"],
+    requiredPatterns: ["System.out.print"],
     forbiddenPatterns: [],
     type: "lesson",
   },

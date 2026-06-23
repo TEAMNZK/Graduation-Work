@@ -79,6 +79,34 @@ export default function DrillJavaPage() {
     setSelectedTopics([]);
   };
 
+  const getSelectableSectionItems = (
+    items: (typeof javaCurriculum)[number]["items"]
+  ) => {
+    return items.filter(
+      (item) => item.type === "lesson" && javaQuestionMap[item.id]
+    );
+  };
+
+  const handleSelectSection = (
+    items: (typeof javaCurriculum)[number]["items"]
+  ) => {
+    const sectionTopicIds = getSelectableSectionItems(items).map(
+      (item) => item.id
+    );
+
+    setSelectedTopics((prev) => Array.from(new Set([...prev, ...sectionTopicIds])));
+  };
+
+  const handleClearSection = (
+    items: (typeof javaCurriculum)[number]["items"]
+  ) => {
+    const sectionTopicIds = new Set(
+      getSelectableSectionItems(items).map((item) => item.id)
+    );
+
+    setSelectedTopics((prev) => prev.filter((id) => !sectionTopicIds.has(id)));
+  };
+
   const handleStart = () => {
     const validSelectedTopics = selectedTopics.filter(
       (topicId) => javaQuestionMap[topicId]
@@ -256,9 +284,56 @@ export default function DrillJavaPage() {
                 key={section.id}
                 className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm"
               >
-                <div className="mb-5 flex flex-col gap-2 border-b border-gray-100 pb-4">
-                  <h2 className="text-2xl font-bold">{section.sectionTitle}</h2>
-                  <p className="text-sm text-gray-600">{section.description}</p>
+                <div className="mb-5 flex flex-col gap-4 border-b border-gray-100 pb-4 lg:flex-row lg:items-start lg:justify-between">
+                  <div>
+                    <h2 className="text-2xl font-bold">{section.sectionTitle}</h2>
+                    <p className="mt-2 text-sm text-gray-600">
+                      {section.description}
+                    </p>
+                  </div>
+
+                  {(() => {
+                    const selectableSectionItems = getSelectableSectionItems(
+                      section.items
+                    );
+                    const selectableSectionIds = selectableSectionItems.map(
+                      (item) => item.id
+                    );
+                    const selectedSectionCount = selectableSectionIds.filter((id) =>
+                      selectedTopics.includes(id)
+                    ).length;
+                    const hasSelectableItems = selectableSectionItems.length > 0;
+
+                    return (
+                      <div className="shrink-0 rounded-lg border border-gray-200 bg-gray-50 p-3">
+                        <p className="text-xs font-bold text-gray-500">
+                          章内の選択
+                        </p>
+                        <p className="mt-1 text-sm font-bold">
+                          {selectedSectionCount}/{selectableSectionItems.length}
+                          件
+                        </p>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleSelectSection(section.items)}
+                            disabled={!hasSelectableItems}
+                            className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs font-bold hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            章を選択
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleClearSection(section.items)}
+                            disabled={!hasSelectableItems || selectedSectionCount === 0}
+                            className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs font-bold hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            解除
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
