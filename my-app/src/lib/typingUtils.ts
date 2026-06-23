@@ -7,6 +7,7 @@ export const ignoredKeys = [
   "Tab",
 ];
 
+// 各文字の表示状態を返す
 export function getCharStatus({
   index,
   currentIndex,
@@ -22,11 +23,16 @@ export function getCharStatus({
   return "pending";
 }
 
+// 正確率を計算する
 export function calculateAccuracy(
   correctChars: number,
   totalMistakes: number
 ) {
   const totalInputs = correctChars + totalMistakes;
-  if (totalInputs === 0) return 100;
+
+  if (totalInputs === 0) {
+    return 100;
+  }
+
   return Math.round((correctChars / totalInputs) * 100);
 }
