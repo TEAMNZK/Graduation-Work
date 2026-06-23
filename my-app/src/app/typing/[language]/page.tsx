@@ -4,15 +4,16 @@ import { questionsByLanguage } from "@/lib/questions";
 import { notFound } from "next/navigation";
 
 type TypingLanguagePageProps = {
-  params: {
+  params: Promise<{
     language: string;
-  };
+  }>;
 };
 
-export default function TypingLanguagePage({
+export default async function TypingLanguagePage({
   params,
 }: TypingLanguagePageProps) {
-  const questions = questionsByLanguage[params.language];
+  const { language } = await params;
+  const questions = questionsByLanguage[language];
 
   if (!questions) {
     notFound();
