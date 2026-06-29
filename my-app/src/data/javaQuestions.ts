@@ -12,7 +12,7 @@ export type JavaQuestion = {
   type: "lesson" | "mini_project" | "final_project";
 };
 
-export const javaQuestionMap: Record<string, JavaQuestion> = {
+const baseJavaQuestionMap: Record<string, JavaQuestion> = {
   "01-java-overview": {
     id: "01-java-overview",
     no: "01",
@@ -679,3 +679,84 @@ public class Main {
     type: "final_project",
   },
 };
+
+const makeReviewQuestion = (
+  base: JavaQuestion,
+  index: number,
+  output: string,
+  focus: string
+): JavaQuestion => {
+  const printPattern =
+    base.requiredPatterns?.some((pattern) => pattern.includes("System.out.print")) ??
+    false;
+
+  return {
+    ...base,
+    id: `${base.id}-q${index}`,
+    no: `${base.no}-${index}`,
+    title: `${base.title} 練習${index}`,
+    description: `${base.title}の復習問題です。${focus}を意識して、実行結果が「${output}」になるコードを書いてください。`,
+    hint:
+      base.requiredPatterns && base.requiredPatterns.length > 0
+        ? `この項目では ${base.requiredPatterns.join("、")} を使うことを意識しましょう。`
+        : "まずは小さく動くコードを書き、実行結果を確認しましょう。",
+    sampleInput: "",
+    expectedOutput: output,
+    starterCode: base.starterCode,
+    requiredPatterns: printPattern
+      ? base.requiredPatterns
+      : [...(base.requiredPatterns ?? []), "System.out.print"],
+    forbiddenPatterns: [],
+  };
+};
+
+const expandQuestionSet = (base: JavaQuestion): JavaQuestion[] => {
+  const baseQuestion: JavaQuestion = {
+    ...base,
+    id: `${base.id}-q1`,
+    no: `${base.no}-1`,
+    title: `${base.title} 基本`,
+  };
+
+  return [
+    baseQuestion,
+    makeReviewQuestion(base, 2, "Practice 1", "基本の書き方"),
+    makeReviewQuestion(base, 3, "Practice 2", "値や処理の流れ"),
+    makeReviewQuestion(base, 4, "Practice 3", "読みやすいコード"),
+    makeReviewQuestion(base, 5, "Practice 4", "自分で書き切ること"),
+  ];
+};
+
+export const javaQuestionMap: Record<string, JavaQuestion[]> = Object.fromEntries(
+  Object.entries(baseJavaQuestionMap).map(([topicId, question]) => [
+    topicId,
+    expandQuestionSet(question),
+  ])
+);
+
+export type JavaQuestionEntry = JavaQuestion & {
+  topicId: string;
+  questionIndex: number;
+  questionCount: number;
+};
+
+export const javaQuestionEntriesById: Record<string, JavaQuestionEntry> =
+  Object.fromEntries(
+    Object.entries(javaQuestionMap).flatMap(([topicId, questions]) =>
+      questions.map((question, index) => [
+        question.id,
+        {
+          ...question,
+          topicId,
+          questionIndex: index,
+          questionCount: questions.length,
+        },
+      ])
+    )
+  );
+
+export const getJavaQuestions = (topicId: string): JavaQuestion[] =>
+  javaQuestionMap[topicId] ?? [];
+
+export const hasJavaQuestions = (topicId: string): boolean =>
+  getJavaQuestions(topicId).length > 0;

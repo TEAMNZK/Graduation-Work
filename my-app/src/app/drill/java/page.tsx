@@ -5,12 +5,13 @@ import { useRouter } from "next/navigation";
 import AuthGuard from "@/components/AuthGuard";
 import AppHeader from "@/components/AppHeader";
 import { javaCurriculum } from "@/data/javaCurriculum";
-import { javaQuestionMap } from "@/data/javaQuestions";
+import { getJavaQuestions, hasJavaQuestions } from "@/data/javaQuestions";
 
 const STORAGE_KEY = "drill-java-session";
 
 type DrillSession = {
   selectedTopics: string[];
+  selectedQuestionIds: string[];
   currentIndex: number;
   isInProgress: boolean;
 };
@@ -30,10 +31,24 @@ export default function DrillJavaPage() {
       try {
         const parsed: DrillSession = JSON.parse(saved);
         const validTopics = parsed.selectedTopics.filter(
-          (topicId) => javaQuestionMap[topicId]
+          (topicId) => hasJavaQuestions(topicId)
         );
 
-        if (parsed.isInProgress && validTopics.length > 0) {
+        const validQuestionIds =
+          parsed.selectedQuestionIds?.filter((questionId) =>
+            validTopics.some((topicId) =>
+              getJavaQuestions(topicId).some((question) => question.id === questionId)
+            )
+          ) ??
+          validTopics.flatMap((topicId) =>
+            getJavaQuestions(topicId).map((question) => question.id)
+          );
+
+        if (
+          parsed.isInProgress &&
+          validTopics.length > 0 &&
+          validQuestionIds.length > 0
+        ) {
           hasSavedSession = true;
         }
       } catch (error) {
@@ -56,12 +71,16 @@ export default function DrillJavaPage() {
   }, []);
 
   const selectableLessonItems = useMemo(() => {
-    return lessonItems.filter((item) => javaQuestionMap[item.id]);
+    return lessonItems.filter((item) => hasJavaQuestions(item.id));
   }, [lessonItems]);
 
   const lessonCount = lessonItems.length;
   const selectableLessonCount = selectableLessonItems.length;
   const selectedCount = selectedTopics.length;
+  const selectedQuestionCount = selectedTopics.reduce(
+    (total, topicId) => total + getJavaQuestions(topicId).length,
+    0
+  );
 
   const toggleTopic = (topicId: string) => {
     setSelectedTopics((prev) =>
@@ -83,7 +102,7 @@ export default function DrillJavaPage() {
     items: (typeof javaCurriculum)[number]["items"]
   ) => {
     return items.filter(
-      (item) => item.type === "lesson" && javaQuestionMap[item.id]
+      (item) => item.type === "lesson" && hasJavaQuestions(item.id)
     );
   };
 
@@ -109,7 +128,7 @@ export default function DrillJavaPage() {
 
   const handleStart = () => {
     const validSelectedTopics = selectedTopics.filter(
-      (topicId) => javaQuestionMap[topicId]
+      (topicId) => hasJavaQuestions(topicId)
     );
 
     if (validSelectedTopics.length === 0) {
@@ -117,8 +136,13 @@ export default function DrillJavaPage() {
       return;
     }
 
+    const selectedQuestionIds = validSelectedTopics.flatMap((topicId) =>
+      getJavaQuestions(topicId).map((question) => question.id)
+    );
+
     const session: DrillSession = {
       selectedTopics: validSelectedTopics,
+      selectedQuestionIds,
       currentIndex: 0,
       isInProgress: true,
     };
@@ -190,7 +214,10 @@ export default function DrillJavaPage() {
                 <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
                   <p className="text-sm text-gray-500">選択中</p>
                   <p className="mt-2 text-3xl font-bold text-blue-600">
-                    {selectedCount}
+                  {selectedCount}
+                  </p>
+                  <p className="mt-1 text-xs text-gray-500">
+                    {selectedQuestionCount}問
                   </p>
                 </div>
 
@@ -253,7 +280,7 @@ export default function DrillJavaPage() {
                 <p className="mt-1 font-bold">
                   {selectedCount === 0
                     ? "問題を選択してください"
-                    : `${selectedCount}件の問題が選択されています`}
+                    : `${selectedCount}項目、${selectedQuestionCount}問が選択されています`}
                 </p>
               </div>
 
@@ -339,7 +366,7 @@ export default function DrillJavaPage() {
                 <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
                   {section.items.map((item) => {
                     const isLesson = item.type === "lesson";
-                    const isAvailable = Boolean(javaQuestionMap[item.id]);
+                    const isAvailable = hasJavaQuestions(item.id);
                     const isChecked = selectedTopics.includes(item.id);
 
                     return (

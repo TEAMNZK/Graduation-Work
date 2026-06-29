@@ -13,12 +13,16 @@ import {
   setDoc,
 } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
-import { javaQuestionMap } from "@/data/javaQuestions";
+import {
+  getJavaQuestions,
+  javaQuestionEntriesById,
+} from "@/data/javaQuestions";
 
 const STORAGE_KEY = "drill-java-session";
 
 type DrillSession = {
   selectedTopics: string[];
+  selectedQuestionIds: string[];
   currentIndex: number;
   isInProgress: boolean;
 };
@@ -64,29 +68,40 @@ export default function DrillJavaStartPage() {
     try {
       const parsed: DrillSession = JSON.parse(saved);
       const validTopics = parsed.selectedTopics.filter(
-        (topicId) => javaQuestionMap[topicId]
+        (topicId) => getJavaQuestions(topicId).length > 0
       );
+      const selectedQuestionIds =
+        parsed.selectedQuestionIds?.filter(
+          (questionId) => javaQuestionEntriesById[questionId]
+        ) ??
+        validTopics.flatMap((topicId) =>
+          getJavaQuestions(topicId).map((question) => question.id)
+        );
 
-      if (!parsed.selectedTopics || validTopics.length === 0) {
+      if (!parsed.selectedTopics || selectedQuestionIds.length === 0) {
         router.push("/drill/java");
         return;
       }
 
       const safeIndex =
-        parsed.currentIndex >= 0 && parsed.currentIndex < validTopics.length
+        parsed.currentIndex >= 0 && parsed.currentIndex < selectedQuestionIds.length
           ? parsed.currentIndex
           : 0;
 
       const safeSession: DrillSession = {
         selectedTopics: validTopics,
+        selectedQuestionIds,
         currentIndex: safeIndex,
         isInProgress: parsed.isInProgress,
       };
 
       localStorage.setItem(STORAGE_KEY, JSON.stringify(safeSession));
 
-      const topic = safeSession.selectedTopics[safeSession.currentIndex] ?? "";
-      const question = topic ? javaQuestionMap[topic] : undefined;
+      const questionId =
+        safeSession.selectedQuestionIds[safeSession.currentIndex] ?? "";
+      const question = questionId
+        ? javaQuestionEntriesById[questionId]
+        : undefined;
 
       const timerId = window.setTimeout(() => {
         setSession(safeSession);
@@ -106,11 +121,16 @@ export default function DrillJavaStartPage() {
     }
   }, [router]);
 
-  const currentTopic: string = session?.selectedTopics[session.currentIndex] ?? "";
+  const currentQuestionId: string =
+    session?.selectedQuestionIds[session.currentIndex] ?? "";
 
-  const currentQuestion = currentTopic ? javaQuestionMap[currentTopic] ?? null : null;
+  const currentQuestion = currentQuestionId
+    ? javaQuestionEntriesById[currentQuestionId] ?? null
+    : null;
 
-  const totalCount = session?.selectedTopics.length ?? 0;
+  const currentTopic = currentQuestion?.topicId ?? "";
+
+  const totalCount = session?.selectedQuestionIds.length ?? 0;
   const currentNumber = session ? session.currentIndex + 1 : 0;
 
   const progressPercent = useMemo(() => {
@@ -147,7 +167,11 @@ export default function DrillJavaStartPage() {
     };
   };
 
-  const updateProgressInFirestore = async (topic: string) => {
+  const updateProgressInFirestore = async (
+    questionId: string,
+    topic: string,
+    title: string
+  ) => {
     const currentUser = auth.currentUser;
     if (!currentUser) return false;
 
@@ -159,7 +183,7 @@ export default function DrillJavaStartPage() {
         ? userSnap.data()?.progress?.solvedTopics
         : [];
 
-    const alreadySolved = solvedTopics.includes(topic);
+    const alreadySolved = solvedTopics.includes(questionId);
 
     if (alreadySolved) {
       return false;
@@ -173,10 +197,10 @@ export default function DrillJavaStartPage() {
         progress: {
           correctAnswers: increment(1),
           completedDrills: increment(1),
-          lastSolvedTopic: topic,
+          lastSolvedTopic: title,
           lastSolvedLanguage: "java",
           updatedAt: serverTimestamp(),
-          solvedTopics: arrayUnion(topic),
+          solvedTopics: arrayUnion(questionId),
         },
       },
       { merge: true }
@@ -198,7 +222,7 @@ export default function DrillJavaStartPage() {
   };
 
   const handleRun = async () => {
-    if (!currentQuestion || !currentTopic) return;
+    if (!currentQuestion || !currentTopic || !currentQuestionId) return;
 
     setIsRunning(true);
     setOutput("");
@@ -250,7 +274,11 @@ export default function DrillJavaStartPage() {
 
         if (!isProgressUpdated) {
           try {
-            const updated = await updateProgressInFirestore(currentTopic);
+            const updated = await updateProgressInFirestore(
+              currentQuestionId,
+              currentTopic,
+              currentQuestion.title
+            );
             setIsProgressUpdated(true);
 
             if (updated) {
@@ -305,7 +333,7 @@ export default function DrillJavaStartPage() {
 
     const nextIndex = session.currentIndex + 1;
 
-    if (nextIndex >= session.selectedTopics.length) {
+    if (nextIndex >= session.selectedQuestionIds.length) {
       const completedSession: DrillSession = {
         ...session,
         currentIndex: 0,
@@ -327,8 +355,11 @@ export default function DrillJavaStartPage() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedSession));
     setSession(updatedSession);
 
-    const nextTopic = updatedSession.selectedTopics[updatedSession.currentIndex] ?? "";
-    const nextQuestion = nextTopic ? javaQuestionMap[nextTopic] : undefined;
+    const nextQuestionId =
+      updatedSession.selectedQuestionIds[updatedSession.currentIndex] ?? "";
+    const nextQuestion = nextQuestionId
+      ? javaQuestionEntriesById[nextQuestionId]
+      : undefined;
 
     setShowHint(false);
     setShowAnswer(false);
