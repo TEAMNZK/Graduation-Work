@@ -132,6 +132,7 @@ export default function DrillJavaStartPage() {
 
   const totalCount = session?.selectedQuestionIds.length ?? 0;
   const currentNumber = session ? session.currentIndex + 1 : 0;
+  const canShowAnswer = Boolean(judgeMessage) && !isCorrect && !isRunning;
 
   const progressPercent = useMemo(() => {
     if (!session || totalCount === 0) return 0;
@@ -229,6 +230,7 @@ export default function DrillJavaStartPage() {
     setErrorOutput("");
     setIsCorrect(false);
     setJudgeMessage("");
+    setShowAnswer(false);
 
     try {
       const response = await fetch("/api/execute", {
@@ -250,6 +252,7 @@ export default function DrillJavaStartPage() {
           data.success === false ? data.error : "コード実行に失敗しました。"
         );
         setJudgeMessage("不正解です。");
+        setShowAnswer(false);
         return;
       }
 
@@ -262,6 +265,7 @@ export default function DrillJavaStartPage() {
       if (stderr) {
         setIsCorrect(false);
         setJudgeMessage("実行エラーがあります。");
+        setShowAnswer(false);
         return;
       }
 
@@ -271,6 +275,7 @@ export default function DrillJavaStartPage() {
 
       if (actual === expected && codeValidation.isValid) {
         setIsCorrect(true);
+        setShowAnswer(false);
 
         if (!isProgressUpdated) {
           try {
@@ -303,6 +308,7 @@ export default function DrillJavaStartPage() {
                 ", "
               )}`
             );
+            setShowAnswer(false);
             return;
           }
 
@@ -312,17 +318,20 @@ export default function DrillJavaStartPage() {
                 ", "
               )}`
             );
+            setShowAnswer(false);
             return;
           }
         }
 
         setJudgeMessage("不正解です。出力結果を確認してください。");
+        setShowAnswer(false);
       }
     } catch (error) {
       console.error("実行API呼び出しエラー:", error);
       setErrorOutput("コード実行APIの呼び出しに失敗しました。");
       setIsCorrect(false);
       setJudgeMessage("不正解です。");
+      setShowAnswer(false);
     } finally {
       setIsRunning(false);
     }
@@ -618,16 +627,17 @@ export default function DrillJavaStartPage() {
 
                 <button
                   onClick={() => setShowAnswer((prev) => !prev)}
-                  className="w-full rounded-lg border bg-white px-4 py-3 text-left font-bold hover:bg-slate-50"
+                  disabled={!canShowAnswer}
+                  className="w-full rounded-lg border bg-white px-4 py-3 text-left font-bold hover:bg-slate-50 disabled:cursor-not-allowed disabled:bg-slate-100 disabled:text-slate-400"
                 >
                   見本を表示
                 </button>
 
-                {showAnswer && (
+                {showAnswer && canShowAnswer && (
                   <div className="rounded-lg border border-blue-100 bg-blue-50 p-4 text-sm leading-7">
-                    期待する出力:
-                    <pre className="mt-2 whitespace-pre-wrap rounded-md bg-white p-3 font-mono text-sm">
-                      {currentQuestion.expectedOutput}
+                    見本コード:
+                    <pre className="mt-2 whitespace-pre-wrap rounded-md bg-white p-3 font-mono text-sm leading-6">
+                      {currentQuestion.answerCode ?? currentQuestion.starterCode}
                     </pre>
                   </div>
                 )}
@@ -702,12 +712,14 @@ export default function DrillJavaStartPage() {
 
               <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
                 <div className="flex items-center justify-between border-b px-4 py-3">
-                  <h2 className="text-lg font-bold">見本</h2>
+                  <h2 className="text-lg font-bold">見本の出力結果</h2>
                 </div>
 
                 <div className="p-4">
                   <div className="min-h-[180px] whitespace-pre-wrap rounded-lg border bg-[#031b22] p-4 font-mono text-sm text-white">
-                    {currentQuestion.expectedOutput}
+                    {currentQuestion.expectedOutput
+                      ? currentQuestion.expectedOutput
+                      : "この問題は固定の出力結果がありません。"}
                   </div>
 
                   {judgeMessage && (
