@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   calculateAccuracy,
@@ -303,13 +304,20 @@ export default function TypingGame({ questions }: TypingGameProps) {
             </div>
           </div>
 
-          <div className="flex justify-center">
+          <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
             <button
               onClick={resetGame}
               className="rounded-xl bg-black px-6 py-3 text-white transition hover:bg-gray-800"
             >
               もう一度遊ぶ
             </button>
+
+            <Link
+              href="/typing"
+              className="rounded-xl border border-gray-300 bg-white px-6 py-3 text-center text-gray-800 transition hover:bg-gray-50"
+            >
+              言語選択へ戻る
+            </Link>
           </div>
         </div>
       ) : (
