@@ -1,3 +1,5 @@
+import { javaExerciseQuestionMap } from "@/data/javaExerciseQuestions";
+
 export type JavaQuestion = {
   id: string;
   no: string;
@@ -248,26 +250,6 @@ public class Main {
     type: "lesson",
   },
 
-  "project-janken": {
-    id: "project-janken",
-    no: "演習",
-    title: "じゃんけんゲーム",
-    description:
-      "ユーザー入力と条件分岐を使って、簡単なじゃんけんゲームを作成してください。",
-    hint: "Scanner、Random、if文またはswitch文を組み合わせます。",
-    expectedOutput: "",
-    starterCode: `import java.util.Random;
-import java.util.Scanner;
-
-public class Main {
-  public static void main(String[] args) {
-
-  }
-}`,
-    requiredPatterns: ["Scanner", "Random"],
-    forbiddenPatterns: [],
-    type: "mini_project",
-  },
   "12-array": {
     id: "12-array",
     no: "12",
@@ -324,24 +306,6 @@ public class Main {
     requiredPatterns: ["printData(", "static"],
     forbiddenPatterns: [],
     type: "lesson",
-  },
-
-  "project-score-app": {
-    id: "project-score-app",
-    no: "演習",
-    title: "成績判定アプリ",
-    description:
-      "配列やメソッドを使って、成績判定アプリを作成してください。",
-    hint: "点数を受け取り、評価を返すメソッドを作ると整理しやすいです。",
-    expectedOutput: "",
-    starterCode: `public class Main {
-  public static void main(String[] args) {
-
-  }
-}`,
-    requiredPatterns: [],
-    forbiddenPatterns: [],
-    type: "mini_project",
   },
 
   "15-class-object": {
@@ -529,24 +493,6 @@ public class Main {
     type: "lesson",
   },
 
-  "project-todo": {
-    id: "project-todo",
-    no: "演習",
-    title: "Todoリスト",
-    description:
-      "クラスやコレクションを使って、簡単なTodoリストを作成してください。",
-    hint: "タスクを追加・表示できる形を目指します。",
-    expectedOutput: "",
-    starterCode: `public class Main {
-  public static void main(String[] args) {
-
-  }
-}`,
-    requiredPatterns: [],
-    forbiddenPatterns: [],
-    type: "mini_project",
-  },
-
   "25-generics": {
     id: "25-generics",
     no: "25",
@@ -626,24 +572,6 @@ public class Main {
     type: "lesson",
   },
 
-  "project-library-enhance": {
-    id: "project-library-enhance",
-    no: "演習",
-    title: "図書管理アプリ強化",
-    description:
-      "コレクションや日付処理などを使って、図書管理アプリを強化してください。",
-    hint: "本の一覧、貸出日、返却予定日などを扱えるようにすると発展らしくなります。",
-    expectedOutput: "",
-    starterCode: `public class Main {
-  public static void main(String[] args) {
-
-  }
-}`,
-    requiredPatterns: [],
-    forbiddenPatterns: [],
-    type: "mini_project",
-  },
-
   "32-final-exercise": {
     id: "32-final-exercise",
     no: "32",
@@ -662,23 +590,6 @@ public class Main {
     type: "lesson",
   },
 
-  "project-library-final": {
-    id: "project-library-final",
-    no: "総合",
-    title: "図書管理アプリ完成",
-    description:
-      "最終課題として、図書管理アプリを完成させてください。",
-    hint: "本の登録、一覧表示、検索、貸出管理などを組み合わせると完成度が上がります。",
-    expectedOutput: "",
-    starterCode: `public class Main {
-  public static void main(String[] args) {
-
-  }
-}`,
-    requiredPatterns: [],
-    forbiddenPatterns: [],
-    type: "final_project",
-  },
 };
 
 const baseAnswerCodeMap: Record<string, string> = {
@@ -1052,207 +963,7 @@ const createPrintAnswerCode = (output: string): string => `public class Main {
   }
 }`;
 
-const jankenStarterCode = `import java.util.Scanner;
-
-public class Main {
-  public static void main(String[] args) {
-
-  }
-}`;
-
-const customJavaQuestionSets: Record<string, JavaQuestion[]> = {
-  "project-janken": [
-    {
-      id: "project-janken-q1",
-      no: "演習-1",
-      title: "じゃんけんゲーム 基本",
-      description:
-        "0ならグー、1ならチョキ、2ならパーと表示する処理を作ってください。今回は入力が0のときに「グー」と表示します。",
-      hint: "int player = 0; を用意し、if文またはswitch文で表示する文字を分けましょう。",
-      expectedOutput: "グー",
-      starterCode: jankenStarterCode,
-      answerCode: `import java.util.Scanner;
-
-public class Main {
-  public static void main(String[] args) {
-    int player = 0;
-
-    if (player == 0) {
-      System.out.println("グー");
-    } else if (player == 1) {
-      System.out.println("チョキ");
-    } else if (player == 2) {
-      System.out.println("パー");
-    }
-  }
-}`,
-      requiredPatterns: ["if", "System.out.println"],
-      forbiddenPatterns: [],
-      type: "mini_project",
-    },
-    {
-      id: "project-janken-q2",
-      no: "演習-2",
-      title: "じゃんけんゲーム 勝敗判定",
-      description:
-        "自分の手をグー、相手の手をチョキとして、勝敗を判定してください。結果として「勝ち」と表示します。",
-      hint: "グーはチョキに勝ちます。player と computer の値を比較しましょう。",
-      expectedOutput: "勝ち",
-      starterCode: jankenStarterCode,
-      answerCode: `import java.util.Scanner;
-
-public class Main {
-  public static void main(String[] args) {
-    int player = 0;
-    int computer = 1;
-
-    if (player == computer) {
-      System.out.println("あいこ");
-    } else if (player == 0 && computer == 1) {
-      System.out.println("勝ち");
-    } else {
-      System.out.println("負け");
-    }
-  }
-}`,
-      requiredPatterns: ["if", "System.out.println"],
-      forbiddenPatterns: [],
-      type: "mini_project",
-    },
-    {
-      id: "project-janken-q3",
-      no: "演習-3",
-      title: "じゃんけんゲーム 入力",
-      description:
-        "Scannerで自分の手と相手の手を入力し、同じ手なら「あいこ」と表示してください。サンプル入力は 2 2 です。",
-      hint: "Scannerで整数を2つ読み取り、player == computer を判定しましょう。",
-      sampleInput: "2 2",
-      expectedOutput: "あいこ",
-      starterCode: jankenStarterCode,
-      answerCode: `import java.util.Scanner;
-
-public class Main {
-  public static void main(String[] args) {
-    Scanner scanner = new Scanner(System.in);
-    int player = scanner.nextInt();
-    int computer = scanner.nextInt();
-
-    if (player == computer) {
-      System.out.println("あいこ");
-    } else {
-      System.out.println("勝敗あり");
-    }
-  }
-}`,
-      requiredPatterns: ["Scanner", "nextInt", "if", "System.out.println"],
-      forbiddenPatterns: [],
-      type: "mini_project",
-    },
-    {
-      id: "project-janken-q4",
-      no: "演習-4",
-      title: "じゃんけんゲーム 手の表示",
-      description:
-        "入力された自分の手と相手の手を文字に変換して表示してください。サンプル入力は 0 2 です。",
-      hint: "0をグー、1をチョキ、2をパーに変換する処理を2回使います。",
-      sampleInput: "0 2",
-      expectedOutput: `あなた: グー
-相手: パー`,
-      starterCode: jankenStarterCode,
-      answerCode: `import java.util.Scanner;
-
-public class Main {
-  public static void main(String[] args) {
-    Scanner scanner = new Scanner(System.in);
-    int player = scanner.nextInt();
-    int computer = scanner.nextInt();
-    String playerHand = "";
-    String computerHand = "";
-
-    if (player == 0) {
-      playerHand = "グー";
-    } else if (player == 1) {
-      playerHand = "チョキ";
-    } else if (player == 2) {
-      playerHand = "パー";
-    }
-
-    if (computer == 0) {
-      computerHand = "グー";
-    } else if (computer == 1) {
-      computerHand = "チョキ";
-    } else if (computer == 2) {
-      computerHand = "パー";
-    }
-
-    System.out.println("あなた: " + playerHand);
-    System.out.println("相手: " + computerHand);
-  }
-}`,
-      requiredPatterns: ["Scanner", "String", "if", "System.out.println"],
-      forbiddenPatterns: [],
-      type: "mini_project",
-    },
-    {
-      id: "project-janken-q5",
-      no: "演習-5",
-      title: "じゃんけんゲーム 完成",
-      description:
-        "自分の手と相手の手を入力し、手の名前と勝敗を表示するじゃんけんゲームを完成させてください。サンプル入力は 0 1 です。",
-      hint: "0=グー、1=チョキ、2=パーです。勝ち条件は、グー対チョキ、チョキ対パー、パー対グーです。",
-      sampleInput: "0 1",
-      expectedOutput: `あなた: グー
-相手: チョキ
-結果: 勝ち`,
-      starterCode: jankenStarterCode,
-      answerCode: `import java.util.Scanner;
-
-public class Main {
-  public static void main(String[] args) {
-    Scanner scanner = new Scanner(System.in);
-    int player = scanner.nextInt();
-    int computer = scanner.nextInt();
-    String playerHand = "";
-    String computerHand = "";
-    String result = "";
-
-    if (player == 0) {
-      playerHand = "グー";
-    } else if (player == 1) {
-      playerHand = "チョキ";
-    } else if (player == 2) {
-      playerHand = "パー";
-    }
-
-    if (computer == 0) {
-      computerHand = "グー";
-    } else if (computer == 1) {
-      computerHand = "チョキ";
-    } else if (computer == 2) {
-      computerHand = "パー";
-    }
-
-    if (player == computer) {
-      result = "あいこ";
-    } else if ((player == 0 && computer == 1)
-        || (player == 1 && computer == 2)
-        || (player == 2 && computer == 0)) {
-      result = "勝ち";
-    } else {
-      result = "負け";
-    }
-
-    System.out.println("あなた: " + playerHand);
-    System.out.println("相手: " + computerHand);
-    System.out.println("結果: " + result);
-  }
-}`,
-      requiredPatterns: ["Scanner", "nextInt", "String", "if", "System.out.println"],
-      forbiddenPatterns: [],
-      type: "mini_project",
-    },
-  ],
-};
+const customJavaQuestionSets: Record<string, JavaQuestion[]> = {};
 
 const makeReviewQuestion = (
   base: JavaQuestion,
@@ -1304,12 +1015,15 @@ const expandQuestionSet = (base: JavaQuestion): JavaQuestion[] => {
   ];
 };
 
-export const javaQuestionMap: Record<string, JavaQuestion[]> = Object.fromEntries(
-  Object.entries(baseJavaQuestionMap).map(([topicId, question]) => [
-    topicId,
-    expandQuestionSet(question),
-  ])
-);
+export const javaQuestionMap: Record<string, JavaQuestion[]> = {
+  ...Object.fromEntries(
+    Object.entries(baseJavaQuestionMap).map(([topicId, question]) => [
+      topicId,
+      expandQuestionSet(question),
+    ])
+  ),
+  ...javaExerciseQuestionMap,
+};
 
 export type JavaQuestionEntry = JavaQuestion & {
   topicId: string;
