@@ -7,7 +7,7 @@ export const projectScoreAppExercise: JavaExerciseQuestion = {
   description:
     "配列やメソッドを使って、成績判定アプリを作成してください。",
   hint: "点数を受け取り、評価を返すメソッドを作ると整理しやすいです。",
-  expectedOutput: "",
+  expectedOutput: "A",
   starterCode: `public class Main {
   public static void main(String[] args) {
 
@@ -32,6 +32,7 @@ export const projectScoreAppAnswerCode = `public class Main {
   public static void main(String[] args) {
     int[] scores = {90, 70, 50};
     String result = judge(scores[0]);
+    System.out.println(result);
   }
 }`;
 

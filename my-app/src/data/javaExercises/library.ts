@@ -7,7 +7,7 @@ export const projectLibraryEnhanceExercise: JavaExerciseQuestion = {
   description:
     "コレクションや日付処理などを使って、図書管理アプリを強化してください。",
   hint: "本の一覧、貸出日、返却予定日などを扱えるようにすると発展らしくなります。",
-  expectedOutput: "",
+  expectedOutput: "Java入門",
   starterCode: `public class Main {
   public static void main(String[] args) {
 
@@ -29,6 +29,10 @@ class Book {
 public class Main {
   public static void main(String[] args) {
     ArrayList<Book> books = new ArrayList<>();
+    Book book = new Book();
+    book.title = "Java入門";
+    books.add(book);
+    System.out.println(books.get(0).title);
   }
 }`;
 
@@ -41,7 +45,7 @@ export const projectLibraryFinalExercise: JavaExerciseQuestion = {
   description:
     "最終課題として、図書管理アプリを完成させてください。",
   hint: "本の登録、一覧表示、検索、貸出管理などを組み合わせると完成度が上がります。",
-  expectedOutput: "",
+  expectedOutput: "Java入門",
   starterCode: `public class Main {
   public static void main(String[] args) {
 
@@ -67,6 +71,7 @@ public class Main {
   public static void main(String[] args) {
     ArrayList<Book> books = new ArrayList<>();
     books.add(new Book("Java入門"));
+    System.out.println(books.get(0).title);
   }
 }`;
 

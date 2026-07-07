@@ -50,6 +50,7 @@ export default function DrillJavaStartPage() {
   const [stdin, setStdin] = useState("");
   const [showHint, setShowHint] = useState(false);
   const [showAnswer, setShowAnswer] = useState(false);
+  const [hasGivenUp, setHasGivenUp] = useState(false);
   const [output, setOutput] = useState("");
   const [errorOutput, setErrorOutput] = useState("");
   const [isRunning, setIsRunning] = useState(false);
@@ -130,9 +131,22 @@ export default function DrillJavaStartPage() {
 
   const currentTopic = currentQuestion?.topicId ?? "";
 
+  const sampleOutputDisplay = useMemo(() => {
+    if (!currentQuestion) {
+      return "この問題は固定の出力結果がありません。";
+    }
+
+    if (currentQuestion.expectedOutput?.trim()) {
+      return currentQuestion.expectedOutput;
+    }
+
+    return "この問題は固定の出力結果がありません。";
+  }, [currentQuestion]);
+
   const totalCount = session?.selectedQuestionIds.length ?? 0;
   const currentNumber = session ? session.currentIndex + 1 : 0;
-  const canShowAnswer = Boolean(judgeMessage) && !isCorrect && !isRunning;
+  const canShowAnswer =
+    hasGivenUp || (Boolean(judgeMessage) && !isCorrect && !isRunning);
 
   const progressPercent = useMemo(() => {
     if (!session || totalCount === 0) return 0;
@@ -220,6 +234,16 @@ export default function DrillJavaStartPage() {
 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(interruptedSession));
     router.push("/drill/java");
+  };
+
+  const handleGiveUp = () => {
+    setHasGivenUp(true);
+    setShowAnswer(true);
+    setJudgeMessage("答えがわからない場合は、見本を確認してください。"
+    );
+    setIsCorrect(false);
+    setOutput("");
+    setErrorOutput("");
   };
 
   const handleRun = async () => {
@@ -372,6 +396,7 @@ export default function DrillJavaStartPage() {
 
     setShowHint(false);
     setShowAnswer(false);
+    setHasGivenUp(false);
     setOutput("");
     setErrorOutput("");
     setStdin("");
@@ -633,6 +658,13 @@ export default function DrillJavaStartPage() {
                   見本を表示
                 </button>
 
+                <button
+                  onClick={handleGiveUp}
+                  className="w-full rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-left font-bold text-amber-700 hover:bg-amber-100"
+                >
+                  問題をあきらめる
+                </button>
+
                 {showAnswer && canShowAnswer && (
                   <div className="rounded-lg border border-blue-100 bg-blue-50 p-4 text-sm leading-7">
                     見本コード:
@@ -717,9 +749,7 @@ export default function DrillJavaStartPage() {
 
                 <div className="p-4">
                   <div className="min-h-[180px] whitespace-pre-wrap rounded-lg border bg-[#031b22] p-4 font-mono text-sm text-white">
-                    {currentQuestion.expectedOutput
-                      ? currentQuestion.expectedOutput
-                      : "この問題は固定の出力結果がありません。"}
+                    {sampleOutputDisplay}
                   </div>
 
                   {judgeMessage && (

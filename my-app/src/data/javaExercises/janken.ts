@@ -7,7 +7,7 @@ export const projectJankenExercise: JavaExerciseQuestion = {
   description:
     "ユーザー入力と条件分岐を使って、簡単なじゃんけんゲームを作成してください。",
   hint: "Scanner、Random、if文またはswitch文を組み合わせます。",
-  expectedOutput: "",
+  expectedOutput: "勝ち",
   starterCode: `import java.util.Random;
 import java.util.Scanner;
 

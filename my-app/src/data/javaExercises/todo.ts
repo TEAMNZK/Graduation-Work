@@ -7,7 +7,7 @@ export const projectTodoExercise: JavaExerciseQuestion = {
   description:
     "クラスやコレクションを使って、簡単なTodoリストを作成してください。",
   hint: "タスクを追加・表示できる形を目指します。",
-  expectedOutput: "",
+  expectedOutput: "勉強する",
   starterCode: `public class Main {
   public static void main(String[] args) {
 
@@ -32,6 +32,7 @@ public class Main {
   public static void main(String[] args) {
     ArrayList<Todo> todos = new ArrayList<>();
     todos.add(new Todo("勉強する"));
+    System.out.println(todos.get(0).title);
   }
 }`;
 
