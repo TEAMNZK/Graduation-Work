@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { onAuthStateChanged, User } from "firebase/auth";
-import { auth } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
+import { auth } from "@/lib/firebase";
 
 type Props = {
   children: React.ReactNode;
@@ -17,16 +17,21 @@ export default function AuthGuard({ children }: Props) {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (!currentUser) {
         router.push("/login");
-      } else {
-        setUser(currentUser);
+        return;
       }
+
+      setUser(currentUser);
     });
 
     return () => unsubscribe();
   }, [router]);
 
   if (user === undefined) {
-    return <p>読み込み中...</p>;
+    return (
+      <main className="min-h-screen bg-[var(--app-bg)] p-8 text-[var(--app-muted)]">
+        読み込み中...
+      </main>
+    );
   }
 
   return <>{children}</>;
