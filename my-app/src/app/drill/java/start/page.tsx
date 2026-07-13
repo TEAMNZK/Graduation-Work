@@ -13,7 +13,7 @@ import {
   setDoc,
 } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
-import { javaQuestionMap } from "@/data/javaQuestions";
+import { javaModelCodeMap, javaQuestionMap } from "@/data/javaQuestions";
 
 const STORAGE_KEY = "drill-java-session";
 
@@ -109,6 +109,8 @@ export default function DrillJavaStartPage() {
   const currentTopic: string = session?.selectedTopics[session.currentIndex] ?? "";
 
   const currentQuestion = currentTopic ? javaQuestionMap[currentTopic] ?? null : null;
+  const currentModelCode = currentTopic ? javaModelCodeMap[currentTopic] ?? "" : "";
+  const canShowModelAnswer = Boolean(judgeMessage) && !isCorrect;
 
   const totalCount = session?.selectedTopics.length ?? 0;
   const currentNumber = session ? session.currentIndex + 1 : 0;
@@ -205,6 +207,7 @@ export default function DrillJavaStartPage() {
     setErrorOutput("");
     setIsCorrect(false);
     setJudgeMessage("");
+    setShowAnswer(false);
 
     try {
       const response = await fetch("/api/execute", {
@@ -585,20 +588,24 @@ export default function DrillJavaStartPage() {
                   </div>
                 )}
 
-                <button
-                  onClick={() => setShowAnswer((prev) => !prev)}
-                  className="w-full rounded-lg border bg-white px-4 py-3 text-left font-bold hover:bg-slate-50"
-                >
-                  見本を表示
-                </button>
+                {canShowModelAnswer && (
+                  <>
+                    <button
+                      onClick={() => setShowAnswer((prev) => !prev)}
+                      className="w-full rounded-lg border bg-white px-4 py-3 text-left font-bold hover:bg-slate-50"
+                    >
+                      見本を表示
+                    </button>
 
-                {showAnswer && (
-                  <div className="rounded-lg border border-blue-100 bg-blue-50 p-4 text-sm leading-7">
-                    期待する出力:
-                    <pre className="mt-2 whitespace-pre-wrap rounded-md bg-white p-3 font-mono text-sm">
-                      {currentQuestion.expectedOutput}
-                    </pre>
-                  </div>
+                    {showAnswer && (
+                      <div className="rounded-lg border border-blue-100 bg-blue-50 p-4 text-sm leading-7">
+                        お手本コード:
+                        <pre className="mt-2 whitespace-pre-wrap rounded-md bg-white p-3 font-mono text-sm">
+                          {currentModelCode}
+                        </pre>
+                      </div>
+                    )}
+                  </>
                 )}
 
                 <button

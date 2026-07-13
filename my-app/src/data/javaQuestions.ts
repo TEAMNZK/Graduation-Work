@@ -12,6 +12,495 @@ export type JavaQuestion = {
   type: "lesson" | "mini_project" | "final_project";
 };
 
+export const javaModelCodeMap: Record<string, string> = {
+  "01-java-overview": `public class Main {
+  public static void main(String[] args) {
+
+  }
+}`,
+  "02-how-to-run": `public class Main {
+  public static void main(String[] args) {
+    System.out.println("Start");
+  }
+}`,
+  "03-hello-world": `public class Main {
+  public static void main(String[] args) {
+    System.out.println("Hello Java");
+  }
+}`,
+  "04-variables": `public class Main {
+  public static void main(String[] args) {
+    String name = "Taro";
+    System.out.println(name);
+  }
+}`,
+  "05-data-types": `public class Main {
+  public static void main(String[] args) {
+    int score = 80;
+    System.out.println(score);
+  }
+}`,
+  "06-operators": `public class Main {
+  public static void main(String[] args) {
+    int a = 10;
+    int b = 5;
+
+    System.out.println(a + b);
+    System.out.println(a - b);
+    System.out.println(a * b);
+    System.out.println(a / b);
+  }
+}`,
+  "07-input-output": `import java.util.Scanner;
+
+public class Main {
+  public static void main(String[] args) {
+    Scanner scanner = new Scanner(System.in);
+    String name = scanner.nextLine();
+    System.out.println("こんにちは、" + name + "さん");
+  }
+}`,
+  "08-if": `import java.util.Scanner;
+
+public class Main {
+  public static void main(String[] args) {
+    Scanner scanner = new Scanner(System.in);
+    int score = scanner.nextInt();
+
+    if (score >= 60) {
+      System.out.println("合格");
+    }
+  }
+}`,
+  "09-switch": `import java.util.Scanner;
+
+public class Main {
+  public static void main(String[] args) {
+    Scanner scanner = new Scanner(System.in);
+    int day = scanner.nextInt();
+
+    switch (day) {
+      case 1:
+        System.out.println("月曜日");
+        break;
+      case 2:
+        System.out.println("火曜日");
+        break;
+      case 3:
+        System.out.println("水曜日");
+        break;
+      default:
+        System.out.println("不明な数字です");
+        break;
+    }
+  }
+}`,
+  "10-for": `public class Main {
+  public static void main(String[] args) {
+    for (int i = 1; i <= 10; i++) {
+      System.out.println(i);
+    }
+  }
+}`,
+  "11-while": `public class Main {
+  public static void main(String[] args) {
+    int i = 1;
+
+    while (i <= 3) {
+      System.out.println(i);
+      i++;
+    }
+  }
+}`,
+  "project-janken": `import java.util.Random;
+import java.util.Scanner;
+
+public class Main {
+  public static void main(String[] args) {
+    Scanner scanner = new Scanner(System.in);
+    Random random = new Random();
+
+    System.out.println("0: グー, 1: チョキ, 2: パー");
+    int user = scanner.nextInt();
+    int computer = random.nextInt(3);
+
+    System.out.println("あなた: " + user);
+    System.out.println("相手: " + computer);
+
+    if (user == computer) {
+      System.out.println("あいこ");
+    } else if ((user == 0 && computer == 1)
+        || (user == 1 && computer == 2)
+        || (user == 2 && computer == 0)) {
+      System.out.println("勝ち");
+    } else {
+      System.out.println("負け");
+    }
+  }
+}`,
+  "12-array": `public class Main {
+  public static void main(String[] args) {
+    int[] numbers = {1, 2, 3};
+    System.out.println(numbers[0]);
+  }
+}`,
+  "13-method": `public class Main {
+  public static void hello() {
+    System.out.println("Hello");
+  }
+
+  public static void main(String[] args) {
+    hello();
+  }
+}`,
+  "14-overload": `public class Main {
+  public static void printData(String text) {
+    System.out.println(text);
+  }
+
+  public static void printData(int number) {
+    System.out.println(number);
+  }
+
+  public static void main(String[] args) {
+    printData("Java");
+    printData(100);
+  }
+}`,
+  "project-score-app": `public class Main {
+  public static String judgeScore(int score) {
+    if (score >= 80) {
+      return "A";
+    } else if (score >= 60) {
+      return "B";
+    }
+    return "C";
+  }
+
+  public static void main(String[] args) {
+    int[] scores = {90, 75, 50};
+
+    for (int score : scores) {
+      System.out.println(score + ": " + judgeScore(score));
+    }
+  }
+}`,
+  "15-class-object": `class Student {
+  String name;
+}
+
+public class Main {
+  public static void main(String[] args) {
+    Student student = new Student();
+    student.name = "Taro";
+    System.out.println(student.name);
+  }
+}`,
+  "16-constructor": `class Student {
+  String name;
+
+  Student(String name) {
+    this.name = name;
+  }
+}
+
+public class Main {
+  public static void main(String[] args) {
+    Student student = new Student("Taro");
+    System.out.println(student.name);
+  }
+}`,
+  "17-static": `public class Main {
+  static int count = 0;
+
+  static void addCount() {
+    count++;
+  }
+
+  public static void main(String[] args) {
+    addCount();
+    System.out.println(count);
+  }
+}`,
+  "18-inheritance": `class Person {
+  String name = "Taro";
+}
+
+class Student extends Person {
+  int score = 80;
+}
+
+public class Main {
+  public static void main(String[] args) {
+    Student student = new Student();
+    System.out.println(student.name);
+    System.out.println(student.score);
+  }
+}`,
+  "19-polymorphism": `class Animal {
+  void speak() {
+    System.out.println("...");
+  }
+}
+
+class Dog extends Animal {
+  @Override
+  void speak() {
+    System.out.println("Wan");
+  }
+}
+
+public class Main {
+  public static void main(String[] args) {
+    Animal animal = new Dog();
+    animal.speak();
+  }
+}`,
+  "20-abstract-interface": `interface Greetable {
+  void greet();
+}
+
+class Student implements Greetable {
+  public void greet() {
+    System.out.println("Hello");
+  }
+}
+
+public class Main {
+  public static void main(String[] args) {
+    Greetable student = new Student();
+    student.greet();
+  }
+}`,
+  "21-package-import": `import java.util.Scanner;
+
+public class Main {
+  public static void main(String[] args) {
+    Scanner scanner = new Scanner(System.in);
+    int number = scanner.nextInt();
+    System.out.println(number);
+  }
+}`,
+  "22-exception": `public class Main {
+  public static void main(String[] args) {
+    try {
+      int answer = 10 / 0;
+      System.out.println(answer);
+    } catch (Exception e) {
+      System.out.println("エラーが発生しました");
+    }
+  }
+}`,
+  "23-file-io": `import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.FileWriter;
+
+public class Main {
+  public static void main(String[] args) throws Exception {
+    FileWriter writer = new FileWriter("sample.txt");
+    writer.write("Hello");
+    writer.close();
+
+    BufferedReader reader = new BufferedReader(new FileReader("sample.txt"));
+    String line = reader.readLine();
+    reader.close();
+
+    System.out.println(line);
+  }
+}`,
+  "24-collection": `import java.util.ArrayList;
+
+public class Main {
+  public static void main(String[] args) {
+    ArrayList<String> list = new ArrayList<>();
+    list.add("Java");
+    list.add("Spring");
+
+    for (String item : list) {
+      System.out.println(item);
+    }
+  }
+}`,
+  "project-todo": `import java.util.ArrayList;
+
+class Todo {
+  String title;
+  boolean done;
+
+  Todo(String title) {
+    this.title = title;
+    this.done = false;
+  }
+}
+
+public class Main {
+  public static void main(String[] args) {
+    ArrayList<Todo> todos = new ArrayList<>();
+    todos.add(new Todo("Javaを勉強する"));
+    todos.add(new Todo("課題を提出する"));
+
+    todos.get(0).done = true;
+
+    for (Todo todo : todos) {
+      String status = todo.done ? "完了" : "未完了";
+      System.out.println(status + ": " + todo.title);
+    }
+  }
+}`,
+  "25-generics": `import java.util.ArrayList;
+
+public class Main {
+  public static void main(String[] args) {
+    ArrayList<String> names = new ArrayList<>();
+    names.add("Taro");
+    names.add("Hanako");
+
+    System.out.println(names.get(0));
+  }
+}`,
+  "26-lambda": `interface Calculator {
+  int add(int a, int b);
+}
+
+public class Main {
+  public static void main(String[] args) {
+    Calculator calculator = (a, b) -> a + b;
+    System.out.println(calculator.add(3, 5));
+  }
+}`,
+  "27-stream-api": `import java.util.Arrays;
+import java.util.List;
+
+public class Main {
+  public static void main(String[] args) {
+    List<Integer> numbers = Arrays.asList(1, 2, 3, 4, 5);
+
+    numbers.stream()
+        .filter(number -> number % 2 == 0)
+        .forEach(System.out::println);
+  }
+}`,
+  "28-date-time": `import java.time.LocalDate;
+
+public class Main {
+  public static void main(String[] args) {
+    LocalDate today = LocalDate.now();
+    System.out.println(today);
+  }
+}`,
+  "project-library-enhance": `import java.time.LocalDate;
+import java.util.ArrayList;
+
+class Book {
+  String title;
+  boolean borrowed;
+  LocalDate dueDate;
+
+  Book(String title) {
+    this.title = title;
+    this.borrowed = false;
+  }
+}
+
+public class Main {
+  public static void main(String[] args) {
+    ArrayList<Book> books = new ArrayList<>();
+    books.add(new Book("Java入門"));
+    books.add(new Book("アルゴリズム基礎"));
+
+    Book book = books.get(0);
+    book.borrowed = true;
+    book.dueDate = LocalDate.now().plusDays(14);
+
+    for (Book item : books) {
+      System.out.println(item.title);
+      System.out.println(item.borrowed ? "貸出中: " + item.dueDate : "貸出可");
+    }
+  }
+}`,
+  "32-final-exercise": `import java.util.ArrayList;
+
+class Student {
+  String name;
+  int score;
+
+  Student(String name, int score) {
+    this.name = name;
+    this.score = score;
+  }
+
+  String grade() {
+    if (score >= 80) {
+      return "A";
+    } else if (score >= 60) {
+      return "B";
+    }
+    return "C";
+  }
+}
+
+public class Main {
+  public static void main(String[] args) {
+    ArrayList<Student> students = new ArrayList<>();
+    students.add(new Student("Taro", 90));
+    students.add(new Student("Hanako", 70));
+
+    for (Student student : students) {
+      System.out.println(student.name + ": " + student.grade());
+    }
+  }
+}`,
+  "project-library-final": `import java.time.LocalDate;
+import java.util.ArrayList;
+
+class Book {
+  String title;
+  String author;
+  boolean borrowed;
+  LocalDate dueDate;
+
+  Book(String title, String author) {
+    this.title = title;
+    this.author = author;
+    this.borrowed = false;
+  }
+}
+
+class Library {
+  ArrayList<Book> books = new ArrayList<>();
+
+  void addBook(String title, String author) {
+    books.add(new Book(title, author));
+  }
+
+  void borrowBook(String title) {
+    for (Book book : books) {
+      if (book.title.equals(title) && !book.borrowed) {
+        book.borrowed = true;
+        book.dueDate = LocalDate.now().plusDays(14);
+      }
+    }
+  }
+
+  void showBooks() {
+    for (Book book : books) {
+      String status = book.borrowed ? "貸出中: " + book.dueDate : "貸出可";
+      System.out.println(book.title + " / " + book.author + " / " + status);
+    }
+  }
+}
+
+public class Main {
+  public static void main(String[] args) {
+    Library library = new Library();
+    library.addBook("Java入門", "山田太郎");
+    library.addBook("データベース基礎", "佐藤花子");
+    library.borrowBook("Java入門");
+    library.showBooks();
+  }
+}`,
+};
+
 export const javaQuestionMap: Record<string, JavaQuestion> = {
   "01-java-overview": {
     id: "01-java-overview",

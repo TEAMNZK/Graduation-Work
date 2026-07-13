@@ -2,10 +2,33 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { FirebaseError } from "firebase/app";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
+
+const isValidEmail = (value: string) => {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+};
+
+const getSignupErrorMessage = (err: unknown) => {
+  if (err instanceof FirebaseError) {
+    if (err.code === "auth/invalid-email") {
+      return "メールアドレスの形式を確認してください。";
+    }
+
+    if (err.code === "auth/email-already-in-use") {
+      return "このメールアドレスはすでに登録されています。";
+    }
+
+    if (err.code === "auth/weak-password") {
+      return "パスワードは6文字以上で入力してください。";
+    }
+  }
+
+  return "新規登録に失敗しました。入力内容を確認してください。";
+};
 
 export default function SignupPage() {
   const [userName, setUserName] = useState("");
@@ -19,8 +42,26 @@ export default function SignupPage() {
     e.preventDefault();
     setError("");
 
-    if (!userName.trim()) {
+    const trimmedUserName = userName.trim();
+    const trimmedEmail = email.trim();
+
+    if (!trimmedUserName) {
       setError("ユーザー名を入力してください。");
+      return;
+    }
+
+    if (!trimmedEmail) {
+      setError("メールアドレスを入力してください。");
+      return;
+    }
+
+    if (!isValidEmail(trimmedEmail)) {
+      setError("メールアドレスの形式を確認してください。");
+      return;
+    }
+
+    if (password.length < 6) {
+      setError("パスワードは6文字以上で入力してください。");
       return;
     }
 
@@ -29,20 +70,20 @@ export default function SignupPage() {
     try {
       const userCredential = await createUserWithEmailAndPassword(
         auth,
-        email,
+        trimmedEmail,
         password
       );
 
       const user = userCredential.user;
 
       await updateProfile(user, {
-        displayName: userName,
+        displayName: trimmedUserName,
       });
 
       await setDoc(doc(db, "users", user.uid), {
         uid: user.uid,
         email: user.email,
-        userName: userName,
+        userName: trimmedUserName,
         createdAt: serverTimestamp(),
         progress: {
           completedDrills: 0,
@@ -56,8 +97,7 @@ export default function SignupPage() {
 
       router.push("/dashboard");
     } catch (err: unknown) {
-      setError("新規登録に失敗しました。入力内容を確認してください。");
-      console.error(err);
+      setError(getSignupErrorMessage(err));
     } finally {
       setIsLoading(false);
     }

@@ -2,9 +2,36 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { FirebaseError } from "firebase/app";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { useRouter } from "next/navigation";
+
+const isValidEmail = (value: string) => {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+};
+
+const getLoginErrorMessage = (err: unknown) => {
+  if (err instanceof FirebaseError) {
+    if (err.code === "auth/invalid-email") {
+      return "メールアドレスの形式を確認してください。";
+    }
+
+    if (
+      err.code === "auth/invalid-credential" ||
+      err.code === "auth/user-not-found" ||
+      err.code === "auth/wrong-password"
+    ) {
+      return "メールアドレスまたはパスワードが正しくありません。";
+    }
+
+    if (err.code === "auth/too-many-requests") {
+      return "ログイン試行が多すぎます。少し時間をおいてから再度お試しください。";
+    }
+  }
+
+  return "ログインに失敗しました。入力内容を確認してください。";
+};
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -16,14 +43,31 @@ export default function LoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    const trimmedEmail = email.trim();
+
+    if (!trimmedEmail) {
+      setError("メールアドレスを入力してください。");
+      return;
+    }
+
+    if (!isValidEmail(trimmedEmail)) {
+      setError("メールアドレスの形式を確認してください。");
+      return;
+    }
+
+    if (!password) {
+      setError("パスワードを入力してください。");
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      await signInWithEmailAndPassword(auth, trimmedEmail, password);
       router.push("/dashboard");
     } catch (err: unknown) {
-      setError("ログインに失敗しました。メールアドレスまたはパスワードを確認してください。");
-      console.error(err);
+      setError(getLoginErrorMessage(err));
     } finally {
       setIsLoading(false);
     }
