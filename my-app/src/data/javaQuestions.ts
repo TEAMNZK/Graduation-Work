@@ -1,3 +1,5 @@
+import { javaExerciseQuestionMap } from "@/data/javaExerciseQuestions";
+
 export type JavaQuestion = {
   id: string;
   no: string;
@@ -7,12 +9,13 @@ export type JavaQuestion = {
   sampleInput?: string;
   expectedOutput?: string;
   starterCode: string;
+  answerCode?: string;
   requiredPatterns?: string[];
   forbiddenPatterns?: string[];
   type: "lesson" | "mini_project" | "final_project";
 };
 
-export const javaQuestionMap: Record<string, JavaQuestion> = {
+const baseJavaQuestionMap: Record<string, JavaQuestion> = {
   "01-java-overview": {
     id: "01-java-overview",
     no: "01",
@@ -247,26 +250,6 @@ public class Main {
     type: "lesson",
   },
 
-  "project-janken": {
-    id: "project-janken",
-    no: "演習",
-    title: "じゃんけんゲーム",
-    description:
-      "ユーザー入力と条件分岐を使って、簡単なじゃんけんゲームを作成してください。",
-    hint: "Scanner、Random、if文またはswitch文を組み合わせます。",
-    expectedOutput: "",
-    starterCode: `import java.util.Random;
-import java.util.Scanner;
-
-public class Main {
-  public static void main(String[] args) {
-
-  }
-}`,
-    requiredPatterns: ["Scanner", "Random"],
-    forbiddenPatterns: [],
-    type: "mini_project",
-  },
   "12-array": {
     id: "12-array",
     no: "12",
@@ -323,24 +306,6 @@ public class Main {
     requiredPatterns: ["printData(", "static"],
     forbiddenPatterns: [],
     type: "lesson",
-  },
-
-  "project-score-app": {
-    id: "project-score-app",
-    no: "演習",
-    title: "成績判定アプリ",
-    description:
-      "配列やメソッドを使って、成績判定アプリを作成してください。",
-    hint: "点数を受け取り、評価を返すメソッドを作ると整理しやすいです。",
-    expectedOutput: "",
-    starterCode: `public class Main {
-  public static void main(String[] args) {
-
-  }
-}`,
-    requiredPatterns: [],
-    forbiddenPatterns: [],
-    type: "mini_project",
   },
 
   "15-class-object": {
@@ -528,24 +493,6 @@ public class Main {
     type: "lesson",
   },
 
-  "project-todo": {
-    id: "project-todo",
-    no: "演習",
-    title: "Todoリスト",
-    description:
-      "クラスやコレクションを使って、簡単なTodoリストを作成してください。",
-    hint: "タスクを追加・表示できる形を目指します。",
-    expectedOutput: "",
-    starterCode: `public class Main {
-  public static void main(String[] args) {
-
-  }
-}`,
-    requiredPatterns: [],
-    forbiddenPatterns: [],
-    type: "mini_project",
-  },
-
   "25-generics": {
     id: "25-generics",
     no: "25",
@@ -625,24 +572,6 @@ public class Main {
     type: "lesson",
   },
 
-  "project-library-enhance": {
-    id: "project-library-enhance",
-    no: "演習",
-    title: "図書管理アプリ強化",
-    description:
-      "コレクションや日付処理などを使って、図書管理アプリを強化してください。",
-    hint: "本の一覧、貸出日、返却予定日などを扱えるようにすると発展らしくなります。",
-    expectedOutput: "",
-    starterCode: `public class Main {
-  public static void main(String[] args) {
-
-  }
-}`,
-    requiredPatterns: [],
-    forbiddenPatterns: [],
-    type: "mini_project",
-  },
-
   "32-final-exercise": {
     id: "32-final-exercise",
     no: "32",
@@ -661,21 +590,464 @@ public class Main {
     type: "lesson",
   },
 
-  "project-library-final": {
-    id: "project-library-final",
-    no: "総合",
-    title: "図書管理アプリ完成",
-    description:
-      "最終課題として、図書管理アプリを完成させてください。",
-    hint: "本の登録、一覧表示、検索、貸出管理などを組み合わせると完成度が上がります。",
-    expectedOutput: "",
-    starterCode: `public class Main {
-  public static void main(String[] args) {
+};
 
+const baseAnswerCodeMap: Record<string, string> = {
+  "01-java-overview": `public class Main {
+  public static void main(String[] args) {
+    // JavaはWebアプリ、Androidアプリ、業務システムなどで使われます。
+    // この確認問題では出力は必要ありません。
   }
 }`,
-    requiredPatterns: [],
-    forbiddenPatterns: [],
-    type: "final_project",
-  },
+  "02-how-to-run": `public class Main {
+  public static void main(String[] args) {
+    System.out.println("Start");
+  }
+}`,
+  "03-hello-world": `public class Main {
+  public static void main(String[] args) {
+    System.out.println("Hello Java");
+  }
+}`,
+  "04-variables": `public class Main {
+  public static void main(String[] args) {
+    String name = "Taro";
+    System.out.println(name);
+  }
+}`,
+  "05-data-types": `public class Main {
+  public static void main(String[] args) {
+    int score = 80;
+    System.out.println(score);
+  }
+}`,
+  "06-operators": `public class Main {
+  public static void main(String[] args) {
+    int a = 10;
+    int b = 5;
+
+    System.out.println(a + b);
+    System.out.println(a - b);
+    System.out.println(a * b);
+    System.out.println(a / b);
+  }
+}`,
+  "07-input-output": `import java.util.Scanner;
+
+public class Main {
+  public static void main(String[] args) {
+    Scanner scanner = new Scanner(System.in);
+    String name = scanner.nextLine();
+
+    System.out.println("こんにちは、" + name + "さん");
+  }
+}`,
+  "08-if": `import java.util.Scanner;
+
+public class Main {
+  public static void main(String[] args) {
+    Scanner scanner = new Scanner(System.in);
+    int score = scanner.nextInt();
+
+    if (score >= 60) {
+      System.out.println("合格");
+    }
+  }
+}`,
+  "09-switch": `import java.util.Scanner;
+
+public class Main {
+  public static void main(String[] args) {
+    Scanner scanner = new Scanner(System.in);
+    int day = scanner.nextInt();
+
+    switch (day) {
+      case 1:
+        System.out.println("月曜日");
+        break;
+      case 2:
+        System.out.println("火曜日");
+        break;
+      default:
+        System.out.println("その他");
+        break;
+    }
+  }
+}`,
+  "10-for": `public class Main {
+  public static void main(String[] args) {
+    for (int i = 1; i <= 10; i++) {
+      System.out.println(i);
+    }
+  }
+}`,
+  "11-while": `public class Main {
+  public static void main(String[] args) {
+    int count = 1;
+
+    while (count <= 3) {
+      System.out.println(count);
+      count++;
+    }
+  }
+}`,
+  "project-janken": `import java.util.Random;
+import java.util.Scanner;
+
+public class Main {
+  public static void main(String[] args) {
+    Scanner scanner = new Scanner(System.in);
+    Random random = new Random();
+
+    int player = scanner.nextInt();
+    int computer = random.nextInt(3);
+
+    if (player == computer) {
+      System.out.println("あいこ");
+    } else if ((player == 0 && computer == 1)
+        || (player == 1 && computer == 2)
+        || (player == 2 && computer == 0)) {
+      System.out.println("勝ち");
+    } else {
+      System.out.println("負け");
+    }
+  }
+}`,
+  "12-array": `public class Main {
+  public static void main(String[] args) {
+    int[] numbers = {1, 2, 3};
+    System.out.println(numbers[0]);
+  }
+}`,
+  "13-method": `public class Main {
+  public static void hello() {
+    System.out.println("Hello");
+  }
+
+  public static void main(String[] args) {
+    hello();
+  }
+}`,
+  "14-overload": `public class Main {
+  public static void printData(String text) {
+  }
+
+  public static void printData(int number) {
+  }
+
+  public static void main(String[] args) {
+  }
+}`,
+  "project-score-app": `public class Main {
+  public static String judge(int score) {
+    if (score >= 80) {
+      return "A";
+    }
+    if (score >= 60) {
+      return "B";
+    }
+    return "C";
+  }
+
+  public static void main(String[] args) {
+    int[] scores = {90, 70, 50};
+    String result = judge(scores[0]);
+  }
+}`,
+  "15-class-object": `class Student {
+  String name;
+}
+
+public class Main {
+  public static void main(String[] args) {
+    Student student = new Student();
+    student.name = "Taro";
+  }
+}`,
+  "16-constructor": `class Student {
+  String name;
+
+  Student(String name) {
+    this.name = name;
+  }
+}
+
+public class Main {
+  public static void main(String[] args) {
+    Student student = new Student("Taro");
+  }
+}`,
+  "17-static": `public class Main {
+  static int count = 0;
+
+  static void addCount() {
+    count++;
+  }
+
+  public static void main(String[] args) {
+    addCount();
+  }
+}`,
+  "18-inheritance": `class Person {
+}
+
+class Student extends Person {
+}
+
+public class Main {
+  public static void main(String[] args) {
+    Student student = new Student();
+  }
+}`,
+  "19-polymorphism": `class Parent {
+}
+
+class Child extends Parent {
+}
+
+public class Main {
+  public static void main(String[] args) {
+    Parent parent = new Child();
+  }
+}`,
+  "20-abstract-interface": `interface Printable {
+  void print();
+}
+
+class Report implements Printable {
+  public void print() {
+  }
+}
+
+public class Main {
+  public static void main(String[] args) {
+    Printable report = new Report();
+  }
+}`,
+  "21-package-import": `import java.util.Scanner;
+
+public class Main {
+  public static void main(String[] args) {
+    Scanner scanner = new Scanner(System.in);
+    int number = scanner.nextInt();
+    System.out.println(number);
+  }
+}`,
+  "22-exception": `public class Main {
+  public static void main(String[] args) {
+    try {
+      int number = Integer.parseInt("10");
+    } catch (Exception e) {
+    }
+  }
+}`,
+  "23-file-io": `import java.io.BufferedReader;
+import java.io.FileReader;
+
+public class Main {
+  public static void main(String[] args) throws Exception {
+    BufferedReader reader = null;
+  }
+}`,
+  "24-collection": `import java.util.ArrayList;
+
+public class Main {
+  public static void main(String[] args) {
+    ArrayList<String> list = new ArrayList<>();
+    list.add("Java");
+  }
+}`,
+  "project-todo": `import java.util.ArrayList;
+
+class Todo {
+  String title;
+
+  Todo(String title) {
+    this.title = title;
+  }
+}
+
+public class Main {
+  public static void main(String[] args) {
+    ArrayList<Todo> todos = new ArrayList<>();
+    todos.add(new Todo("勉強する"));
+  }
+}`,
+  "25-generics": `import java.util.ArrayList;
+
+public class Main {
+  public static void main(String[] args) {
+    ArrayList<String> names = new ArrayList<>();
+    names.add("Taro");
+  }
+}`,
+  "26-lambda": `interface Message {
+  void show();
+}
+
+public class Main {
+  public static void main(String[] args) {
+    Message message = () -> {
+    };
+  }
+}`,
+  "27-stream-api": `import java.util.Arrays;
+import java.util.List;
+
+public class Main {
+  public static void main(String[] args) {
+    List<Integer> numbers = Arrays.asList(1, 2, 3);
+    numbers.stream().filter(n -> n > 1).count();
+  }
+}`,
+  "28-date-time": `import java.time.LocalDate;
+
+public class Main {
+  public static void main(String[] args) {
+    LocalDate today = LocalDate.now();
+  }
+}`,
+  "project-library-enhance": `import java.time.LocalDate;
+import java.util.ArrayList;
+
+class Book {
+  String title;
+  LocalDate dueDate;
+}
+
+public class Main {
+  public static void main(String[] args) {
+    ArrayList<Book> books = new ArrayList<>();
+  }
+}`,
+  "32-final-exercise": `class Student {
+  String name;
+  int score;
+
+  Student(String name, int score) {
+    this.name = name;
+    this.score = score;
+  }
+}
+
+public class Main {
+  public static void main(String[] args) {
+    Student[] students = {
+      new Student("Taro", 80),
+      new Student("Hanako", 90)
+    };
+  }
+}`,
+  "project-library-final": `import java.util.ArrayList;
+
+class Book {
+  String title;
+  boolean borrowed;
+
+  Book(String title) {
+    this.title = title;
+  }
+}
+
+public class Main {
+  public static void main(String[] args) {
+    ArrayList<Book> books = new ArrayList<>();
+    books.add(new Book("Java入門"));
+  }
+}`,
 };
+
+const createPrintAnswerCode = (output: string): string => `public class Main {
+  public static void main(String[] args) {
+    System.out.println("${output}");
+  }
+}`;
+
+const customJavaQuestionSets: Record<string, JavaQuestion[]> = {};
+
+const makeReviewQuestion = (
+  base: JavaQuestion,
+  index: number,
+  output: string,
+  focus: string
+): JavaQuestion => {
+  return {
+    ...base,
+    id: `${base.id}-q${index}`,
+    no: `${base.no}-${index}`,
+    title: `${base.title} 練習${index}`,
+    description: `${base.title}の復習問題です。${focus}を意識して、実行結果が「${output}」になるコードを書いてください。`,
+    hint:
+      base.requiredPatterns && base.requiredPatterns.length > 0
+        ? `この項目では ${base.requiredPatterns.join("、")} を使うことを意識しましょう。`
+        : "まずは小さく動くコードを書き、実行結果を確認しましょう。",
+    sampleInput: "",
+    expectedOutput: output,
+    starterCode: base.starterCode,
+    answerCode: createPrintAnswerCode(output),
+    requiredPatterns: ["System.out.print"],
+    forbiddenPatterns: [],
+  };
+};
+
+const expandQuestionSet = (base: JavaQuestion): JavaQuestion[] => {
+  if (customJavaQuestionSets[base.id]) {
+    return customJavaQuestionSets[base.id];
+  }
+
+  const baseQuestion: JavaQuestion = {
+    ...base,
+    id: `${base.id}-q1`,
+    no: `${base.no}-1`,
+    title: `${base.title} 基本`,
+    answerCode:
+      base.answerCode ??
+      baseAnswerCodeMap[base.id] ??
+      createPrintAnswerCode(base.expectedOutput ?? ""),
+  };
+
+  return [
+    baseQuestion,
+    makeReviewQuestion(base, 2, "Practice 1", "基本の書き方"),
+    makeReviewQuestion(base, 3, "Practice 2", "値や処理の流れ"),
+    makeReviewQuestion(base, 4, "Practice 3", "読みやすいコード"),
+    makeReviewQuestion(base, 5, "Practice 4", "自分で書き切ること"),
+  ];
+};
+
+export const javaQuestionMap: Record<string, JavaQuestion[]> = {
+  ...Object.fromEntries(
+    Object.entries(baseJavaQuestionMap).map(([topicId, question]) => [
+      topicId,
+      expandQuestionSet(question),
+    ])
+  ),
+  ...javaExerciseQuestionMap,
+};
+
+export type JavaQuestionEntry = JavaQuestion & {
+  topicId: string;
+  questionIndex: number;
+  questionCount: number;
+};
+
+export const javaQuestionEntriesById: Record<string, JavaQuestionEntry> =
+  Object.fromEntries(
+    Object.entries(javaQuestionMap).flatMap(([topicId, questions]) =>
+      questions.map((question, index) => [
+        question.id,
+        {
+          ...question,
+          topicId,
+          questionIndex: index,
+          questionCount: questions.length,
+        },
+      ])
+    )
+  );
+
+export const getJavaQuestions = (topicId: string): JavaQuestion[] =>
+  javaQuestionMap[topicId] ?? [];
+
+export const hasJavaQuestions = (topicId: string): boolean =>
+  getJavaQuestions(topicId).length > 0;

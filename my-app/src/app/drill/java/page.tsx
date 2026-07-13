@@ -5,12 +5,13 @@ import { useRouter } from "next/navigation";
 import AuthGuard from "@/components/AuthGuard";
 import AppHeader from "@/components/AppHeader";
 import { javaCurriculum } from "@/data/javaCurriculum";
-import { javaQuestionMap } from "@/data/javaQuestions";
+import { getJavaQuestions, hasJavaQuestions } from "@/data/javaQuestions";
 
 const STORAGE_KEY = "drill-java-session";
 
 type DrillSession = {
   selectedTopics: string[];
+  selectedQuestionIds: string[];
   currentIndex: number;
   isInProgress: boolean;
 };
@@ -30,10 +31,24 @@ export default function DrillJavaPage() {
       try {
         const parsed: DrillSession = JSON.parse(saved);
         const validTopics = parsed.selectedTopics.filter(
-          (topicId) => javaQuestionMap[topicId]
+          (topicId) => hasJavaQuestions(topicId)
         );
 
-        if (parsed.isInProgress && validTopics.length > 0) {
+        const validQuestionIds =
+          parsed.selectedQuestionIds?.filter((questionId) =>
+            validTopics.some((topicId) =>
+              getJavaQuestions(topicId).some((question) => question.id === questionId)
+            )
+          ) ??
+          validTopics.flatMap((topicId) =>
+            getJavaQuestions(topicId).map((question) => question.id)
+          );
+
+        if (
+          parsed.isInProgress &&
+          validTopics.length > 0 &&
+          validQuestionIds.length > 0
+        ) {
           hasSavedSession = true;
         }
       } catch (error) {
@@ -49,19 +64,21 @@ export default function DrillJavaPage() {
     return () => window.clearTimeout(timerId);
   }, []);
 
-  const lessonItems = useMemo(() => {
-    return javaCurriculum.flatMap((section) =>
-      section.items.filter((item) => item.type === "lesson")
-    );
+  const questionItems = useMemo(() => {
+    return javaCurriculum.flatMap((section) => section.items);
   }, []);
 
-  const selectableLessonItems = useMemo(() => {
-    return lessonItems.filter((item) => javaQuestionMap[item.id]);
-  }, [lessonItems]);
+  const selectableQuestionItems = useMemo(() => {
+    return questionItems.filter((item) => hasJavaQuestions(item.id));
+  }, [questionItems]);
 
-  const lessonCount = lessonItems.length;
-  const selectableLessonCount = selectableLessonItems.length;
+  const questionItemCount = questionItems.length;
+  const selectableQuestionItemCount = selectableQuestionItems.length;
   const selectedCount = selectedTopics.length;
+  const selectedQuestionCount = selectedTopics.reduce(
+    (total, topicId) => total + getJavaQuestions(topicId).length,
+    0
+  );
 
   const toggleTopic = (topicId: string) => {
     setSelectedTopics((prev) =>
@@ -72,7 +89,7 @@ export default function DrillJavaPage() {
   };
 
   const handleSelectAll = () => {
-    setSelectedTopics(selectableLessonItems.map((item) => item.id));
+    setSelectedTopics(selectableQuestionItems.map((item) => item.id));
   };
 
   const handleClearAll = () => {
@@ -82,9 +99,7 @@ export default function DrillJavaPage() {
   const getSelectableSectionItems = (
     items: (typeof javaCurriculum)[number]["items"]
   ) => {
-    return items.filter(
-      (item) => item.type === "lesson" && javaQuestionMap[item.id]
-    );
+    return items.filter((item) => hasJavaQuestions(item.id));
   };
 
   const handleSelectSection = (
@@ -109,7 +124,7 @@ export default function DrillJavaPage() {
 
   const handleStart = () => {
     const validSelectedTopics = selectedTopics.filter(
-      (topicId) => javaQuestionMap[topicId]
+      (topicId) => hasJavaQuestions(topicId)
     );
 
     if (validSelectedTopics.length === 0) {
@@ -117,8 +132,13 @@ export default function DrillJavaPage() {
       return;
     }
 
+    const selectedQuestionIds = validSelectedTopics.flatMap((topicId) =>
+      getJavaQuestions(topicId).map((question) => question.id)
+    );
+
     const session: DrillSession = {
       selectedTopics: validSelectedTopics,
+      selectedQuestionIds,
       currentIndex: 0,
       isInProgress: true,
     };
@@ -190,20 +210,23 @@ export default function DrillJavaPage() {
                 <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
                   <p className="text-sm text-gray-500">選択中</p>
                   <p className="mt-2 text-3xl font-bold text-blue-600">
-                    {selectedCount}
+                  {selectedCount}
+                  </p>
+                  <p className="mt-1 text-xs text-gray-500">
+                    {selectedQuestionCount}問
                   </p>
                 </div>
 
                 <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
                   <p className="text-sm text-gray-500">選択可能</p>
                   <p className="mt-2 text-3xl font-bold">
-                    {selectableLessonCount}
+                    {selectableQuestionItemCount}
                   </p>
                 </div>
               </div>
 
               <p className="mt-4 text-xs leading-6 text-gray-500">
-                カリキュラム内の通常問題 {lessonCount} 件中、問題データがあるものだけを選択できます。
+                カリキュラム内の出題項目 {questionItemCount} 件中、問題データがあるものだけを選択できます。
               </p>
 
               <div className="mt-5 flex flex-wrap gap-3">
@@ -253,7 +276,7 @@ export default function DrillJavaPage() {
                 <p className="mt-1 font-bold">
                   {selectedCount === 0
                     ? "問題を選択してください"
-                    : `${selectedCount}件の問題が選択されています`}
+                    : `${selectedCount}項目、${selectedQuestionCount}問が選択されています`}
                 </p>
               </div>
 
@@ -338,15 +361,14 @@ export default function DrillJavaPage() {
 
                 <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
                   {section.items.map((item) => {
-                    const isLesson = item.type === "lesson";
-                    const isAvailable = Boolean(javaQuestionMap[item.id]);
+                    const isAvailable = hasJavaQuestions(item.id);
                     const isChecked = selectedTopics.includes(item.id);
 
                     return (
                       <div
                         key={item.id}
                         className={`rounded-lg border p-4 transition ${
-                          isLesson && isAvailable && isChecked
+                          isAvailable && isChecked
                             ? "border-blue-300 bg-blue-50"
                             : isAvailable
                             ? "border-gray-200 bg-gray-50"
@@ -355,7 +377,7 @@ export default function DrillJavaPage() {
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex min-w-0 items-start gap-3">
-                            {isLesson && isAvailable ? (
+                            {isAvailable ? (
                               <input
                                 type="checkbox"
                                 checked={isChecked}
@@ -377,9 +399,9 @@ export default function DrillJavaPage() {
                               </div>
 
                               <p className="mt-2 text-sm text-gray-600">
-                                {isLesson && !isAvailable
+                                {!isAvailable
                                   ? "問題データを準備中です。公開後に選択できます。"
-                                  : isLesson
+                                  : item.type === "lesson"
                                   ? "基礎理解のための通常問題です。"
                                   : item.type === "mini_project"
                                   ? "ここまでの内容を使って小作品を作る演習です。"
@@ -393,7 +415,7 @@ export default function DrillJavaPage() {
                               item.type
                             )}`}
                           >
-                            {isLesson && !isAvailable
+                            {!isAvailable
                               ? "準備中"
                               : getItemLabel(item.type)}
                           </span>

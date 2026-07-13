@@ -140,9 +140,13 @@ export default function DashboardPage() {
   }, [completedDrills]);
 
   const nextRecommendedTopic = useMemo(() => {
-    const javaTopics = Object.keys(javaQuestionMap);
-    const nextTopic = javaTopics.find((topic) => !solvedTopics.includes(topic));
-    return nextTopic ?? "Javaの問題はすべて完了しています";
+    const nextTopic = Object.entries(javaQuestionMap).find(
+      ([topicId, questions]) =>
+        !solvedTopics.includes(topicId) &&
+        !questions.every((question) => solvedTopics.includes(question.id))
+    );
+
+    return nextTopic?.[1][0]?.title ?? "Javaの問題はすべて完了しています";
   }, [solvedTopics]);
 
   const nextRecommendedLink = useMemo(() => {
