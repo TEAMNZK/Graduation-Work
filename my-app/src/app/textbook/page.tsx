@@ -1,44 +1,68 @@
-import Link from "next/link";
-import AuthGuard from "@/components/AuthGuard";
-import AppHeader from "@/components/AppHeader";
+import LanguageSelectionPage, {
+  type LanguageCard,
+} from "@/components/LanguageSelectionPage";
 import { getTextbooks } from "@/lib/textbooks";
 
 export default async function TextbookPage() {
   const textbooks = await getTextbooks();
+  const hasJavaTextbooks = textbooks.length > 0;
+
+  const languages: LanguageCard[] = [
+    {
+      name: "Java",
+      href: "/textbook/java",
+      status: hasJavaTextbooks ? "公開中" : "準備中",
+      description: hasJavaTextbooks
+        ? "基礎文法から応用項目まで、Javaの教科書を順番に読めます。"
+        : "教科書データを準備中です。",
+      available: hasJavaTextbooks,
+      actionLabel: "教科書を読む",
+    },
+    {
+      name: "Python",
+      href: "/textbook/python",
+      status: "準備中",
+      description: "Pythonの基礎教科書を準備中です。",
+      available: false,
+      actionLabel: "教科書を読む",
+    },
+    {
+      name: "C",
+      href: "/textbook/c",
+      status: "準備中",
+      description: "C言語の基礎教科書を準備中です。",
+      available: false,
+      actionLabel: "教科書を読む",
+    },
+    {
+      name: "JavaScript",
+      href: "/textbook/javascript",
+      status: "準備中",
+      description: "JavaScriptの基礎教科書を準備中です。",
+      available: false,
+      actionLabel: "教科書を読む",
+    },
+  ];
 
   return (
-    <AuthGuard>
-      <main className="min-h-screen bg-gray-100 text-gray-900">
-        <AppHeader title="教科書" activeKey="textbook" showBack />
-
-        <section className="mx-auto max-w-7xl px-6 py-8">
-          {textbooks.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-gray-300 bg-white p-6 shadow-sm">
-              <h2 className="text-lg font-bold">教科書ファイルがありません</h2>
-              <p className="mt-2 text-sm leading-6 text-gray-600">
-                textbooks フォルダに .md または .txt ファイルを入れると、
-                このページに一覧表示されます。
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {textbooks.map((textbook) => (
-                <Link
-                  key={textbook.slug}
-                  href={`/textbook/${textbook.slug}`}
-                  className="rounded-2xl bg-white p-8 shadow transition hover:-translate-y-0.5 hover:bg-gray-50 hover:shadow-md"
-                >
-                  <p className="text-xs font-bold uppercase text-gray-400">
-                    {textbook.extension.replace(".", "")}
-                  </p>
-                  <h2 className="mt-3 text-2xl font-bold">{textbook.title}</h2>
-                  <p className="mt-4 text-sm text-gray-600">本文を読む</p>
-                </Link>
-              ))}
-            </div>
-          )}
-        </section>
-      </main>
-    </AuthGuard>
+    <LanguageSelectionPage
+      title="教科書"
+      description="読みたい言語を選んで、基礎から順番に学習できます。"
+      activeKey="textbook"
+      highlightLabel="現在利用できる教科書"
+      highlightTitle={
+        hasJavaTextbooks
+          ? "Java教科書を公開中です"
+          : "教科書データを準備中です"
+      }
+      highlightDescription={
+        hasJavaTextbooks
+          ? "統合したJavaの本文データを、言語選択から開けるようにしました。未公開の言語は準備中として表示しています。"
+          : "textbooks フォルダに本文ファイルを追加すると、Java教科書として表示されます。"
+      }
+      countLabel="公開中"
+      countDescription="言語の教科書が利用できます。"
+      languages={languages}
+    />
   );
 }

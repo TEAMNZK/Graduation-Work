@@ -1,31 +1,54 @@
-"use client";
+import LanguageSelectionPage, {
+  type LanguageCard,
+} from "@/components/LanguageSelectionPage";
 
-import Link from "next/link";
-import AuthGuard from "@/components/AuthGuard";
-import AppHeader from "@/components/AppHeader";
-
-const languages = ["Java", "Python", "C", "JavaScript"];
+const languages: LanguageCard[] = [
+  {
+    name: "Java",
+    href: "/articles/java",
+    status: "準備中",
+    description: "Javaの学習記事を準備中です。",
+    available: false,
+    actionLabel: "記事を読む",
+  },
+  {
+    name: "Python",
+    href: "/articles/python",
+    status: "準備中",
+    description: "Pythonの学習記事を準備中です。",
+    available: false,
+    actionLabel: "記事を読む",
+  },
+  {
+    name: "C",
+    href: "/articles/c",
+    status: "準備中",
+    description: "C言語の学習記事を準備中です。",
+    available: false,
+    actionLabel: "記事を読む",
+  },
+  {
+    name: "JavaScript",
+    href: "/articles/javascript",
+    status: "準備中",
+    description: "JavaScriptの学習記事を準備中です。",
+    available: false,
+    actionLabel: "記事を読む",
+  },
+];
 
 export default function ArticlesPage() {
   return (
-    <AuthGuard>
-      <main className="min-h-screen bg-gray-100 text-gray-900">
-        <AppHeader title="記事" activeKey="articles" showBack />
-
-        <section className="mx-auto max-w-7xl px-6 py-8">
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {languages.map((language) => (
-              <Link
-                key={language}
-                href={`/articles/${language.toLowerCase()}`}
-                className="rounded-2xl bg-white p-8 text-center text-2xl font-bold shadow transition hover:bg-gray-50 hover:shadow-md"
-              >
-                {language}
-              </Link>
-            ))}
-          </div>
-        </section>
-      </main>
-    </AuthGuard>
+    <LanguageSelectionPage
+      title="記事"
+      description="読みたい言語を選んで、補足記事や学習メモを確認できます。"
+      activeKey="articles"
+      highlightLabel="現在利用できる記事"
+      highlightTitle="記事ページを準備中です"
+      highlightDescription="記事データはまだ未公開のため、言語カードは準備中として表示しています。公開後はここから言語別の記事へ移動できます。"
+      countLabel="公開中"
+      countDescription="言語の記事が利用できます。"
+      languages={languages}
+    />
   );
 }
