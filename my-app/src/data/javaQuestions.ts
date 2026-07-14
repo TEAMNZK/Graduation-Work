@@ -12,6 +12,7 @@ export type JavaQuestion = {
   answerCode?: string;
   requiredPatterns?: string[];
   forbiddenPatterns?: string[];
+  inheritPreviousCode?: boolean;
   type: "lesson" | "mini_project" | "final_project";
 };
 

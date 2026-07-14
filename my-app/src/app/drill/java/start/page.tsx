@@ -25,6 +25,7 @@ type DrillSession = {
   selectedQuestionIds: string[];
   currentIndex: number;
   isInProgress: boolean;
+  answeredCodeByQuestionId?: Record<string, string>;
 };
 
 type ExecuteApiSuccessResponse = {
@@ -94,6 +95,7 @@ export default function DrillJavaStartPage() {
         selectedQuestionIds,
         currentIndex: safeIndex,
         isInProgress: parsed.isInProgress,
+        answeredCodeByQuestionId: parsed.answeredCodeByQuestionId ?? {},
       };
 
       localStorage.setItem(STORAGE_KEY, JSON.stringify(safeSession));
@@ -108,7 +110,16 @@ export default function DrillJavaStartPage() {
         setSession(safeSession);
 
         if (question) {
-          setCode(question.starterCode);
+          const previousQuestionId =
+            safeSession.selectedQuestionIds[safeIndex - 1] ?? "";
+          const inheritedCode =
+            question.inheritPreviousCode && previousQuestionId
+              ? safeSession.answeredCodeByQuestionId?.[previousQuestionId] ?? ""
+              : "";
+
+          setCode(
+            inheritedCode || question.starterCode
+          );
           setStdin(question.sampleInput ?? "");
         }
 
@@ -383,6 +394,10 @@ export default function DrillJavaStartPage() {
       ...session,
       currentIndex: nextIndex,
       isInProgress: true,
+      answeredCodeByQuestionId: {
+        ...(session.answeredCodeByQuestionId ?? {}),
+        [currentQuestionId]: code,
+      },
     };
 
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedSession));
@@ -405,7 +420,11 @@ export default function DrillJavaStartPage() {
     setIsProgressUpdated(false);
 
     if (nextQuestion) {
-      setCode(nextQuestion.starterCode);
+      const nextStarterCode = nextQuestion.inheritPreviousCode
+        ? code
+        : nextQuestion.starterCode;
+
+      setCode(nextStarterCode);
       setStdin(nextQuestion.sampleInput ?? "");
     }
   };

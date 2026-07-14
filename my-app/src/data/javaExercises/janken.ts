@@ -86,10 +86,11 @@ public class Main {
     no: "演習-2",
     title: "じゃんけんゲーム 勝敗判定",
     description:
-      "自分の手をグー、相手の手をチョキとして、勝敗を判定してください。結果として「勝ち」と表示します。",
+      "手順1で作ったコードを引き継いで、勝敗を判定する処理を追加してください。結果として「勝ち」と表示します。",
     hint: "グーはチョキに勝ちます。player と computer の値を比較しましょう。",
     expectedOutput: "勝ち",
     starterCode: jankenStarterCode,
+    inheritPreviousCode: true,
     answerCode: `import java.util.Scanner;
 
 public class Main {
@@ -115,11 +116,12 @@ public class Main {
     no: "演習-3",
     title: "じゃんけんゲーム 入力",
     description:
-      "Scannerで自分の手と相手の手を入力し、同じ手なら「あいこ」と表示してください。サンプル入力は 2 2 です。",
+      "手順2のコードを引き継いで、Scannerで入力を受け取る処理を追加してください。サンプル入力は 2 2 です。",
     hint: "Scannerで整数を2つ読み取り、player == computer を判定しましょう。",
     sampleInput: "2 2",
     expectedOutput: "あいこ",
     starterCode: jankenStarterCode,
+    inheritPreviousCode: true,
     answerCode: `import java.util.Scanner;
 
 public class Main {
@@ -144,12 +146,13 @@ public class Main {
     no: "演習-4",
     title: "じゃんけんゲーム 手の表示",
     description:
-      "入力された自分の手と相手の手を文字に変換して表示してください。サンプル入力は 0 2 です。",
+      "手順3のコードを引き継いで、入力された手を文字として表示する処理を追加してください。サンプル入力は 0 2 です。",
     hint: "0をグー、1をチョキ、2をパーに変換する処理を2回使います。",
     sampleInput: "0 2",
     expectedOutput: `あなた: グー
 相手: パー`,
     starterCode: jankenStarterCode,
+    inheritPreviousCode: true,
     answerCode: `import java.util.Scanner;
 
 public class Main {
@@ -189,13 +192,14 @@ public class Main {
     no: "演習-5",
     title: "じゃんけんゲーム 完成",
     description:
-      "自分の手と相手の手を入力し、手の名前と勝敗を表示するじゃんけんゲームを完成させてください。サンプル入力は 0 1 です。",
+      "手順4のコードを引き継いで、手の名前と勝敗を表示するじゃんけんゲームを完成させてください。サンプル入力は 0 1 です。",
     hint: "0=グー、1=チョキ、2=パーです。勝ち条件は、グー対チョキ、チョキ対パー、パー対グーです。",
     sampleInput: "0 1",
     expectedOutput: `あなた: グー
 相手: チョキ
 結果: 勝ち`,
     starterCode: jankenStarterCode,
+    inheritPreviousCode: true,
     answerCode: `import java.util.Scanner;
 
 public class Main {
