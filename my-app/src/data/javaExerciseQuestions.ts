@@ -104,10 +104,10 @@ const expandQuestionSet = (
 
   return [
     baseQuestion,
-    makeReviewQuestion(base, 2, "Practice 1", "基本の書き方"),
-    makeReviewQuestion(base, 3, "Practice 2", "値や処理の流れ"),
-    makeReviewQuestion(base, 4, "Practice 3", "読みやすいコード"),
-    makeReviewQuestion(base, 5, "Practice 4", "自分で書き切ること"),
+    makeReviewQuestion(base, 2, "確認1", "基本の書き方"),
+    makeReviewQuestion(base, 3, "確認2", "値や処理の流れ"),
+    makeReviewQuestion(base, 4, "確認3", "読みやすいコード"),
+    makeReviewQuestion(base, 5, "確認4", "自分で書き切ること"),
   ];
 };
 
