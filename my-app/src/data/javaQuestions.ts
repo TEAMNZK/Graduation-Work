@@ -45,7 +45,7 @@ const baseJavaQuestionMap: Record<string, JavaQuestion> = {
     expectedOutput: "Start",
     starterCode: `public class Main {
   public static void main(String[] args) {
-
+    // ここに入力してください（例: System.out.println("Start");）
   }
 }`,
     requiredPatterns: ["System.out.print"],
@@ -58,11 +58,11 @@ const baseJavaQuestionMap: Record<string, JavaQuestion> = {
     no: "03",
     title: "Hello World",
     description: "「Hello Java」と表示しなさい。",
-    hint: 'System.out.println("Hello Java"); を使います。',
+    hint: '`System.out.println("Hello Java");` を使って標準出力に文字列を表示します。',
     expectedOutput: "Hello Java",
     starterCode: `public class Main {
   public static void main(String[] args) {
-
+    // ここに入力してください（例: System.out.println("Hello Java");）
   }
 }`,
     requiredPatterns: ["System.out.println"],
@@ -76,11 +76,11 @@ const baseJavaQuestionMap: Record<string, JavaQuestion> = {
     title: "変数",
     description:
       'name という変数に "Taro" を入れて表示しなさい。',
-    hint: 'String name = "Taro"; と書いて、System.out.println(name); を使います。',
+    hint: '`String name = "Taro";` として変数を定義し、`System.out.println(name);` で表示します。',
     expectedOutput: "Taro",
     starterCode: `public class Main {
   public static void main(String[] args) {
-
+    // ここに入力してください（例: String name = "Taro"; System.out.println(name);）
   }
 }`,
     requiredPatterns: ["String", "name", "System.out.println"],
@@ -93,11 +93,11 @@ const baseJavaQuestionMap: Record<string, JavaQuestion> = {
     no: "05",
     title: "データ型",
     description: "int型の変数 score に 80 を入れて表示しなさい。",
-    hint: "int score = 80; と書いて、System.out.println(score); を使います。",
+    hint: "`int score = 80;` を宣言し、`System.out.println(score);` で値を出力します。",
     expectedOutput: "80",
     starterCode: `public class Main {
   public static void main(String[] args) {
-
+    // ここに入力してください（例: int score = 80; System.out.println(score);）
   }
 }`,
     requiredPatterns: ["int", "score", "System.out.println"],
@@ -120,7 +120,7 @@ const baseJavaQuestionMap: Record<string, JavaQuestion> = {
   public static void main(String[] args) {
     int a = 10;
     int b = 5;
-
+    // ここに入力してください（例: System.out.println(a + b); 等）
   }
 }`,
     requiredPatterns: ["a", "b", "+", "-", "*", "/", "System.out.println"],
@@ -134,14 +134,14 @@ const baseJavaQuestionMap: Record<string, JavaQuestion> = {
     title: "入力と出力",
     description:
       '名前を入力し、「こんにちは、〇〇さん」と表示しなさい。',
-    hint: "Scanner と nextLine() を使います。",
+    hint: "`Scanner scanner = new Scanner(System.in);` と `scanner.nextLine()` を使って標準入力を読み取り、表示します。",
     sampleInput: "太郎",
     expectedOutput: "こんにちは、太郎さん",
     starterCode: `import java.util.Scanner;
 
 public class Main {
   public static void main(String[] args) {
-
+    // ここに入力してください（例: Scanner scanner = new Scanner(System.in); String name = scanner.nextLine(); System.out.println("こんにちは、" + name + "さん");）
   }
 }`,
     requiredPatterns: ["Scanner", "nextLine", "System.out.println"],
@@ -155,14 +155,14 @@ public class Main {
     title: "if文",
     description:
       '点数を入力し、60点以上なら「合格」と表示しなさい。',
-    hint: "if を使って score >= 60 を判定します。",
+    hint: "`Scanner` で点数を読み取り、`if (score >= 60)` で判定して `System.out.println(\"合格\")` を出力します。",
     sampleInput: "60",
     expectedOutput: "合格",
     starterCode: `import java.util.Scanner;
 
 public class Main {
   public static void main(String[] args) {
-
+    // ここに入力してください（例: Scanner scanner = new Scanner(System.in); int score = scanner.nextInt();）
   }
 }`,
     requiredPatterns: ["Scanner", "if", "System.out.println"],
@@ -176,14 +176,14 @@ public class Main {
     title: "switch文",
     description:
       "1〜7の数字を入力し、対応する曜日を表示しなさい。今回は 1 が入力されたとき「月曜日」と表示するものとします。",
-    hint: "switch と case を使います。",
+    hint: "`switch` と `case` を使って、1→月曜日、2→火曜日... のように分岐させます。",
     sampleInput: "1",
     expectedOutput: "月曜日",
     starterCode: `import java.util.Scanner;
 
 public class Main {
   public static void main(String[] args) {
-
+    // ここに入力してください（例: Scanner scanner = new Scanner(System.in); int day = scanner.nextInt();）
   }
 }`,
     requiredPatterns: ["Scanner", "switch", "case", "System.out.println"],
@@ -209,7 +209,7 @@ public class Main {
 10`,
     starterCode: `public class Main {
   public static void main(String[] args) {
-
+    // ここに入力してください（例: for (int i = 1; i <= 10; i++) { System.out.println(i); }）
   }
 }`,
     requiredPatterns: ["for", "System.out.println"],
@@ -239,7 +239,7 @@ public class Main {
 3`,
     starterCode: `public class Main {
   public static void main(String[] args) {
-
+    // ここに入力してください（例: int i = 1; while (i <= 3) { System.out.println(i); i++; }）
   }
 }`,
     requiredPatterns: ["while", "System.out.println"],
@@ -261,7 +261,7 @@ public class Main {
     expectedOutput: "1",
     starterCode: `public class Main {
   public static void main(String[] args) {
-
+    // ここに入力してください（例: int[] numbers = {1, 2, 3}; System.out.println(numbers[0]);）
   }
 }`,
     requiredPatterns: ["int[]", "numbers", "System.out.println"],
