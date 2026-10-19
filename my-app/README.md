@@ -1,5 +1,15 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Javaドリルの検証
+
+- `npm test`: 採点、API、進捗計算の回帰テスト。
+- `npm run check:java`: 全見本コードをJava 13互換でコンパイルし、全入力ケースと戻り値・宣言の検証を実行します。ローカルのJDK（`java`と`javac`）が必要です。ファイル入出力は一時フォルダ内で実行します。
+- `npx tsc --noEmit` / `npm run lint`: 型とLintの確認。
+
+問題文・見本は`src/data/javaQuestions.ts`と`src/data/javaExercises`、追加入力ケースは`javaTestCases.ts`、メソッド等の実行時検証は`javaVerifications.ts`で管理します。採点はサーバー側で行い、Judge0の正常終了、全ケースの出力、コメントや文字列を除外したコード要素を確認します。有限のテストケースによる検証であり、任意のJavaコードの意味を完全に証明するものではありません。
+
+達成率は現在登録されている問題IDのうち、解答済みの一意なIDの割合です。削除済みの問題IDや旧トピックIDは集計しません。
+
 ## Getting Started
 
 First, run the development server:

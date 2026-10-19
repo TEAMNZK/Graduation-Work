@@ -33,6 +33,7 @@ type ExecuteApiSuccessResponse = {
   stdout: string;
   stderr: string;
   exitCode: number;
+  grading?: { correct: boolean; message: string; passedCount: number; testCount: number };
 };
 
 type ExecuteApiErrorResponse = {
@@ -55,7 +56,9 @@ export default function DrillJavaStartPage() {
   const [output, setOutput] = useState("");
   const [errorOutput, setErrorOutput] = useState("");
   const [isRunning, setIsRunning] = useState(false);
-  const [isCorrect, setIsCorrect] = useState(false);
+  const [isCorrectResult, setIsCorrect] = useState(false);
+  const [submittedCode, setSubmittedCode] = useState("");
+  const isCorrect = isCorrectResult && code === submittedCode;
   const [judgeMessage, setJudgeMessage] = useState("");
   const [isProgressUpdated, setIsProgressUpdated] = useState(false);
 
@@ -151,7 +154,7 @@ export default function DrillJavaStartPage() {
       return currentQuestion.expectedOutput;
     }
 
-    return "この問題は固定の出力結果がありません。";
+    return "この問題では何も出力しないでください。";
   }, [currentQuestion]);
 
   const totalCount = session?.selectedQuestionIds.length ?? 0;
@@ -164,38 +167,8 @@ export default function DrillJavaStartPage() {
     return (currentNumber / totalCount) * 100;
   }, [session, currentNumber, totalCount]);
 
-  const normalizeOutput = (text: string) => {
-    return text.replace(/\r\n/g, "\n").trim();
-  };
-
-  const normalizeCode = (text: string) => {
-    return text.replace(/\r\n/g, "\n");
-  };
-
-  const validateCodePatterns = (sourceCode: string) => {
-    const normalizedCode = normalizeCode(sourceCode);
-    const requiredPatterns = currentQuestion?.requiredPatterns ?? [];
-    const forbiddenPatterns = currentQuestion?.forbiddenPatterns ?? [];
-
-    const missingPatterns = requiredPatterns.filter(
-      (pattern) => !normalizedCode.includes(pattern)
-    );
-
-    const foundForbiddenPatterns = forbiddenPatterns.filter((pattern) =>
-      normalizedCode.includes(pattern)
-    );
-
-    return {
-      isValid:
-        missingPatterns.length === 0 && foundForbiddenPatterns.length === 0,
-      missingPatterns,
-      foundForbiddenPatterns,
-    };
-  };
-
   const updateProgressInFirestore = async (
     questionId: string,
-    topic: string,
     title: string
   ) => {
     const currentUser = auth.currentUser;
@@ -258,8 +231,9 @@ export default function DrillJavaStartPage() {
   };
 
   const handleRun = async () => {
-    if (!currentQuestion || !currentTopic || !currentQuestionId) return;
+    if (isRunning || !currentQuestion || !currentTopic || !currentQuestionId) return;
 
+    setSubmittedCode(code);
     setIsRunning(true);
     setOutput("");
     setErrorOutput("");
@@ -275,6 +249,7 @@ export default function DrillJavaStartPage() {
         },
         body: JSON.stringify({
           language: "java",
+          questionId: currentQuestionId,
           code,
           stdin,
         }),
@@ -297,18 +272,14 @@ export default function DrillJavaStartPage() {
       setOutput(stdout);
       setErrorOutput(stderr);
 
-      if (stderr) {
+      if (stderr || data.exitCode !== 3) {
         setIsCorrect(false);
         setJudgeMessage("実行エラーがあります。");
         setShowAnswer(false);
         return;
       }
 
-      const actual = normalizeOutput(stdout);
-      const expected = normalizeOutput(currentQuestion.expectedOutput ?? "");
-      const codeValidation = validateCodePatterns(code);
-
-      if (actual === expected && codeValidation.isValid) {
+      if (data.grading?.correct) {
         setIsCorrect(true);
         setShowAnswer(false);
 
@@ -316,7 +287,6 @@ export default function DrillJavaStartPage() {
           try {
             const updated = await updateProgressInFirestore(
               currentQuestionId,
-              currentTopic,
               currentQuestion.title
             );
             setIsProgressUpdated(true);
@@ -336,29 +306,7 @@ export default function DrillJavaStartPage() {
       } else {
         setIsCorrect(false);
 
-        if (actual === expected && !codeValidation.isValid) {
-          if (codeValidation.missingPatterns.length > 0) {
-            setJudgeMessage(
-              `出力は正しいですが、必要なコード要素が不足しています: ${codeValidation.missingPatterns.join(
-                ", "
-              )}`
-            );
-            setShowAnswer(false);
-            return;
-          }
-
-          if (codeValidation.foundForbiddenPatterns.length > 0) {
-            setJudgeMessage(
-              `出力は正しいですが、禁止された書き方が含まれています: ${codeValidation.foundForbiddenPatterns.join(
-                ", "
-              )}`
-            );
-            setShowAnswer(false);
-            return;
-          }
-        }
-
-        setJudgeMessage("不正解です。出力結果を確認してください。");
+        setJudgeMessage(data.grading?.message ?? "採点結果を取得できませんでした。再実行してください。");
         setShowAnswer(false);
       }
     } catch (error) {
@@ -721,7 +669,8 @@ export default function DrillJavaStartPage() {
                 <textarea
                   ref={editorRef}
                   value={code}
-                  onChange={(e) => setCode(e.target.value)}
+                  disabled={isRunning}
+                  onChange={(e) => { setCode(e.target.value); setIsCorrect(false); setJudgeMessage(""); }}
                   onKeyDown={handleEditorKeyDown}
                   className="min-h-[520px] w-full rounded-lg border bg-slate-900 p-4 font-mono text-sm leading-6 text-slate-100 outline-none xl:min-h-[620px]"
                   spellCheck={false}
@@ -741,6 +690,7 @@ export default function DrillJavaStartPage() {
                       標準入力
                     </label>
                     <textarea
+                      disabled={isRunning}
                       value={stdin}
                       onChange={(e) => setStdin(e.target.value)}
                       placeholder="必要な場合だけ入力してください"

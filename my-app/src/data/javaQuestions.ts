@@ -1,4 +1,6 @@
 import { javaExerciseQuestionMap } from "@/data/javaExerciseQuestions";
+import { javaTestCases } from "@/data/javaTestCases";
+import { javaVerifications } from "@/data/javaVerifications";
 
 export type JavaQuestion = {
   id: string;
@@ -12,6 +14,9 @@ export type JavaQuestion = {
   answerCode?: string;
   requiredPatterns?: string[];
   forbiddenPatterns?: string[];
+  requiredPatternGroups?: string[][];
+  testCases?: { stdin: string; expectedOutput: string }[];
+  verificationCode?: string;
   inheritPreviousCode?: boolean;
   type: "lesson" | "mini_project" | "final_project";
 };
@@ -22,15 +27,15 @@ const baseJavaQuestionMap: Record<string, JavaQuestion> = {
     no: "01",
     title: "Javaとは",
     description:
-      "Javaの特徴や用途を確認しましょう。この問題は確認用なので、自動採点は行いません。",
+      "Javaの特徴や用途を教科書で確認し、Java と表示してください。",
     hint: "Javaで作れるものや特徴を教科書ページで確認してください。",
-    expectedOutput: "",
+    expectedOutput: "Java",
     starterCode: `public class Main {
   public static void main(String[] args) {
 
   }
 }`,
-    requiredPatterns: [],
+    requiredPatterns: ["System.out.println"],
     forbiddenPatterns: [],
     type: "lesson",
   },
@@ -395,7 +400,7 @@ public class Main {
     no: "14",
     title: "オーバーロード",
     description:
-      "同じ名前で、引数の数が異なる printData メソッドを2つ作成してください。",
+      "printData(String text)とprintData(int number, String text)を作成してください。出力は不要です。",
     hint: "メソッド名は同じで、引数リストを変えます。",
     expectedOutput: "",
     starterCode: `public class Main {
@@ -403,7 +408,7 @@ public class Main {
 
   }
 }`,
-    requiredPatterns: ["printData(", "static"],
+    requiredPatterns: ["void printData(String", "void printData(int"],
     forbiddenPatterns: [],
     type: "lesson",
   },
@@ -421,7 +426,7 @@ public class Main {
 
   }
 }`,
-    requiredPatterns: ["class", "new"],
+    requiredPatterns: ["class Student", "String name", "new Student"],
     forbiddenPatterns: [],
     type: "lesson",
   },
@@ -449,7 +454,7 @@ public class Main {
     no: "17",
     title: "static",
     description:
-      "static 変数または static メソッドを使った簡単なコードを書いてください。",
+      "static int count = 0; を宣言し、staticなaddCountメソッドで1増やしてmainから呼び出してください。出力は不要です。",
     hint: "クラス名.メソッド名 の呼び出しを意識します。",
     expectedOutput: "",
     starterCode: `public class Main {
@@ -457,7 +462,7 @@ public class Main {
 
   }
 }`,
-    requiredPatterns: ["static"],
+    requiredPatterns: ["static int count", "static void addCount", "count++", "addCount();"],
     forbiddenPatterns: [],
     type: "lesson",
   },
@@ -485,7 +490,7 @@ public class Main {
     no: "19",
     title: "ポリモーフィズム",
     description:
-      "親クラス型の変数で子クラスのオブジェクトを扱うコードを書いてください。",
+      "Parentクラスと、それを継承したChildクラスを作り、Parent型の変数にnew Child()を代入してください。出力は不要です。",
     hint: "Parent p = new Child(); の形を考えます。",
     expectedOutput: "",
     starterCode: `public class Main {
@@ -493,7 +498,7 @@ public class Main {
 
   }
 }`,
-    requiredPatterns: ["new"],
+    requiredPatterns: ["class Parent", "extends Parent", "Parent", "new Child"],
     forbiddenPatterns: [],
     type: "lesson",
   },
@@ -505,6 +510,7 @@ public class Main {
     description:
       "インターフェースまたは抽象クラスを使った簡単なコードを書いてください。",
     hint: "interface または abstract class を使います。",
+    requiredPatternGroups: [["interface", "abstract class"]],
     expectedOutput: "",
     starterCode: `public class Main {
   public static void main(String[] args) {
@@ -560,15 +566,15 @@ public class Main {
     no: "23",
     title: "ファイル入出力",
     description:
-      "ファイルの読み書きに関する基本コードを書いてください。",
-    hint: "BufferedReader や FileWriter などを調べながら書きます。",
-    expectedOutput: "",
+      "Files.writeでsample.txtにJavaを書き込み、Files.readAllLinesで読み取ってJavaと表示してください。文字コードはUTF-8を指定します。",
+    hint: "Paths.get、StandardCharsets.UTF_8、Files.write、Files.readAllLinesを使います。",
+    expectedOutput: "Java",
     starterCode: `public class Main {
   public static void main(String[] args) throws Exception {
 
   }
 }`,
-    requiredPatterns: [],
+    requiredPatterns: ["Files.write", "Files.readAllLines", "StandardCharsets.UTF_8"],
     forbiddenPatterns: [],
     type: "lesson",
   },
@@ -578,9 +584,9 @@ public class Main {
     no: "24",
     title: "コレクション",
     description:
-      "ArrayList を使って文字列を追加し、1つ表示してください。",
+      "ArrayList<String>にJavaを追加し、getで取り出してJavaと表示してください。",
     hint: "ArrayList<String> list = new ArrayList<>(); を使います。",
-    expectedOutput: "",
+    expectedOutput: "Java",
     starterCode: `import java.util.ArrayList;
 
 public class Main {
@@ -588,7 +594,7 @@ public class Main {
 
   }
 }`,
-    requiredPatterns: ["ArrayList"],
+    requiredPatterns: ["ArrayList", ".add(", ".get("],
     forbiddenPatterns: [],
     type: "lesson",
   },
@@ -677,15 +683,15 @@ public class Main {
     no: "32",
     title: "総合演習",
     description:
-      "これまで学んだ内容を組み合わせるための総合演習です。",
+      "nameとscoreを持つStudentクラスを作成し、Taro（80点）とHanako（90点）をStudent配列に入れてください。sumScoresメソッドで合計点を求め、170と表示してください。",
     hint: "クラス、配列、メソッド、条件分岐などを整理して使いましょう。",
-    expectedOutput: "",
+    expectedOutput: "170",
     starterCode: `public class Main {
   public static void main(String[] args) {
 
   }
 }`,
-    requiredPatterns: [],
+    requiredPatterns: ["class Student", "Student[]", "sumScores(", "for", "return"],
     forbiddenPatterns: [],
     type: "lesson",
   },
@@ -695,8 +701,7 @@ public class Main {
 const baseAnswerCodeMap: Record<string, string> = {
   "01-java-overview": `public class Main {
   public static void main(String[] args) {
-    // JavaはWebアプリ、Androidアプリ、業務システムなどで使われます。
-    // この確認問題では出力は必要ありません。
+    System.out.println("Java");
   }
 }`,
   "02-how-to-run": `public class Main {
@@ -832,7 +837,7 @@ public class Main {
   public static void printData(String text) {
   }
 
-  public static void printData(int number) {
+  public static void printData(int number, String text) {
   }
 
   public static void main(String[] args) {
@@ -941,12 +946,14 @@ public class Main {
     }
   }
 }`,
-  "23-file-io": `import java.io.BufferedReader;
-import java.io.FileReader;
+  "23-file-io": `import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.charset.StandardCharsets;
 
 public class Main {
   public static void main(String[] args) throws Exception {
-    BufferedReader reader = null;
+    Files.write(Paths.get("sample.txt"), "Java".getBytes(StandardCharsets.UTF_8));
+    System.out.println(Files.readAllLines(Paths.get("sample.txt"), StandardCharsets.UTF_8).get(0));
   }
 }`,
   "24-collection": `import java.util.ArrayList;
@@ -955,6 +962,7 @@ public class Main {
   public static void main(String[] args) {
     ArrayList<String> list = new ArrayList<>();
     list.add("Java");
+    System.out.println(list.get(0));
   }
 }`,
   "project-todo": `import java.util.ArrayList;
@@ -1036,6 +1044,15 @@ public class Main {
       new Student("Taro", 80),
       new Student("Hanako", 90)
     };
+    System.out.println(sumScores(students));
+  }
+
+  public static int sumScores(Student[] students) {
+    int sum = 0;
+    for (Student student : students) {
+      sum += student.score;
+    }
+    return sum;
   }
 }`,
   "project-library-final": `import java.util.ArrayList;
@@ -1073,6 +1090,8 @@ type ReviewQuestionSpec = {
   answerCode: string;
   requiredPatterns?: string[];
   forbiddenPatterns?: string[];
+  requiredPatternGroups?: string[][];
+  testCases?: { stdin: string; expectedOutput: string }[];
 };
 
 const lessonReviewSpecs: Record<string, ReviewQuestionSpec[]> = {
@@ -2683,16 +2702,16 @@ public class Main {
     {
       title: "IOExceptionのcatch",
       description: "IOExceptionをcatchする形を書き、OKと表示してください。",
-      hint: "catch (IOException e) を使います。",
+      hint: "try内でthrow new IOException()し、catch (IOException e)でOKと表示します。",
       expectedOutput: "OK",
       answerCode: `import java.io.IOException;
 
 public class Main {
   public static void main(String[] args) {
     try {
-      System.out.println("OK");
+      throw new IOException();
     } catch (IOException e) {
-      System.out.println("Error");
+      System.out.println("OK");
     }
   }
 }`,
@@ -3141,6 +3160,7 @@ const makeReviewQuestion = (
       starterCode: spec.starterCode ?? base.starterCode,
       requiredPatterns: spec.requiredPatterns ?? base.requiredPatterns ?? [],
       forbiddenPatterns: spec.forbiddenPatterns ?? [],
+      requiredPatternGroups: spec.requiredPatternGroups ?? [],
     };
   }
 
@@ -3197,6 +3217,19 @@ export const javaQuestionMap: Record<string, JavaQuestion[]> = {
   ),
   ...javaExerciseQuestionMap,
 };
+
+for (const questions of Object.values(javaQuestionMap)) {
+  for (const question of questions) {
+    question.verificationCode = javaVerifications[question.id];
+    const cases = [
+      { stdin: question.sampleInput ?? "", expectedOutput: question.expectedOutput ?? "" },
+      ...(javaTestCases[question.id] ?? []),
+    ];
+    question.testCases = cases.filter((testCase, index) =>
+      cases.findIndex((other) => other.stdin === testCase.stdin && other.expectedOutput === testCase.expectedOutput) === index
+    );
+  }
+}
 
 export type JavaQuestionEntry = JavaQuestion & {
   topicId: string;

@@ -10,6 +10,8 @@ export type JavaExerciseQuestion = {
   answerCode?: string;
   requiredPatterns?: string[];
   forbiddenPatterns?: string[];
+  requiredPatternGroups?: string[][];
+  testCases?: { stdin: string; expectedOutput: string }[];
   inheritPreviousCode?: boolean;
   type: "lesson" | "mini_project" | "final_project";
 };

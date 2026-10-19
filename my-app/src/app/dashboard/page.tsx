@@ -7,7 +7,8 @@ import { doc, getDoc } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import AuthGuard from "@/components/AuthGuard";
 import AppHeader from "@/components/AppHeader";
-import { javaQuestionMap } from "@/data/javaQuestions";
+import { javaQuestionMap, javaQuestionEntriesById } from "@/data/javaQuestions";
+import { calculateLearningProgress } from "@/lib/learningProgress";
 
 type UserProgress = {
   correctAnswers?: number;
@@ -90,8 +91,10 @@ export default function DashboardPage() {
 
   const progress = userData?.progress;
   const correctAnswers = progress?.correctAnswers ?? 0;
-  const completedDrills = progress?.completedDrills ?? 0;
-  const solvedCount = progress?.solvedTopics?.length ?? 0;
+  const learningProgress = calculateLearningProgress(
+    Object.keys(javaQuestionEntriesById), progress?.solvedTopics ?? []
+  );
+  const solvedCount = learningProgress.solvedCount;
   const currentLanguage = progress?.lastSolvedLanguage ?? "まだありません";
 
   const solvedTopics = useMemo(() => {
@@ -134,15 +137,12 @@ export default function DashboardPage() {
     return "入門者";
   }, [level]);
 
-  const progressPercent = useMemo(() => {
-    const target = 20;
-    return Math.min((completedDrills / target) * 100, 100);
-  }, [completedDrills]);
+  const progressPercent = learningProgress.percent;
 
   const nextRecommendedTopic = useMemo(() => {
     const nextTopic = Object.entries(javaQuestionMap).find(
-      ([topicId, questions]) =>
-        !solvedTopics.includes(topicId) &&
+      ([, questions]) =>
+        questions.length > 0 &&
         !questions.every((question) => solvedTopics.includes(question.id))
     );
 
@@ -261,7 +261,7 @@ export default function DashboardPage() {
                       </div>
 
                       <p className="mt-2 text-sm text-gray-500">
-                        完了ドリル数 {completedDrills} / 20
+                        完了ドリル数 {solvedCount} / {learningProgress.totalCount}
                       </p>
                     </div>
                   </div>

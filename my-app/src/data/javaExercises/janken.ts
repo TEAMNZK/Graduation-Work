@@ -77,7 +77,8 @@ public class Main {
     }
   }
 }`,
-    requiredPatterns: ["if", "System.out.println"],
+    requiredPatterns: ["System.out.println"],
+    requiredPatternGroups: [["if", "switch"]],
     forbiddenPatterns: [],
     type: "mini_project",
   },
