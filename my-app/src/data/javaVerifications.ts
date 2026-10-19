@@ -2,6 +2,7 @@
 export const javaVerifications: Record<string, string> = {
   "13-method-q3": 'if (getNumber() != 5) throw new AssertionError("getNumber");',
   "13-method-q5": 'if (add(3, 4) != 7 || add(-2, 5) != 3 || add(0, 0) != 0) throw new AssertionError("add");',
+  "25-generics-q2": 'if (!"Other".equals(new Box<String>("Other").get()) || new Box<Integer>(42).get() != 42) throw new AssertionError("Box<T>");',
   "14-overload-q1": `
     java.lang.reflect.Method one = Main.class.getDeclaredMethod("printData", String.class);
     java.lang.reflect.Method two = Main.class.getDeclaredMethod("printData", int.class, String.class);

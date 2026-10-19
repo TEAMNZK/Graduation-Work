@@ -55,6 +55,18 @@ export type JavaExecutionResult = {
 };
 export type JavaExecutor = (code: string, stdin: string) => Promise<JavaExecutionResult>;
 
+export function gradeJavaQuiz(question: JavaQuestion, choiceId: unknown) {
+  const quiz = question.quiz;
+  const valid = typeof choiceId === "string" && quiz?.choices.some((choice) => choice.id === choiceId);
+  const correct = Boolean(valid && choiceId === quiz?.correctChoiceId);
+  return {
+    correct,
+    message: correct ? "正解です。" : "不正解です。選択肢と問題文をもう一度確認してください。",
+    passedCount: correct ? 1 : 0,
+    testCount: 1,
+  };
+}
+
 export const normalizeJavaOutput = (output: string) => output.replace(/\r\n?/g, "\n").trim();
 
 export function addJavaVerification(code: string, verification?: string): string {

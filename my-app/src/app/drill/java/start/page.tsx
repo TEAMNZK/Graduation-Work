@@ -101,7 +101,10 @@ export default function DrillJavaStartPage() {
         currentIndex: safeIndex,
         isInProgress: parsed.isInProgress,
         answeredCodeByQuestionId: parsed.answeredCodeByQuestionId ?? {},
-        review: getJavaDrillReview(parsed.review, selectedQuestionIds[safeIndex]) ?? undefined,
+        review: getJavaDrillReview(parsed.review, selectedQuestionIds[safeIndex], JSON.stringify([
+          javaQuestionEntriesById[selectedQuestionIds[safeIndex]].answerCode,
+          javaQuestionEntriesById[selectedQuestionIds[safeIndex]].quiz,
+        ])) ?? undefined,
       };
 
       localStorage.setItem(STORAGE_KEY, JSON.stringify(safeSession));
@@ -124,7 +127,7 @@ export default function DrillJavaStartPage() {
               : "";
 
           const review = safeSession.review;
-          setCode(review?.code ?? (inheritedCode || question.starterCode));
+          setCode(review?.code ?? (question.quiz ? "" : inheritedCode || question.starterCode));
           setStdin(review?.stdin ?? question.sampleInput ?? "");
           setOutput(review?.output ?? "");
           setSubmittedCode(review?.code ?? "");
@@ -236,7 +239,7 @@ export default function DrillJavaStartPage() {
   };
 
   const handleRun = async () => {
-    if (isRunning || !currentQuestion || !currentTopic || !currentQuestionId) return;
+    if (isRunning || !currentQuestion || !currentTopic || !currentQuestionId || (currentQuestion.quiz && !code)) return;
 
     setSubmittedCode(code);
     setIsRunning(true);
@@ -333,6 +336,7 @@ export default function DrillJavaStartPage() {
       stdin,
       output,
       progressSaved: isProgressUpdated,
+      questionVersion: JSON.stringify([currentQuestion.answerCode, currentQuestion.quiz]),
     };
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...session, review }));
@@ -397,7 +401,7 @@ export default function DrillJavaStartPage() {
         ? code
         : nextQuestion.starterCode;
 
-      setCode(nextStarterCode);
+      setCode(nextQuestion.quiz ? "" : nextStarterCode);
       setStdin(nextQuestion.sampleInput ?? "");
     }
   };
@@ -622,7 +626,7 @@ export default function DrillJavaStartPage() {
               <div className="space-y-4 p-5">
                 <div className="rounded-lg border border-sky-100 bg-sky-50 p-4">
                   <p className="mb-3 text-sm font-semibold text-slate-500">
-                    Main.java
+                      {currentQuestion.quiz ? "選択問題" : "Main.java"}
                   </p>
                   <p className="whitespace-pre-line text-lg leading-8">
                     {currentQuestion.description}
@@ -659,9 +663,11 @@ export default function DrillJavaStartPage() {
 
                 {showAnswer && canShowAnswer && (
                   <div className="rounded-lg border border-blue-100 bg-blue-50 p-4 text-sm leading-7">
-                    見本コード:
+                    {currentQuestion.quiz ? "正しい答え:" : "見本コード:"}
                     <pre className="mt-2 whitespace-pre-wrap rounded-md bg-white p-3 font-mono text-sm leading-6">
-                      {currentQuestion.answerCode ?? currentQuestion.starterCode}
+                      {currentQuestion.quiz
+                        ? currentQuestion.quiz.choices.find((choice) => choice.id === currentQuestion.quiz?.correctChoiceId)?.text
+                        : currentQuestion.answerCode ?? currentQuestion.starterCode}
                     </pre>
                   </div>
                 )}
@@ -678,20 +684,31 @@ export default function DrillJavaStartPage() {
             <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
               <div className="flex items-center justify-between border-b bg-slate-800 px-5 py-3 text-white">
                 <div className="rounded-md bg-slate-700 px-4 py-2 font-bold">
-                  Main.java
+                  {currentQuestion.quiz ? "正しい答えを選んでください" : "Main.java"}
                 </div>
 
                 <button
                   onClick={handleRun}
-                  disabled={isRunning}
+                  disabled={isRunning || Boolean(currentQuestion.quiz && !code)}
                   className="rounded-lg bg-emerald-500 px-5 py-2 text-sm font-bold text-white hover:bg-emerald-600 disabled:opacity-60"
                 >
-                  {isRunning ? "実行中..." : "実行"}
+                  {isRunning ? "確認中..." : currentQuestion.quiz ? "回答する" : "実行"}
                 </button>
               </div>
 
               <div className="p-4">
-                <textarea
+                {currentQuestion.quiz ? (
+                  <fieldset className="space-y-4 p-2" disabled={isRunning}>
+                    <legend className="mb-4 font-bold">選択肢</legend>
+                    {currentQuestion.quiz.choices.map((choice) => (
+                      <label key={choice.id} className={`flex cursor-pointer items-start gap-3 rounded-lg border p-4 ${code === choice.id ? "border-blue-400 bg-blue-50" : "border-slate-200 hover:bg-slate-50"}`}>
+                        <input type="radio" name={currentQuestionId} value={choice.id} checked={code === choice.id}
+                          onChange={() => { setCode(choice.id); setIsCorrect(false); setJudgeMessage(""); }} className="mt-1" />
+                        <span className="whitespace-pre-wrap font-mono text-sm leading-7">{choice.text}</span>
+                      </label>
+                    ))}
+                  </fieldset>
+                ) : <textarea
                   ref={editorRef}
                   value={code}
                   disabled={isRunning}
@@ -699,12 +716,12 @@ export default function DrillJavaStartPage() {
                   onKeyDown={handleEditorKeyDown}
                   className="min-h-[520px] w-full rounded-lg border bg-slate-900 p-4 font-mono text-sm leading-6 text-slate-100 outline-none xl:min-h-[620px]"
                   spellCheck={false}
-                />
+                />}
               </div>
             </div>
 
             <aside className="space-y-4">
-              <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
+              {!currentQuestion.quiz && <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
                 <div className="flex items-center justify-between border-b px-4 py-3">
                   <h2 className="text-lg font-bold">コンソール</h2>
                 </div>
@@ -734,17 +751,17 @@ export default function DrillJavaStartPage() {
                     {!output && !errorOutput && "ここに実行結果が表示されます。"}
                   </div>
                 </div>
-              </div>
+              </div>}
 
               <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
                 <div className="flex items-center justify-between border-b px-4 py-3">
-                  <h2 className="text-lg font-bold">見本の出力結果</h2>
+                  <h2 className="text-lg font-bold">{currentQuestion.quiz ? "回答結果" : "見本の出力結果"}</h2>
                 </div>
 
                 <div className="p-4">
-                  <div className="min-h-[180px] whitespace-pre-wrap rounded-lg border bg-[#031b22] p-4 font-mono text-sm text-white">
+                  {!currentQuestion.quiz && <div className="min-h-[180px] whitespace-pre-wrap rounded-lg border bg-[#031b22] p-4 font-mono text-sm text-white">
                     {sampleOutputDisplay}
-                  </div>
+                  </div>}
 
                   {judgeMessage && (
                     <div

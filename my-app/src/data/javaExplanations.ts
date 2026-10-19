@@ -73,6 +73,8 @@ function explainLine(code: string): string | null {
   if (/\bthis\./.test(text) && text.includes("=")) return "受け取った値を、このオブジェクト自身のフィールドに保存します。";
   if (/\.add\s*\(/.test(text)) return "リストの末尾に、新しい要素を追加します。";
   if (/\.put\s*\(/.test(text)) return "キーと値の組をMapへ登録します。同じキーがあれば、値を更新します。";
+  if (/\.set\s*\(/.test(text)) return "指定した添字の要素を、新しい値に置き換えます。要素数は変わりません。";
+  if (/\.remove\s*\(/.test(text)) return "指定した要素をリストから削除します。後ろの要素は前へ詰まり、要素数が1減ります。";
   if (/\+\+|--/.test(text)) return text.includes("++") ? "この変数の値を1増やします。" : "この変数の値を1減らします。";
   if (/\+=/.test(text)) return "右辺の値を現在の変数の値に足し、その結果で更新します。";
   if (/^(?:public\s+|private\s+|protected\s+|static\s+)*(?:[\w<>\[\],]+\s+)+\w+\s*\([^;]*\)\s*(?:throws\s+\w+\s*)?\{/.test(text)) return "名前、受け取る引数、返す値の型を指定してメソッドを定義します。呼び出すと、この中の処理が動きます。";
@@ -93,5 +95,5 @@ export function getJavaExplanation(question: JavaQuestionEntry): JavaExplanation
     const explanation = explainLine(code);
     return explanation ? [{ line: index + 1, code: code.trim(), explanation }] : [];
   });
-  return { ...guide, walkthrough };
+  return { ...guide, overview: question.quiz?.explanation ?? guide.overview, walkthrough };
 }

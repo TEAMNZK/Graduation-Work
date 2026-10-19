@@ -12,6 +12,11 @@ test("every available question has a guide and explanations tied to its own answ
     const explanation = getJavaExplanation(question);
     assert.ok(explanation.overview.length > 20, question.id);
     assert.ok(explanation.points.length >= 2, question.id);
+    if (question.quiz) {
+      assert.ok(question.quiz.choices.some((choice) => choice.id === question.quiz.correctChoiceId), question.id);
+      assert.equal(explanation.overview, question.quiz.explanation, question.id);
+      continue;
+    }
     assert.ok(explanation.walkthrough.length > 0, question.id);
     const lines = question.answerCode.split(/\r?\n/);
     for (const step of explanation.walkthrough) {
@@ -40,6 +45,9 @@ test("returning from explanation restores only the matching question and preserv
   };
   assert.deepEqual(getJavaDrillReview(JSON.parse(JSON.stringify(review)), review.questionId), review);
   assert.equal(getJavaDrillReview(review, "14-overload-q2"), null);
+  assert.equal(getJavaDrillReview(review, review.questionId, "new-version"), null);
+  assert.equal(getJavaDrillReview({ ...review, questionVersion: "old-version" }, review.questionId, "new-version"), null);
+  assert.ok(getJavaDrillReview({ ...review, questionVersion: "new-version" }, review.questionId, "new-version"));
   for (const invalid of [undefined, null, "review", {}, { ...review, code: null }, { ...review, progressSaved: "true" }]) {
     assert.equal(getJavaDrillReview(invalid, review.questionId), null);
   }

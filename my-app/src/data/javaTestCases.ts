@@ -16,10 +16,11 @@ export const javaTestCases: Record<string, TestCase[]> = {
   "08-if-q5": cases(["12", ""], ["13", "Teen"], ["19", "Teen"], ["20", ""]),
   "09-switch-q1": cases(["2", "火曜日"], ["3", "水曜日"], ["4", "木曜日"], ["5", "金曜日"], ["6", "土曜日"], ["7", "日曜日"]),
   "09-switch-q2": cases(["1", "Red"], ["3", "Yellow"]),
-  "09-switch-q3": cases(["1", "Start"], ["2", "Save"]),
+  "09-switch-q3": cases(["1", "平日"], ["2", "平日"], ["3", "平日"], ["4", "平日"], ["5", "平日"], ["7", "休日"], ["0", "範囲外"], ["8", "範囲外"]),
   "09-switch-q4": cases(["1", "OK"], ["0", "NG"]),
   "09-switch-q5": cases(["python", ""], ["Java", ""]),
   "21-package-import-q1": cases(["0", "0"], ["-12", "-12"]),
+  "11-while-q4": cases(["0", "0"], ["-3 3 0", "0"], ["1 2 3 0 99", "6"]),
   "21-package-import-q4": cases(["Python", "Python"], ["C", "C"]),
   "project-janken-q3": cases(["0 0", "あいこ"], ["1 1", "あいこ"], ["0 1", "勝敗あり"], ["2 0", "勝敗あり"]),
 };

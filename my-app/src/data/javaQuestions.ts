@@ -2,6 +2,12 @@ import { javaExerciseQuestionMap } from "@/data/javaExerciseQuestions";
 import { javaTestCases } from "@/data/javaTestCases";
 import { javaVerifications } from "@/data/javaVerifications";
 
+export type JavaQuiz = {
+  choices: { id: string; text: string }[];
+  correctChoiceId: string;
+  explanation: string;
+};
+
 export type JavaQuestion = {
   id: string;
   no: string;
@@ -17,6 +23,7 @@ export type JavaQuestion = {
   requiredPatternGroups?: string[][];
   testCases?: { stdin: string; expectedOutput: string }[];
   verificationCode?: string;
+  quiz?: JavaQuiz;
   inheritPreviousCode?: boolean;
   type: "lesson" | "mini_project" | "final_project";
 };
@@ -527,19 +534,17 @@ public class Main {
     no: "21",
     title: "パッケージとimport",
     description:
-      "Scanner を使うために import 文を書いて、整数を1つ入力して表示してください。",
-    hint: "import java.util.Scanner; を使います。",
+      "import文を使わず、完全修飾名java.util.ScannerでScannerを使って整数を1つ読み取り、表示してください。",
+    hint: "変数の型とnewの両方にjava.util.Scannerと書けば、import文を省略できます。",
     expectedOutput: "10",
-    starterCode: `import java.util.Scanner;
-
-public class Main {
+    starterCode: `public class Main {
   public static void main(String[] args) {
 
   }
 }`,
-    requiredPatterns: ["import", "Scanner"],
+    requiredPatterns: ["java.util.Scanner", "nextInt"],
     sampleInput: "10",
-    forbiddenPatterns: [],
+    forbiddenPatterns: ["import"],
     type: "lesson",
   },
 
@@ -929,11 +934,9 @@ public class Main {
     Printable report = new Report();
   }
 }`,
-  "21-package-import": `import java.util.Scanner;
-
-public class Main {
+  "21-package-import": `public class Main {
   public static void main(String[] args) {
-    Scanner scanner = new Scanner(System.in);
+    java.util.Scanner scanner = new java.util.Scanner(System.in);
     int number = scanner.nextInt();
     System.out.println(number);
   }
@@ -1092,51 +1095,77 @@ type ReviewQuestionSpec = {
   forbiddenPatterns?: string[];
   requiredPatternGroups?: string[][];
   testCases?: { stdin: string; expectedOutput: string }[];
+  quiz?: JavaQuiz;
 };
 
 const lessonReviewSpecs: Record<string, ReviewQuestionSpec[]> = {
   "01-java-overview": [
     {
       title: "Javaの用途",
-      description: "Javaで作れるものを1つ選び、Webアプリと出力してください。",
+      description: "Javaの用途として適切な組み合わせを選んでください。",
       hint: "JavaはWebアプリ、Androidアプリ、業務システムなどで使われます。",
-      expectedOutput: "Webアプリ",
-      answerCode: createPrintAnswerCode("Webアプリ"),
-      requiredPatterns: ["System.out.print"],
+      expectedOutput: "",
+      answerCode: "",
+      requiredPatterns: [],
+      quiz: {
+        choices: [{ id: "web-only", text: "Webページの見た目を指定する用途に限られる" }, { id: "applications", text: "Webアプリ、業務システム、Androidアプリなど" }, { id: "database-only", text: "データベースの検索命令を書く用途に限られる" }],
+        correctChoiceId: "applications",
+        explanation: "Javaはさまざまなアプリケーションの開発に使えます。見た目の指定を主に担うCSSや、データベースを操作するSQLとは役割が異なります。",
+      },
     },
     {
       title: "Javaの特徴",
-      description: "Javaの特徴として、実行環境があれば動かしやすいことを意識し、どこでも動くと出力してください。",
+      description: "コンパイルしたJavaのプログラムを、異なるOSで動かせる理由として適切な説明を選んでください。",
       hint: "Javaは環境を整えることでさまざまな場所で実行できます。",
-      expectedOutput: "どこでも動く",
-      answerCode: createPrintAnswerCode("どこでも動く"),
-      requiredPatterns: ["System.out.print"],
+      expectedOutput: "",
+      answerCode: "",
+      requiredPatterns: [],
+      quiz: {
+        choices: [{ id: "jvm", text: "それぞれのOSに対応したJavaの実行環境（JVM）がバイトコードを実行するから" }, { id: "browser", text: "Javaのコードは必ずブラウザ内で実行されるから" }, { id: "no-runtime", text: "Javaの実行環境を用意する必要がないから" }],
+        correctChoiceId: "jvm",
+        explanation: "Javaのソースコードは、コンパイルによってバイトコードになります。OSごとのJVMがこれを実行するため、対応する実行環境があれば異なるOSでも動かせます。",
+      },
     },
     {
       title: "Javaファイル名",
-      description: "Javaの基本ファイル名として Main.java と出力してください。",
+      description: "public class Mainと宣言したクラスを保存するファイル名を選んでください。",
       hint: "このドリルでは Main.java を使って実行します。",
-      expectedOutput: "Main.java",
-      answerCode: createPrintAnswerCode("Main.java"),
-      requiredPatterns: ["System.out.print"],
+      expectedOutput: "",
+      answerCode: "",
+      requiredPatterns: [],
+      quiz: {
+        choices: [{ id: "main-class", text: "Main.class" }, { id: "lowercase", text: "main.java" }, { id: "source", text: "Main.java" }],
+        correctChoiceId: "source",
+        explanation: "publicなクラス名とソースファイル名を一致させます。大文字・小文字も区別します。Main.classはコンパイル後に生成されるファイルです。",
+      },
     },
     {
       title: "mainメソッド",
-      description: "Javaプログラムの開始地点を意識し、mainと出力してください。",
+      description: "このドリルで使用する、プログラムの入口となるmainメソッドの宣言を選んでください。",
       hint: "Javaではmainメソッドから処理が始まります。",
-      expectedOutput: "main",
-      answerCode: createPrintAnswerCode("main"),
-      requiredPatterns: ["System.out.print"],
+      expectedOutput: "",
+      answerCode: "",
+      requiredPatterns: [],
+      quiz: {
+        choices: [{ id: "return-int", text: "public static int main(String[] args)" }, { id: "entry", text: "public static void main(String[] args)" }, { id: "capital", text: "public static void Main(String[] args)" }],
+        correctChoiceId: "entry",
+        explanation: "このドリルではpublic static void main(String[] args)を入口にします。mainの大文字・小文字や戻り値の型も宣言の一部です。",
+      },
     },
   ],
   "02-how-to-run": [
     {
-      title: "実行メッセージ",
-      description: "コードが実行できることを確認するため、Run OK と出力してください。",
-      hint: "System.out.printlnで文字列を出力します。",
-      expectedOutput: "Run OK",
-      answerCode: createPrintAnswerCode("Run OK"),
-      requiredPatterns: ["System.out.print"],
+      title: "コンパイルエラーの原因",
+      description: 'System.out.println("Run OK") の行でコンパイルエラーになりました。この文に不足している記号を選んでください。',
+      hint: "Javaでは多くの文の終わりに、区切りの記号が必要です。",
+      expectedOutput: "",
+      answerCode: "",
+      requiredPatterns: [],
+      quiz: {
+        choices: [{ id: "colon", text: ":（コロン）" }, { id: "comma", text: ",（カンマ）" }, { id: "semicolon", text: ";（セミコロン）" }],
+        correctChoiceId: "semicolon",
+        explanation: '正しい文はSystem.out.println("Run OK");です。文末のセミコロンがないと、コンパイルを完了できません。',
+      },
     },
     {
       title: "2行の出力",
@@ -1154,57 +1183,74 @@ Run`,
     },
     {
       title: "実行順序",
-      description: "処理が上から順に動くことを確認し、First、Secondの順に出力してください。",
-      hint: "書いた順にprintlnが実行されます。",
-      expectedOutput: `First
-Second`,
-      answerCode: `public class Main {
-  public static void main(String[] args) {
-    System.out.println("First");
-    System.out.println("Second");
-  }
-}`,
-      requiredPatterns: ["System.out.println"],
+      description: 'mainの中に、System.out.print("A");、System.out.println("B");、System.out.println("C");の順に書きました。出力を選んでください。',
+      hint: "処理は書いた順に進みます。printとprintlnで改行の有無が違うことにも注目しましょう。",
+      expectedOutput: "",
+      answerCode: "",
+      requiredPatterns: [],
+      quiz: {
+        choices: [{ id: "lines", text: "A\nB\nC" }, { id: "joined", text: "AB\nC" }, { id: "all-joined", text: "ABC" }],
+        correctChoiceId: "joined",
+        explanation: "最初のprintは改行しません。続くprintlnのBはAの直後に表示され、そこで改行されます。そのため1行目がAB、2行目がCになります。",
+      },
     },
     {
-      title: "実行完了",
-      description: "最後に Finished と出力してください。",
-      hint: "文字列はダブルクォーテーションで囲みます。",
-      expectedOutput: "Finished",
-      answerCode: createPrintAnswerCode("Finished"),
-      requiredPatterns: ["System.out.print"],
+      title: "コメントと実行結果",
+      description: 'mainの1行目が // System.out.println("Hidden");、2行目が System.out.println("Visible"); です。実行結果を選んでください。',
+      hint: "//から行末まではコメントなので、処理として実行されません。",
+      expectedOutput: "",
+      answerCode: "",
+      requiredPatterns: [],
+      quiz: {
+        choices: [{ id: "visible", text: "Visible" }, { id: "both", text: "Hidden\nVisible" }, { id: "hidden", text: "Hidden" }],
+        correctChoiceId: "visible",
+        explanation: "1行目はコメントなので実行されません。実際に動くのは2行目のprintlnだけです。コメントは説明を書くほか、一時的に処理を止めるときにも使えます。",
+      },
     },
   ],
   "03-hello-world": [
     {
-      title: "Hello Code",
-      description: "Hello Code と出力してください。",
-      hint: "Hello Java と同じ形で文字列を変えます。",
-      expectedOutput: "Hello Code",
-      answerCode: createPrintAnswerCode("Hello Code"),
-      requiredPatterns: ["System.out.println"],
+      title: "改行しない出力",
+      description: "printを2回使い、Helloと半角スペース付きのJavaを同じ行につなげて表示してください。最後に引数のないprintlnで改行します。",
+      hint: 'print("Hello")、print(" Java")、println()の順に呼びます。',
+      expectedOutput: "Hello Java",
+      answerCode: `public class Main {
+  public static void main(String[] args) {
+    System.out.print("Hello");
+    System.out.print(" Java");
+    System.out.println();
+  }
+}`,
+      requiredPatterns: ["System.out.print(", "System.out.println()"],
     },
     {
-      title: "あいさつの出力",
-      description: "こんにちは と出力してください。",
-      hint: "日本語の文字列もprintlnで出力できます。",
-      expectedOutput: "こんにちは",
-      answerCode: createPrintAnswerCode("こんにちは"),
-      requiredPatterns: ["System.out.println"],
+      title: "引用符を表示する",
+      description: 'printでダブルクォーテーション付きの"Java"を表示し、printlnで「を学ぶ」を続けて表示してください。',
+      hint: '文字列内のダブルクォーテーションは、直前にバックスラッシュを付けてエスケープします。',
+      expectedOutput: '"Java"を学ぶ',
+      answerCode: `public class Main {
+  public static void main(String[] args) {
+    System.out.print("\\"Java\\"");
+    System.out.println("を学ぶ");
+  }
+}`,
+      requiredPatterns: ["System.out.print(", "System.out.println"],
     },
     {
-      title: "2行のあいさつ",
-      description: "1行目にHello、2行目にJavaと出力してください。",
-      hint: "改行したいときはprintlnを複数回使います。",
+      title: "空行を入れる",
+      description: "HelloとJavaの間に空行を1行入れて表示してください。引数のないprintlnを使います。",
+      hint: "println()は文字を表示せず、改行だけを行います。",
       expectedOutput: `Hello
+
 Java`,
       answerCode: `public class Main {
   public static void main(String[] args) {
     System.out.println("Hello");
+    System.out.println();
     System.out.println("Java");
   }
 }`,
-      requiredPatterns: ["System.out.println"],
+      requiredPatterns: ["System.out.println()"],
     },
     {
       title: "文字列の連結",
@@ -1221,32 +1267,42 @@ Java`,
   ],
   "04-variables": [
     {
-      title: "名前を変数で表示",
-      description: "String型の変数 userName に Hanako を入れて表示してください。",
-      hint: "String userName = \"Hanako\"; のように書きます。",
-      expectedOutput: "Hanako",
+      title: "変数の値を交換する",
+      description: "firstにTaro、secondにHanakoを入れ、退避用の変数tempを使って値を交換してください。交換後のfirstとsecondを1行ずつ表示します。",
+      hint: "tempにfirstを退避してからfirstを更新し、最後にtempの値をsecondへ入れます。",
+      expectedOutput: `Hanako
+Taro`,
       answerCode: `public class Main {
   public static void main(String[] args) {
-    String userName = "Hanako";
-    System.out.println(userName);
+    String first = "Taro";
+    String second = "Hanako";
+    String temp = first;
+    first = second;
+    second = temp;
+    System.out.println(first);
+    System.out.println(second);
   }
 }`,
-      requiredPatterns: ["String", "userName", "System.out.println"],
-      forbiddenPatterns: ['System.out.println("Hanako")'],
+      requiredPatterns: ["String", "temp", "first = second", "second = temp", "System.out.println"],
+      forbiddenPatterns: ['System.out.println("Hanako")', 'System.out.println("Taro")'],
     },
     {
-      title: "数値を変数で表示",
-      description: "int型の変数 age に 20 を入れて表示してください。",
-      hint: "整数はint型で扱えます。",
-      expectedOutput: "20",
+      title: "値のコピーと更新",
+      description: "originalに20を入れ、copiedにoriginalの値をコピーします。その後originalだけを30に変え、copied、originalの順に1行ずつ表示してください。",
+      hint: "intの代入では、その時点の値がコピーされます。片方を変えても、もう片方は変わりません。",
+      expectedOutput: `20
+30`,
       answerCode: `public class Main {
   public static void main(String[] args) {
-    int age = 20;
-    System.out.println(age);
+    int original = 20;
+    int copied = original;
+    original = 30;
+    System.out.println(copied);
+    System.out.println(original);
   }
 }`,
-      requiredPatterns: ["int", "age", "System.out.println"],
-      forbiddenPatterns: ["System.out.println(20)"],
+      requiredPatterns: ["int", "copied = original", "original = 30", "System.out.println"],
+      forbiddenPatterns: ["System.out.println(20)", "System.out.println(30)"],
     },
     {
       title: "変数の再代入",
@@ -1573,33 +1629,36 @@ public class Main {
       requiredPatterns: ["switch", "case", "break", "System.out.println"],
     },
     {
-      title: "メニュー選択",
-      description: "1ならStart、2ならSave、3ならExitと表示してください。サンプル入力は 3 です。",
-      hint: "メニュー番号ごとにcaseを用意します。",
-      sampleInput: "3",
-      expectedOutput: "Exit",
+      title: "複数のcaseをまとめる",
+      description: "曜日番号を入力し、1〜5なら平日、6・7なら休日、それ以外なら範囲外と表示してください。複数のcaseをまとめて同じ処理につなげます。",
+      hint: "case 1:からcase 5:までは処理を書かずに並べ、共通の表示処理を1回書きます。",
+      sampleInput: "6",
+      expectedOutput: "休日",
       answerCode: `import java.util.Scanner;
 
 public class Main {
   public static void main(String[] args) {
     Scanner scanner = new Scanner(System.in);
-    int menu = scanner.nextInt();
-    switch (menu) {
+    int day = scanner.nextInt();
+    switch (day) {
       case 1:
-        System.out.println("Start");
-        break;
       case 2:
-        System.out.println("Save");
-        break;
       case 3:
-        System.out.println("Exit");
+      case 4:
+      case 5:
+        System.out.println("平日");
+        break;
+      case 6:
+      case 7:
+        System.out.println("休日");
         break;
       default:
+        System.out.println("範囲外");
         break;
     }
   }
 }`,
-      requiredPatterns: ["switch", "case", "System.out.println"],
+      requiredPatterns: ["switch", "case 1: case 2:", "case 6: case 7:", "default", "System.out.println"],
     },
     {
       title: "defaultの利用",
@@ -1651,22 +1710,22 @@ public class Main {
   ],
   "10-for": [
     {
-      title: "1から5まで出力",
-      description: "for文を使って1から5までを1行ずつ出力してください。",
-      hint: "int i = 1; i <= 5; i++ の形を使います。",
-      expectedOutput: `1
+      title: "カウントダウン",
+      description: "for文で3、2、1の順に1行ずつ表示し、繰り返しが終わった後にStartと表示してください。",
+      hint: "iを3から始め、1以上の間、i--で1ずつ減らします。Startの表示はループの外に書きます。",
+      expectedOutput: `3
 2
-3
-4
-5`,
+1
+Start`,
       answerCode: `public class Main {
   public static void main(String[] args) {
-    for (int i = 1; i <= 5; i++) {
+    for (int i = 3; i >= 1; i--) {
       System.out.println(i);
     }
+    System.out.println("Start");
   }
 }`,
-      requiredPatterns: ["for", "System.out.println"],
+      requiredPatterns: ["for", "--", "System.out.println"],
       forbiddenPatterns: ["System.out.println(1);", "System.out.println(2);"],
     },
     {
@@ -1756,22 +1815,26 @@ Java`,
       requiredPatterns: ["while", "+=", "System.out.println"],
     },
     {
-      title: "whileで合計",
-      description: "while文を使って1から5までの合計15を出力してください。",
-      hint: "sumに値を足してからiを増やします。",
-      expectedOutput: "15",
-      answerCode: `public class Main {
+      title: "0が入力されるまで集計",
+      description: "整数を順に入力し、0が出るまでの合計をwhile文で求めて表示してください。終了の合図の0は合計に含めません。",
+      hint: "最初の整数を読み取り、number != 0の間は合計に足してから次の整数を読みます。",
+      sampleInput: "4 6 0",
+      expectedOutput: "10",
+      answerCode: `import java.util.Scanner;
+
+public class Main {
   public static void main(String[] args) {
-    int i = 1;
+    Scanner scanner = new Scanner(System.in);
     int sum = 0;
-    while (i <= 5) {
-      sum += i;
-      i++;
+    int number = scanner.nextInt();
+    while (number != 0) {
+      sum += number;
+      number = scanner.nextInt();
     }
     System.out.println(sum);
   }
 }`,
-      requiredPatterns: ["while", "sum", "System.out.println"],
+      requiredPatterns: ["Scanner", "nextInt", "while", "!=", "sum", "System.out.println"],
     },
     {
       title: "条件で止まる",
@@ -1855,20 +1918,25 @@ Loop`,
   ],
   "13-method": [
     {
-      title: "メソッドであいさつ",
-      description: "greetメソッドを作り、その中でHiと出力し、mainから呼び出してください。",
-      hint: "static void greet() を定義します。",
-      expectedOutput: "Hi",
+      title: "引数を使って処理を再利用",
+      description: "受け取った文字列を2回表示するstatic void printTwice(String message)を作ってください。mainからHi、Javaを渡して1回ずつ呼び出します。",
+      hint: "メソッド内でmessageを2回表示します。呼び出しを2回書けば、同じ処理を異なる文字列で再利用できます。",
+      expectedOutput: `Hi
+Hi
+Java
+Java`,
       answerCode: `public class Main {
-  public static void greet() {
-    System.out.println("Hi");
+  public static void printTwice(String message) {
+    System.out.println(message);
+    System.out.println(message);
   }
 
   public static void main(String[] args) {
-    greet();
+    printTwice("Hi");
+    printTwice("Java");
   }
 }`,
-      requiredPatterns: ["static", "greet(", "greet();"],
+      requiredPatterns: ["static void printTwice(String", "System.out.println(message)", "printTwice("],
     },
     {
       title: "戻り値のあるメソッド",
@@ -2536,20 +2604,19 @@ public class Main {
       requiredPatterns: ["import", "Random", "nextInt"],
     },
     {
-      title: "ArrayListのimport",
-      description: "ArrayListをimportしてJavaを追加し、Javaと表示してください。",
-      hint: "import java.util.ArrayList; を使います。",
-      expectedOutput: "Java",
-      answerCode: `import java.util.ArrayList;
+      title: "static import",
+      description: "Math.maxをstatic importし、クラス名を付けずにmax(3, 7)を呼び出して7と表示してください。",
+      hint: "import static java.lang.Math.max;と書くと、Math.を省略できます。maxは2つの値の大きい方を返します。",
+      expectedOutput: "7",
+      answerCode: `import static java.lang.Math.max;
 
 public class Main {
   public static void main(String[] args) {
-    ArrayList<String> list = new ArrayList<>();
-    list.add("Java");
-    System.out.println(list.get(0));
+    System.out.println(max(3, 7));
   }
 }`,
-      requiredPatterns: ["import", "ArrayList", ".add"],
+      requiredPatterns: ["import static java.lang.Math.max", "max("],
+      forbiddenPatterns: ["Math.max("],
     },
     {
       title: "複数import",
@@ -2571,19 +2638,21 @@ public class Main {
       requiredPatterns: ["import", "Scanner", "ArrayList"],
     },
     {
-      title: "java.timeのimport",
-      description: "LocalDateをimportし、2026-01-01を表示してください。",
-      hint: "LocalDate.of(2026, 1, 1) を使います。",
-      expectedOutput: "2026-01-01",
+      title: "日付書式クラスのimport",
+      description: "LocalDateとDateTimeFormatterをimportし、2026年1月1日を2026/01/01の形式で表示してください。",
+      hint: 'DateTimeFormatter.ofPattern("yyyy/MM/dd")で書式を作り、date.format(formatter)で変換します。',
+      expectedOutput: "2026/01/01",
       answerCode: `import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 public class Main {
   public static void main(String[] args) {
     LocalDate date = LocalDate.of(2026, 1, 1);
-    System.out.println(date);
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd");
+    System.out.println(date.format(formatter));
   }
 }`,
-      requiredPatterns: ["import", "LocalDate", "System.out.println"],
+      requiredPatterns: ["import java.time.format.DateTimeFormatter", "DateTimeFormatter.ofPattern", ".format(", "System.out.println"],
     },
   ],
   "22-exception": [
@@ -2720,20 +2789,25 @@ public class Main {
   ],
   "24-collection": [
     {
-      title: "ArrayListに追加",
-      description: "ArrayListにJavaを追加し、Javaと表示してください。",
-      hint: "list.addとlist.getを使います。",
-      expectedOutput: "Java",
+      title: "リストの更新と削除",
+      description: "ArrayListにJavaとCを追加します。setで先頭をPythonに変更し、removeで2番目の要素を削除してください。先頭の値と残った要素数を1行ずつ表示します。",
+      hint: 'list.set(0, "Python")で置き換え、list.remove(1)で添字1の要素を削除します。',
+      expectedOutput: `Python
+1`,
       answerCode: `import java.util.ArrayList;
 
 public class Main {
   public static void main(String[] args) {
     ArrayList<String> list = new ArrayList<>();
     list.add("Java");
+    list.add("C");
+    list.set(0, "Python");
+    list.remove(1);
     System.out.println(list.get(0));
+    System.out.println(list.size());
   }
 }`,
-      requiredPatterns: ["ArrayList", ".add", ".get"],
+      requiredPatterns: ["ArrayList", ".add", ".set(", ".remove(", ".get", ".size()"],
     },
     {
       title: "リストのサイズ",
@@ -2791,20 +2865,34 @@ public class Main {
   ],
   "25-generics": [
     {
-      title: "Stringのリスト",
-      description: "ArrayList<String>にJavaを入れて表示してください。",
-      hint: "型を<String>で指定します。",
+      title: "型を指定できるBoxクラス",
+      description: "ジェネリクスを使ったBox<T>クラスを作成してください。コンストラクタでT型の値を受け取り、getメソッドで返します。Box<String>にJavaを保存して取り出し、表示してください。",
+      hint: "class Box<T>、T型のフィールドvalue、Tを返すget()を定義します。型を変えればIntegerなども保存できます。",
       expectedOutput: "Java",
-      answerCode: `import java.util.ArrayList;
+      starterCode: `public class Main {
+  public static void main(String[] args) {
+    // ここに入力してください
+  }
+}`,
+      answerCode: `class Box<T> {
+  private T value;
+
+  Box(T value) {
+    this.value = value;
+  }
+
+  T get() {
+    return value;
+  }
+}
 
 public class Main {
   public static void main(String[] args) {
-    ArrayList<String> words = new ArrayList<>();
-    words.add("Java");
-    System.out.println(words.get(0));
+    Box<String> box = new Box<>("Java");
+    System.out.println(box.get());
   }
 }`,
-      requiredPatterns: ["ArrayList<String>", "new ArrayList"],
+      requiredPatterns: ["class Box<T>", "T value", "T get()", "Box<String>", ".get()"],
     },
     {
       title: "Integerのリスト",
@@ -3161,6 +3249,7 @@ const makeReviewQuestion = (
       requiredPatterns: spec.requiredPatterns ?? base.requiredPatterns ?? [],
       forbiddenPatterns: spec.forbiddenPatterns ?? [],
       requiredPatternGroups: spec.requiredPatternGroups ?? [],
+      sampleInput: spec.sampleInput,
     };
   }
 

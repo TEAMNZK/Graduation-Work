@@ -38,11 +38,20 @@ export default async function JavaExplanationPage({ params }: {
               <p className="font-bold text-amber-900">解くときのポイント</p>
               <p className="mt-1">{question.hint}</p>
             </div>
-            <ul className="mt-5 list-disc space-y-3 pl-5 leading-7">
+            {!question.quiz && <ul className="mt-5 list-disc space-y-3 pl-5 leading-7">
               {explanation.points.map((point) => <li key={point}>{point}</li>)}
-            </ul>
+            </ul>}
           </section>
 
+          {question.quiz ? (
+            <section className="rounded-xl border border-slate-200 bg-white p-6 sm:p-8">
+              <h2 className="text-xl font-bold">正しい答え</h2>
+              <p className="mt-4 whitespace-pre-wrap rounded-lg bg-emerald-50 p-4 font-mono text-emerald-900">
+                {question.quiz.choices.find((choice) => choice.id === question.quiz?.correctChoiceId)?.text}
+              </p>
+              <p className="mt-4 leading-8">{question.quiz.explanation}</p>
+            </section>
+          ) : <>
           <section className="overflow-hidden rounded-xl border border-slate-200 bg-white">
             <div className="p-6 sm:px-8">
               <h2 className="text-xl font-bold">見本コード</h2>
@@ -73,6 +82,7 @@ export default async function JavaExplanationPage({ params }: {
             </div>
           </section>
 
+          </>}
           <nav aria-label="解説を読んだ後の操作" className="flex flex-wrap gap-3 pb-4">
             <Link href="/drill/java/start" className="rounded-lg bg-blue-600 px-6 py-3 font-bold text-white hover:bg-blue-700">問題に戻って続ける</Link>
             {explanation.textbook && <Link href={`/textbook/${explanation.textbook}`} className="rounded-lg border border-slate-300 bg-white px-6 py-3 font-bold hover:bg-slate-50">教科書で詳しく読む</Link>}

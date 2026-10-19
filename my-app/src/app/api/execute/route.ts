@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { javaQuestionEntriesById } from "@/data/javaQuestions";
 import { executeJava } from "@/lib/judge0";
-import { gradeJavaQuestion } from "@/lib/javaGrading";
+import { gradeJavaQuestion, gradeJavaQuiz } from "@/lib/javaGrading";
 
 export async function POST(req: NextRequest) {
   try {
@@ -14,6 +14,12 @@ export async function POST(req: NextRequest) {
       ? javaQuestionEntriesById[body.questionId] : undefined;
     if (body.questionId !== undefined && !question) {
       return NextResponse.json({ success: false, error: "問題が見つかりません。" }, { status: 400 });
+    }
+    if (question?.quiz) {
+      return NextResponse.json({
+        success: true, stdout: "", stderr: "", exitCode: 3,
+        grading: gradeJavaQuiz(question, body.code),
+      });
     }
     // 表示用の実行と採点の入力が同じ場合は結果を再利用する。
     const results = new Map<string, ReturnType<typeof executeJava>>();

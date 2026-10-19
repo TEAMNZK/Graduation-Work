@@ -2,17 +2,59 @@ const { test } = require("node:test");
 const assert = require("node:assert/strict");
 const load = require("../scripts/load-ts.cjs");
 const { javaQuestionEntriesById: questions } = load("src/data/javaQuestions.ts");
-const { validateJavaCode, gradeJavaQuestion, addJavaVerification } = load("src/lib/javaGrading.ts");
+const { validateJavaCode, gradeJavaQuestion, gradeJavaQuiz, javaTokens, addJavaVerification } = load("src/lib/javaGrading.ts");
 const { calculateLearningProgress } = load("src/lib/learningProgress.ts");
 const accepted = (stdout) => ({ stdout, stderr: "", statusId: 3, statusDescription: "Accepted" });
 
 test("all reference answers satisfy the code requirements and have sample cases", () => {
   assert.equal(Object.keys(questions).length, 153);
   for (const question of Object.values(questions)) {
+    if (question.quiz) continue;
     assert.equal(validateJavaCode(question, question.answerCode), null, question.id);
     assert.equal(question.testCases[0].expectedOutput, question.expectedOutput ?? "", question.id);
     assert.equal(question.testCases[0].stdin, question.sampleInput ?? "", question.id);
   }
+});
+
+test("all quiz questions accept only their correct choice", () => {
+  for (const question of Object.values(questions).filter((question) => question.quiz)) {
+    const ids = question.quiz.choices.map((choice) => choice.id);
+    assert.equal(new Set(ids).size, ids.length, question.id);
+    for (const id of ids) {
+      assert.equal(gradeJavaQuiz(question, id).correct, id === question.quiz.correctChoiceId, question.id);
+    }
+    for (const invalid of [undefined, "unknown", {}, "public class Main {}"])
+      assert.equal(gradeJavaQuiz(question, invalid).correct, false, question.id);
+  }
+});
+
+test("code answers no longer have exact duplicates", () => {
+  const seen = new Map();
+  for (const question of Object.values(questions).filter((question) => !question.quiz)) {
+    const normalized = javaTokens(question.answerCode, true).join(" ");
+    assert.ok(!seen.has(normalized), `${question.id} duplicates ${seen.get(normalized)}`);
+    seen.set(normalized, question.id);
+  }
+});
+
+test("previous duplicate solutions cannot satisfy replacement tasks", () => {
+  const oldList = questions["24-collection-q1"].answerCode;
+  for (const id of ["21-package-import-q3", "24-collection-q2", "25-generics-q2"])
+    assert.ok(validateJavaCode(questions[id], oldList), id);
+  assert.ok(validateJavaCode(questions["10-for-q2"], questions["10-for-q1"].answerCode));
+  assert.ok(validateJavaCode(questions["11-while-q4"], questions["11-while-q1"].answerCode));
+});
+
+test("quiz API does not execute Java or trust a client-provided correct answer", async () => {
+  const question = questions["01-java-overview-q2"];
+  const { POST } = load("src/app/api/execute/route.ts", {
+    "next/server": { NextResponse: { json: (body, options) => ({ body, status: options?.status ?? 200 }) } },
+    "@/lib/judge0": { executeJava: async () => { throw new Error("Quiz must not execute Java"); } },
+  });
+  const submit = (code) => POST({ json: async () => ({ language: "java", questionId: question.id, code, correctChoiceId: code }) });
+  const wrong = question.quiz.choices.find((choice) => choice.id !== question.quiz.correctChoiceId).id;
+  assert.equal((await submit(wrong)).body.grading.correct, false);
+  assert.equal((await submit(question.quiz.correctChoiceId)).body.grading.correct, true);
 });
 
 test("comments, strings, identifier fragments and imports cannot satisfy requirements", () => {

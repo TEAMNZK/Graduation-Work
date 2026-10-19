@@ -10,6 +10,7 @@ const { javaQuestionEntriesById: questions } = load("src/data/javaQuestions.ts")
 const { addJavaVerification, validateJavaCode, normalizeJavaOutput } = load("src/lib/javaGrading.ts");
 const directory = fs.mkdtempSync(path.join(os.tmpdir(), "codex-java-answers-"));
 const failures = [];
+const codeQuestions = Object.values(questions).filter((question) => !question.quiz);
 let completed = 0;
 let caseCount = 0;
 
@@ -46,16 +47,16 @@ async function check(question) {
     failures.push({ id: question.id, error: error.stderr || error.message });
   }
   completed++;
-  if (completed % 25 === 0) console.log(`Checked ${completed}/${Object.keys(questions).length} answers`);
+  if (completed % 25 === 0) console.log(`Checked ${completed}/${codeQuestions.length} answers`);
 }
 
 (async () => {
   try {
-    const queue = Object.values(questions);
+    const queue = [...codeQuestions];
     await Promise.all(Array.from({ length: 4 }, async () => {
       while (queue.length) await check(queue.shift());
     }));
-    console.log(JSON.stringify({ answers: completed, cases: caseCount, failures }, null, 2));
+    console.log(JSON.stringify({ answers: completed, quizQuestions: Object.keys(questions).length - codeQuestions.length, cases: caseCount, failures }, null, 2));
     if (failures.length) process.exitCode = 1;
   } finally {
     const target = path.resolve(directory);
