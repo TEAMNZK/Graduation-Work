@@ -13,6 +13,7 @@ import {
   setDoc,
 } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
+import { getJavaDrillReview, type JavaDrillReview } from "@/lib/javaDrillReview";
 import {
   getJavaQuestions,
   javaQuestionEntriesById,
@@ -26,6 +27,7 @@ type DrillSession = {
   currentIndex: number;
   isInProgress: boolean;
   answeredCodeByQuestionId?: Record<string, string>;
+  review?: JavaDrillReview;
 };
 
 type ExecuteApiSuccessResponse = {
@@ -99,6 +101,7 @@ export default function DrillJavaStartPage() {
         currentIndex: safeIndex,
         isInProgress: parsed.isInProgress,
         answeredCodeByQuestionId: parsed.answeredCodeByQuestionId ?? {},
+        review: getJavaDrillReview(parsed.review, selectedQuestionIds[safeIndex]) ?? undefined,
       };
 
       localStorage.setItem(STORAGE_KEY, JSON.stringify(safeSession));
@@ -120,13 +123,15 @@ export default function DrillJavaStartPage() {
               ? safeSession.answeredCodeByQuestionId?.[previousQuestionId] ?? ""
               : "";
 
-          setCode(
-            inheritedCode || question.starterCode
-          );
-          setStdin(question.sampleInput ?? "");
+          const review = safeSession.review;
+          setCode(review?.code ?? (inheritedCode || question.starterCode));
+          setStdin(review?.stdin ?? question.sampleInput ?? "");
+          setOutput(review?.output ?? "");
+          setSubmittedCode(review?.code ?? "");
+          setIsCorrect(Boolean(review));
+          setJudgeMessage(review ? "正解です。解説から戻りました。" : "");
+          setIsProgressUpdated(review?.progressSaved ?? false);
         }
-
-        setIsProgressUpdated(false);
       }, 0);
 
       return () => window.clearTimeout(timerId);
@@ -320,6 +325,24 @@ export default function DrillJavaStartPage() {
     }
   };
 
+  const handleExplanation = () => {
+    if (!session || !currentQuestion || !isCorrect || isRunning) return;
+    const review: JavaDrillReview = {
+      questionId: currentQuestionId,
+      code,
+      stdin,
+      output,
+      progressSaved: isProgressUpdated,
+    };
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...session, review }));
+      router.push(`/drill/java/explanation/${encodeURIComponent(currentQuestionId)}`);
+    } catch (error) {
+      console.error("解説を開く前の保存に失敗しました:", error);
+      setJudgeMessage("コードの保存に失敗しました。ブラウザの保存領域を確認して再度お試しください。");
+    }
+  };
+
   const handleNext = () => {
     if (!session || !isCorrect) return;
 
@@ -330,6 +353,7 @@ export default function DrillJavaStartPage() {
         ...session,
         currentIndex: 0,
         isInProgress: false,
+        review: undefined,
       };
 
       localStorage.setItem(STORAGE_KEY, JSON.stringify(completedSession));
@@ -342,6 +366,7 @@ export default function DrillJavaStartPage() {
       ...session,
       currentIndex: nextIndex,
       isInProgress: true,
+      review: undefined,
       answeredCodeByQuestionId: {
         ...(session.answeredCodeByQuestionId ?? {}),
         [currentQuestionId]: code,
@@ -732,6 +757,18 @@ export default function DrillJavaStartPage() {
                       {judgeMessage}
                     </div>
                   )}
+
+                  <button
+                    onClick={handleExplanation}
+                    disabled={!isCorrect || isRunning}
+                    className="mt-4 w-full rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 font-bold text-blue-700 hover:bg-blue-100 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
+                    aria-describedby="explanation-help"
+                  >
+                    解説を見る
+                  </button>
+                  <p id="explanation-help" className="mt-2 text-xs text-slate-500">
+                    {isCorrect ? "解き方とコードの意味を確認できます。" : "正解すると解説を読めるようになります。"}
+                  </p>
 
                   <button
                     onClick={handleNext}
