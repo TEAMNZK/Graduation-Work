@@ -8,6 +8,7 @@ import { auth, db } from "@/lib/firebase";
 import AuthGuard from "@/components/AuthGuard";
 import AppHeader from "@/components/AppHeader";
 import { javaQuestionMap } from "@/data/javaQuestions";
+import { pythonQuestionMap } from "@/data/pythonQuestions";
 
 type UserProgress = {
   correctAnswers?: number;
@@ -140,18 +141,18 @@ export default function DashboardPage() {
   }, [completedDrills]);
 
   const nextRecommendedTopic = useMemo(() => {
-    const nextTopic = Object.entries(javaQuestionMap).find(
+    const nextTopic = Object.entries(currentLanguage === "python" ? pythonQuestionMap : javaQuestionMap).find(
       ([topicId, questions]) =>
         !solvedTopics.includes(topicId) &&
         !questions.every((question) => solvedTopics.includes(question.id))
     );
 
-    return nextTopic?.[1][0]?.title ?? "Javaの問題はすべて完了しています";
-  }, [solvedTopics]);
+    return nextTopic?.[1][0]?.title ?? `${currentLanguage === "python" ? "Python" : "Java"}の問題はすべて完了しています`;
+  }, [solvedTopics, currentLanguage]);
 
   const nextRecommendedLink = useMemo(() => {
-    return "/drill/java";
-  }, []);
+    return currentLanguage === "python" ? "/drill/python" : "/drill/java";
+  }, [currentLanguage]);
 
   if (loading) {
     return (

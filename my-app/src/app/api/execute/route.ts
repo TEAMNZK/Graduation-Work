@@ -21,6 +21,7 @@ const JUDGE0_BASE_URL =
 
 const LANGUAGE_ID_MAP: Record<string, number> = {
   java: 62,
+  python: 71,
 };
 
 function encodeBase64(value: string): string {
