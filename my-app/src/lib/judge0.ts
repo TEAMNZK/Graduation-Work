@@ -17,6 +17,10 @@ export function executePython(code: string, stdin: string): Promise<JavaExecutio
   return executeCode(code, stdin, 71);
 }
 
+export function executeC(code: string, stdin: string): Promise<JavaExecutionResult> {
+  return executeCode(code, stdin, 50);
+}
+
 async function executeCode(code: string, stdin: string, languageId: number): Promise<JavaExecutionResult> {
   const baseUrl = process.env.JUDGE0_BASE_URL ?? "https://ce.judge0.com";
   const submission = await fetch(`${baseUrl}/submissions?base64_encoded=true&wait=false`, {

@@ -8,6 +8,8 @@ import { auth, db } from "@/lib/firebase";
 import AuthGuard from "@/components/AuthGuard";
 import AppHeader from "@/components/AppHeader";
 import { javaQuestionMap, javaQuestionEntriesById } from "@/data/javaQuestions";
+import { pythonQuestionMap, pythonQuestionEntriesById } from "@/data/pythonQuestions";
+import { cCoreQuestionMap, cRequiredQuestionEntriesById } from "@/data/cQuestions";
 import { calculateLearningProgress } from "@/lib/learningProgress";
 
 type UserProgress = {
@@ -91,11 +93,14 @@ export default function DashboardPage() {
 
   const progress = userData?.progress;
   const correctAnswers = progress?.correctAnswers ?? 0;
+  const currentLanguage = progress?.lastSolvedLanguage ?? "まだありません";
+  const questionMap = currentLanguage === "c" ? cCoreQuestionMap : currentLanguage === "python" ? pythonQuestionMap : javaQuestionMap;
+  const questionEntries = currentLanguage === "c" ? cRequiredQuestionEntriesById : currentLanguage === "python" ? pythonQuestionEntriesById : javaQuestionEntriesById;
+  const languageLabel = currentLanguage === "c" ? "C言語" : currentLanguage === "python" ? "Python" : "Java";
   const learningProgress = calculateLearningProgress(
-    Object.keys(javaQuestionEntriesById), progress?.solvedTopics ?? []
+    Object.keys(questionEntries), progress?.solvedTopics ?? []
   );
   const solvedCount = learningProgress.solvedCount;
-  const currentLanguage = progress?.lastSolvedLanguage ?? "まだありません";
 
   const solvedTopics = useMemo(() => {
     return progress?.solvedTopics ?? [];
@@ -140,17 +145,15 @@ export default function DashboardPage() {
   const progressPercent = learningProgress.percent;
 
   const nextRecommendedTopic = useMemo(() => {
-    const nextTopic = Object.entries(javaQuestionMap).find(
-      ([, questions]) =>
-        questions.length > 0 &&
-        !questions.every((question) => solvedTopics.includes(question.id))
+    const nextTopic = Object.values(questionMap).flat().find(
+      (question) => !solvedTopics.includes(question.id)
     );
 
-    return nextTopic?.[1][0]?.title ?? `${currentLanguage === "python" ? "Python" : "Java"}の問題はすべて完了しています`;
-  }, [solvedTopics, currentLanguage]);
+    return nextTopic?.title ?? `${languageLabel}の${currentLanguage === "c" ? "必修問題" : "問題"}はすべて完了しています`;
+  }, [solvedTopics, questionMap, languageLabel, currentLanguage]);
 
   const nextRecommendedLink = useMemo(() => {
-    return currentLanguage === "python" ? "/drill/python" : "/drill/java";
+    return currentLanguage === "c" ? "/drill/c" : currentLanguage === "python" ? "/drill/python" : "/drill/java";
   }, [currentLanguage]);
 
   if (loading) {

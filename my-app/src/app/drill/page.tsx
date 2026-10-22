@@ -22,9 +22,9 @@ const languages: LanguageCard[] = [
   {
     name: "C",
     href: "/drill/c",
-    status: "準備中",
-    description: "コンパイル型言語の練習メニューを準備中です。",
-    available: false,
+    status: "公開中",
+    description: "入力・配列・関数・ポインタ・構造体まで練習できます。",
+    available: true,
     actionLabel: "問題を選ぶ",
   },
   {
@@ -44,8 +44,8 @@ export default function DrillPage() {
       description="実行できる問題を選んで、学習内容をすぐに確認できます。"
       activeKey="drill"
       highlightLabel="現在利用できるドリル"
-      highlightTitle="Java・Pythonドリルを公開中です"
-      highlightDescription="JavaとPythonの基礎問題から始められます。未公開の言語は準備中として表示し、存在しないページへ移動しないようにしています。"
+      highlightTitle="Java・Python・C言語ドリルを公開中です"
+      highlightDescription="Java・Python・C言語の基礎問題から始められます。未公開の言語は準備中として表示し、存在しないページへ移動しないようにしています。"
       countLabel="公開中"
       countDescription="言語のドリルが利用できます。"
       languages={languages}
