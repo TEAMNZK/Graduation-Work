@@ -13,6 +13,7 @@ import {
   setDoc,
 } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
+import { getJavaDrillReview, type JavaDrillReview } from "@/lib/javaDrillReview";
 import {
   getJavaQuestions,
   javaQuestionEntriesById,
@@ -26,6 +27,7 @@ type DrillSession = {
   currentIndex: number;
   isInProgress: boolean;
   answeredCodeByQuestionId?: Record<string, string>;
+  review?: JavaDrillReview;
 };
 
 type ExecuteApiSuccessResponse = {
@@ -33,6 +35,7 @@ type ExecuteApiSuccessResponse = {
   stdout: string;
   stderr: string;
   exitCode: number;
+  grading?: { correct: boolean; message: string; passedCount: number; testCount: number };
 };
 
 type ExecuteApiErrorResponse = {
@@ -55,7 +58,9 @@ export default function DrillJavaStartPage() {
   const [output, setOutput] = useState("");
   const [errorOutput, setErrorOutput] = useState("");
   const [isRunning, setIsRunning] = useState(false);
-  const [isCorrect, setIsCorrect] = useState(false);
+  const [isCorrectResult, setIsCorrect] = useState(false);
+  const [submittedCode, setSubmittedCode] = useState("");
+  const isCorrect = isCorrectResult && code === submittedCode;
   const [judgeMessage, setJudgeMessage] = useState("");
   const [isProgressUpdated, setIsProgressUpdated] = useState(false);
 
@@ -96,6 +101,10 @@ export default function DrillJavaStartPage() {
         currentIndex: safeIndex,
         isInProgress: parsed.isInProgress,
         answeredCodeByQuestionId: parsed.answeredCodeByQuestionId ?? {},
+        review: getJavaDrillReview(parsed.review, selectedQuestionIds[safeIndex], JSON.stringify([
+          javaQuestionEntriesById[selectedQuestionIds[safeIndex]].answerCode,
+          javaQuestionEntriesById[selectedQuestionIds[safeIndex]].quiz,
+        ])) ?? undefined,
       };
 
       localStorage.setItem(STORAGE_KEY, JSON.stringify(safeSession));
@@ -117,13 +126,15 @@ export default function DrillJavaStartPage() {
               ? safeSession.answeredCodeByQuestionId?.[previousQuestionId] ?? ""
               : "";
 
-          setCode(
-            inheritedCode || question.starterCode
-          );
-          setStdin(question.sampleInput ?? "");
+          const review = safeSession.review;
+          setCode(review?.code ?? (question.quiz ? "" : inheritedCode || question.starterCode));
+          setStdin(review?.stdin ?? question.sampleInput ?? "");
+          setOutput(review?.output ?? "");
+          setSubmittedCode(review?.code ?? "");
+          setIsCorrect(Boolean(review));
+          setJudgeMessage(review ? "正解です。解説から戻りました。" : "");
+          setIsProgressUpdated(review?.progressSaved ?? false);
         }
-
-        setIsProgressUpdated(false);
       }, 0);
 
       return () => window.clearTimeout(timerId);
@@ -151,7 +162,7 @@ export default function DrillJavaStartPage() {
       return currentQuestion.expectedOutput;
     }
 
-    return "この問題は固定の出力結果がありません。";
+    return "この問題では何も出力しないでください。";
   }, [currentQuestion]);
 
   const totalCount = session?.selectedQuestionIds.length ?? 0;
@@ -164,38 +175,8 @@ export default function DrillJavaStartPage() {
     return (currentNumber / totalCount) * 100;
   }, [session, currentNumber, totalCount]);
 
-  const normalizeOutput = (text: string) => {
-    return text.replace(/\r\n/g, "\n").trim();
-  };
-
-  const normalizeCode = (text: string) => {
-    return text.replace(/\r\n/g, "\n");
-  };
-
-  const validateCodePatterns = (sourceCode: string) => {
-    const normalizedCode = normalizeCode(sourceCode);
-    const requiredPatterns = currentQuestion?.requiredPatterns ?? [];
-    const forbiddenPatterns = currentQuestion?.forbiddenPatterns ?? [];
-
-    const missingPatterns = requiredPatterns.filter(
-      (pattern) => !normalizedCode.includes(pattern)
-    );
-
-    const foundForbiddenPatterns = forbiddenPatterns.filter((pattern) =>
-      normalizedCode.includes(pattern)
-    );
-
-    return {
-      isValid:
-        missingPatterns.length === 0 && foundForbiddenPatterns.length === 0,
-      missingPatterns,
-      foundForbiddenPatterns,
-    };
-  };
-
   const updateProgressInFirestore = async (
     questionId: string,
-    topic: string,
     title: string
   ) => {
     const currentUser = auth.currentUser;
@@ -258,8 +239,9 @@ export default function DrillJavaStartPage() {
   };
 
   const handleRun = async () => {
-    if (!currentQuestion || !currentTopic || !currentQuestionId) return;
+    if (isRunning || !currentQuestion || !currentTopic || !currentQuestionId || (currentQuestion.quiz && !code)) return;
 
+    setSubmittedCode(code);
     setIsRunning(true);
     setOutput("");
     setErrorOutput("");
@@ -275,6 +257,7 @@ export default function DrillJavaStartPage() {
         },
         body: JSON.stringify({
           language: "java",
+          questionId: currentQuestionId,
           code,
           stdin,
         }),
@@ -297,18 +280,14 @@ export default function DrillJavaStartPage() {
       setOutput(stdout);
       setErrorOutput(stderr);
 
-      if (stderr) {
+      if (stderr || data.exitCode !== 3) {
         setIsCorrect(false);
         setJudgeMessage("実行エラーがあります。");
         setShowAnswer(false);
         return;
       }
 
-      const actual = normalizeOutput(stdout);
-      const expected = normalizeOutput(currentQuestion.expectedOutput ?? "");
-      const codeValidation = validateCodePatterns(code);
-
-      if (actual === expected && codeValidation.isValid) {
+      if (data.grading?.correct) {
         setIsCorrect(true);
         setShowAnswer(false);
 
@@ -316,7 +295,6 @@ export default function DrillJavaStartPage() {
           try {
             const updated = await updateProgressInFirestore(
               currentQuestionId,
-              currentTopic,
               currentQuestion.title
             );
             setIsProgressUpdated(true);
@@ -336,29 +314,7 @@ export default function DrillJavaStartPage() {
       } else {
         setIsCorrect(false);
 
-        if (actual === expected && !codeValidation.isValid) {
-          if (codeValidation.missingPatterns.length > 0) {
-            setJudgeMessage(
-              `出力は正しいですが、必要なコード要素が不足しています: ${codeValidation.missingPatterns.join(
-                ", "
-              )}`
-            );
-            setShowAnswer(false);
-            return;
-          }
-
-          if (codeValidation.foundForbiddenPatterns.length > 0) {
-            setJudgeMessage(
-              `出力は正しいですが、禁止された書き方が含まれています: ${codeValidation.foundForbiddenPatterns.join(
-                ", "
-              )}`
-            );
-            setShowAnswer(false);
-            return;
-          }
-        }
-
-        setJudgeMessage("不正解です。出力結果を確認してください。");
+        setJudgeMessage(data.grading?.message ?? "採点結果を取得できませんでした。再実行してください。");
         setShowAnswer(false);
       }
     } catch (error) {
@@ -372,6 +328,25 @@ export default function DrillJavaStartPage() {
     }
   };
 
+  const handleExplanation = () => {
+    if (!session || !currentQuestion || !isCorrect || isRunning) return;
+    const review: JavaDrillReview = {
+      questionId: currentQuestionId,
+      code,
+      stdin,
+      output,
+      progressSaved: isProgressUpdated,
+      questionVersion: JSON.stringify([currentQuestion.answerCode, currentQuestion.quiz]),
+    };
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...session, review }));
+      router.push(`/drill/java/explanation/${encodeURIComponent(currentQuestionId)}`);
+    } catch (error) {
+      console.error("解説を開く前の保存に失敗しました:", error);
+      setJudgeMessage("コードの保存に失敗しました。ブラウザの保存領域を確認して再度お試しください。");
+    }
+  };
+
   const handleNext = () => {
     if (!session || !isCorrect) return;
 
@@ -382,6 +357,7 @@ export default function DrillJavaStartPage() {
         ...session,
         currentIndex: 0,
         isInProgress: false,
+        review: undefined,
       };
 
       localStorage.setItem(STORAGE_KEY, JSON.stringify(completedSession));
@@ -394,6 +370,7 @@ export default function DrillJavaStartPage() {
       ...session,
       currentIndex: nextIndex,
       isInProgress: true,
+      review: undefined,
       answeredCodeByQuestionId: {
         ...(session.answeredCodeByQuestionId ?? {}),
         [currentQuestionId]: code,
@@ -424,7 +401,7 @@ export default function DrillJavaStartPage() {
         ? code
         : nextQuestion.starterCode;
 
-      setCode(nextStarterCode);
+      setCode(nextQuestion.quiz ? "" : nextStarterCode);
       setStdin(nextQuestion.sampleInput ?? "");
     }
   };
@@ -649,7 +626,7 @@ export default function DrillJavaStartPage() {
               <div className="space-y-4 p-5">
                 <div className="rounded-lg border border-sky-100 bg-sky-50 p-4">
                   <p className="mb-3 text-sm font-semibold text-slate-500">
-                    Main.java
+                      {currentQuestion.quiz ? "選択問題" : "Main.java"}
                   </p>
                   <p className="whitespace-pre-line text-lg leading-8">
                     {currentQuestion.description}
@@ -686,9 +663,11 @@ export default function DrillJavaStartPage() {
 
                 {showAnswer && canShowAnswer && (
                   <div className="rounded-lg border border-blue-100 bg-blue-50 p-4 text-sm leading-7">
-                    見本コード:
+                    {currentQuestion.quiz ? "正しい答え:" : "見本コード:"}
                     <pre className="mt-2 whitespace-pre-wrap rounded-md bg-white p-3 font-mono text-sm leading-6">
-                      {currentQuestion.answerCode ?? currentQuestion.starterCode}
+                      {currentQuestion.quiz
+                        ? currentQuestion.quiz.choices.find((choice) => choice.id === currentQuestion.quiz?.correctChoiceId)?.text
+                        : currentQuestion.answerCode ?? currentQuestion.starterCode}
                     </pre>
                   </div>
                 )}
@@ -705,32 +684,44 @@ export default function DrillJavaStartPage() {
             <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
               <div className="flex items-center justify-between border-b bg-slate-800 px-5 py-3 text-white">
                 <div className="rounded-md bg-slate-700 px-4 py-2 font-bold">
-                  Main.java
+                  {currentQuestion.quiz ? "正しい答えを選んでください" : "Main.java"}
                 </div>
 
                 <button
                   onClick={handleRun}
-                  disabled={isRunning}
+                  disabled={isRunning || Boolean(currentQuestion.quiz && !code)}
                   className="rounded-lg bg-emerald-500 px-5 py-2 text-sm font-bold text-white hover:bg-emerald-600 disabled:opacity-60"
                 >
-                  {isRunning ? "実行中..." : "実行"}
+                  {isRunning ? "確認中..." : currentQuestion.quiz ? "回答する" : "実行"}
                 </button>
               </div>
 
               <div className="p-4">
-                <textarea
+                {currentQuestion.quiz ? (
+                  <fieldset className="space-y-4 p-2" disabled={isRunning}>
+                    <legend className="mb-4 font-bold">選択肢</legend>
+                    {currentQuestion.quiz.choices.map((choice) => (
+                      <label key={choice.id} className={`flex cursor-pointer items-start gap-3 rounded-lg border p-4 ${code === choice.id ? "border-blue-400 bg-blue-50" : "border-slate-200 hover:bg-slate-50"}`}>
+                        <input type="radio" name={currentQuestionId} value={choice.id} checked={code === choice.id}
+                          onChange={() => { setCode(choice.id); setIsCorrect(false); setJudgeMessage(""); }} className="mt-1" />
+                        <span className="whitespace-pre-wrap font-mono text-sm leading-7">{choice.text}</span>
+                      </label>
+                    ))}
+                  </fieldset>
+                ) : <textarea
                   ref={editorRef}
                   value={code}
-                  onChange={(e) => setCode(e.target.value)}
+                  disabled={isRunning}
+                  onChange={(e) => { setCode(e.target.value); setIsCorrect(false); setJudgeMessage(""); }}
                   onKeyDown={handleEditorKeyDown}
                   className="min-h-[520px] w-full rounded-lg border bg-slate-900 p-4 font-mono text-sm leading-6 text-slate-100 outline-none xl:min-h-[620px]"
                   spellCheck={false}
-                />
+                />}
               </div>
             </div>
 
             <aside className="space-y-4">
-              <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
+              {!currentQuestion.quiz && <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
                 <div className="flex items-center justify-between border-b px-4 py-3">
                   <h2 className="text-lg font-bold">コンソール</h2>
                 </div>
@@ -741,6 +732,7 @@ export default function DrillJavaStartPage() {
                       標準入力
                     </label>
                     <textarea
+                      disabled={isRunning}
                       value={stdin}
                       onChange={(e) => setStdin(e.target.value)}
                       placeholder="必要な場合だけ入力してください"
@@ -759,17 +751,17 @@ export default function DrillJavaStartPage() {
                     {!output && !errorOutput && "ここに実行結果が表示されます。"}
                   </div>
                 </div>
-              </div>
+              </div>}
 
               <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
                 <div className="flex items-center justify-between border-b px-4 py-3">
-                  <h2 className="text-lg font-bold">見本の出力結果</h2>
+                  <h2 className="text-lg font-bold">{currentQuestion.quiz ? "回答結果" : "見本の出力結果"}</h2>
                 </div>
 
                 <div className="p-4">
-                  <div className="min-h-[180px] whitespace-pre-wrap rounded-lg border bg-[#031b22] p-4 font-mono text-sm text-white">
+                  {!currentQuestion.quiz && <div className="min-h-[180px] whitespace-pre-wrap rounded-lg border bg-[#031b22] p-4 font-mono text-sm text-white">
                     {sampleOutputDisplay}
-                  </div>
+                  </div>}
 
                   {judgeMessage && (
                     <div
@@ -782,6 +774,18 @@ export default function DrillJavaStartPage() {
                       {judgeMessage}
                     </div>
                   )}
+
+                  <button
+                    onClick={handleExplanation}
+                    disabled={!isCorrect || isRunning}
+                    className="mt-4 w-full rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 font-bold text-blue-700 hover:bg-blue-100 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
+                    aria-describedby="explanation-help"
+                  >
+                    解説を見る
+                  </button>
+                  <p id="explanation-help" className="mt-2 text-xs text-slate-500">
+                    {isCorrect ? "解き方とコードの意味を確認できます。" : "正解すると解説を読めるようになります。"}
+                  </p>
 
                   <button
                     onClick={handleNext}

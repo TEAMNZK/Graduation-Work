@@ -1,4 +1,12 @@
 import { javaExerciseQuestionMap } from "@/data/javaExerciseQuestions";
+import { javaTestCases } from "@/data/javaTestCases";
+import { javaVerifications } from "@/data/javaVerifications";
+
+export type JavaQuiz = {
+  choices: { id: string; text: string }[];
+  correctChoiceId: string;
+  explanation: string;
+};
 
 export type JavaQuestion = {
   id: string;
@@ -12,6 +20,10 @@ export type JavaQuestion = {
   answerCode?: string;
   requiredPatterns?: string[];
   forbiddenPatterns?: string[];
+  requiredPatternGroups?: string[][];
+  testCases?: { stdin: string; expectedOutput: string }[];
+  verificationCode?: string;
+  quiz?: JavaQuiz;
   inheritPreviousCode?: boolean;
   type: "lesson" | "mini_project" | "final_project";
 };
@@ -22,15 +34,15 @@ const baseJavaQuestionMap: Record<string, JavaQuestion> = {
     no: "01",
     title: "Javaとは",
     description:
-      "Javaの特徴や用途を確認しましょう。この問題は確認用なので、自動採点は行いません。",
+      "Javaの特徴や用途を教科書で確認し、Java と表示してください。",
     hint: "Javaで作れるものや特徴を教科書ページで確認してください。",
-    expectedOutput: "",
+    expectedOutput: "Java",
     starterCode: `public class Main {
   public static void main(String[] args) {
 
   }
 }`,
-    requiredPatterns: [],
+    requiredPatterns: ["System.out.println"],
     forbiddenPatterns: [],
     type: "lesson",
   },
@@ -45,7 +57,12 @@ const baseJavaQuestionMap: Record<string, JavaQuestion> = {
     expectedOutput: "Start",
     starterCode: `public class Main {
   public static void main(String[] args) {
-
+    // ここに入力してください（例: System.out.println("Start");）
+  }
+}`,
+    answerCode: `public class Main {
+  public static void main(String[] args) {
+    System.out.println("Start");
   }
 }`,
     requiredPatterns: ["System.out.print"],
@@ -58,11 +75,16 @@ const baseJavaQuestionMap: Record<string, JavaQuestion> = {
     no: "03",
     title: "Hello World",
     description: "「Hello Java」と表示しなさい。",
-    hint: 'System.out.println("Hello Java"); を使います。',
+    hint: '`System.out.println("Hello Java");` を使って標準出力に文字列を表示します。',
     expectedOutput: "Hello Java",
     starterCode: `public class Main {
   public static void main(String[] args) {
-
+    // ここに入力してください（例: System.out.println("Hello Java");）
+  }
+}`,
+    answerCode: `public class Main {
+  public static void main(String[] args) {
+    System.out.println("Hello Java");
   }
 }`,
     requiredPatterns: ["System.out.println"],
@@ -76,11 +98,17 @@ const baseJavaQuestionMap: Record<string, JavaQuestion> = {
     title: "変数",
     description:
       'name という変数に "Taro" を入れて表示しなさい。',
-    hint: 'String name = "Taro"; と書いて、System.out.println(name); を使います。',
+    hint: '`String name = "Taro";` として変数を定義し、`System.out.println(name);` で表示します。',
     expectedOutput: "Taro",
     starterCode: `public class Main {
   public static void main(String[] args) {
-
+    // ここに入力してください（例: String name = "Taro"; System.out.println(name);）
+  }
+}`,
+    answerCode: `public class Main {
+  public static void main(String[] args) {
+    String name = "Taro";
+    System.out.println(name);
   }
 }`,
     requiredPatterns: ["String", "name", "System.out.println"],
@@ -93,11 +121,17 @@ const baseJavaQuestionMap: Record<string, JavaQuestion> = {
     no: "05",
     title: "データ型",
     description: "int型の変数 score に 80 を入れて表示しなさい。",
-    hint: "int score = 80; と書いて、System.out.println(score); を使います。",
+    hint: "`int score = 80;` を宣言し、`System.out.println(score);` で値を出力します。",
     expectedOutput: "80",
     starterCode: `public class Main {
   public static void main(String[] args) {
-
+    // ここに入力してください（例: int score = 80; System.out.println(score);）
+  }
+}`,
+    answerCode: `public class Main {
+  public static void main(String[] args) {
+    int score = 80;
+    System.out.println(score);
   }
 }`,
     requiredPatterns: ["int", "score", "System.out.println"],
@@ -120,7 +154,7 @@ const baseJavaQuestionMap: Record<string, JavaQuestion> = {
   public static void main(String[] args) {
     int a = 10;
     int b = 5;
-
+    // ここに入力してください（例: System.out.println(a + b); 等）
   }
 }`,
     requiredPatterns: ["a", "b", "+", "-", "*", "/", "System.out.println"],
@@ -134,14 +168,23 @@ const baseJavaQuestionMap: Record<string, JavaQuestion> = {
     title: "入力と出力",
     description:
       '名前を入力し、「こんにちは、〇〇さん」と表示しなさい。',
-    hint: "Scanner と nextLine() を使います。",
+    hint: "`Scanner scanner = new Scanner(System.in);` と `scanner.nextLine()` を使って標準入力を読み取り、表示します。",
     sampleInput: "太郎",
     expectedOutput: "こんにちは、太郎さん",
     starterCode: `import java.util.Scanner;
 
 public class Main {
   public static void main(String[] args) {
+    // ここに入力してください（例: Scanner scanner = new Scanner(System.in); String name = scanner.nextLine(); System.out.println("こんにちは、" + name + "さん");）
+  }
+}`,
+    answerCode: `import java.util.Scanner;
 
+public class Main {
+  public static void main(String[] args) {
+    Scanner scanner = new Scanner(System.in);
+    String name = scanner.nextLine();
+    System.out.println("こんにちは、" + name + "さん");
   }
 }`,
     requiredPatterns: ["Scanner", "nextLine", "System.out.println"],
@@ -155,14 +198,25 @@ public class Main {
     title: "if文",
     description:
       '点数を入力し、60点以上なら「合格」と表示しなさい。',
-    hint: "if を使って score >= 60 を判定します。",
+    hint: "`Scanner` で点数を読み取り、`if (score >= 60)` で判定して `System.out.println(\"合格\")` を出力します。",
     sampleInput: "60",
     expectedOutput: "合格",
     starterCode: `import java.util.Scanner;
 
 public class Main {
   public static void main(String[] args) {
+    // ここに入力してください（例: Scanner scanner = new Scanner(System.in); int score = scanner.nextInt();）
+  }
+}`,
+    answerCode: `import java.util.Scanner;
 
+public class Main {
+  public static void main(String[] args) {
+    Scanner scanner = new Scanner(System.in);
+    int score = scanner.nextInt();
+    if (score >= 60) {
+      System.out.println("合格");
+    }
   }
 }`,
     requiredPatterns: ["Scanner", "if", "System.out.println"],
@@ -176,14 +230,47 @@ public class Main {
     title: "switch文",
     description:
       "1〜7の数字を入力し、対応する曜日を表示しなさい。今回は 1 が入力されたとき「月曜日」と表示するものとします。",
-    hint: "switch と case を使います。",
+    hint: "`switch` と `case` を使って、1→月曜日、2→火曜日... のように分岐させます。",
     sampleInput: "1",
     expectedOutput: "月曜日",
     starterCode: `import java.util.Scanner;
 
 public class Main {
   public static void main(String[] args) {
+    // ここに入力してください（例: Scanner scanner = new Scanner(System.in); int day = scanner.nextInt();）
+  }
+}`,
+    answerCode: `import java.util.Scanner;
 
+public class Main {
+  public static void main(String[] args) {
+    Scanner scanner = new Scanner(System.in);
+    int day = scanner.nextInt();
+    switch (day) {
+      case 1:
+        System.out.println("月曜日");
+        break;
+      case 2:
+        System.out.println("火曜日");
+        break;
+      case 3:
+        System.out.println("水曜日");
+        break;
+      case 4:
+        System.out.println("木曜日");
+        break;
+      case 5:
+        System.out.println("金曜日");
+        break;
+      case 6:
+        System.out.println("土曜日");
+        break;
+      case 7:
+        System.out.println("日曜日");
+        break;
+      default:
+        break;
+    }
   }
 }`,
     requiredPatterns: ["Scanner", "switch", "case", "System.out.println"],
@@ -209,7 +296,14 @@ public class Main {
 10`,
     starterCode: `public class Main {
   public static void main(String[] args) {
-
+    // ここに入力してください（例: for (int i = 1; i <= 10; i++) { System.out.println(i); }）
+  }
+}`,
+    answerCode: `public class Main {
+  public static void main(String[] args) {
+    for (int i = 1; i <= 10; i++) {
+      System.out.println(i);
+    }
   }
 }`,
     requiredPatterns: ["for", "System.out.println"],
@@ -232,17 +326,28 @@ public class Main {
     id: "11-while",
     no: "11",
     title: "while文",
-    description: "while文を使って 1 から 3 までの数字を1行ずつ出力してください。",
-    hint: "繰り返し用の変数を使い、最後に増やします。",
-    expectedOutput: `1
-2
-3`,
+    description:
+      "1から3までの数を while で順番に足し算し、合計を最後に出力してください。",
+    hint:
+      "while ループで数を繰り返し足し合わせ、ループ終了後に合計を表示します。",
+    expectedOutput: "6",
     starterCode: `public class Main {
   public static void main(String[] args) {
-
+    // ここに入力してください（例: int i = 1; int sum = 0; while (i <= 3) { sum += i; i++; } System.out.println(sum);）
   }
 }`,
-    requiredPatterns: ["while", "System.out.println"],
+    answerCode: `public class Main {
+  public static void main(String[] args) {
+    int i = 1;
+    int sum = 0;
+    while (i <= 3) {
+      sum += i;
+      i++;
+    }
+    System.out.println(sum);
+  }
+}`,
+    requiredPatterns: ["while", "sum", "System.out.println"],
     forbiddenPatterns: [
       "System.out.println(1);",
       "System.out.println(2);",
@@ -261,7 +366,13 @@ public class Main {
     expectedOutput: "1",
     starterCode: `public class Main {
   public static void main(String[] args) {
-
+    // ここに入力してください（例: int[] numbers = {1, 2, 3}; System.out.println(numbers[0]);）
+  }
+}`,
+    answerCode: `public class Main {
+  public static void main(String[] args) {
+    int[] numbers = {1, 2, 3};
+    System.out.println(numbers[0]);
   }
 }`,
     requiredPatterns: ["int[]", "numbers", "System.out.println"],
@@ -296,7 +407,7 @@ public class Main {
     no: "14",
     title: "オーバーロード",
     description:
-      "同じ名前で、引数の数が異なる printData メソッドを2つ作成してください。",
+      "printData(String text)とprintData(int number, String text)を作成してください。出力は不要です。",
     hint: "メソッド名は同じで、引数リストを変えます。",
     expectedOutput: "",
     starterCode: `public class Main {
@@ -304,7 +415,7 @@ public class Main {
 
   }
 }`,
-    requiredPatterns: ["printData(", "static"],
+    requiredPatterns: ["void printData(String", "void printData(int"],
     forbiddenPatterns: [],
     type: "lesson",
   },
@@ -322,7 +433,7 @@ public class Main {
 
   }
 }`,
-    requiredPatterns: ["class", "new"],
+    requiredPatterns: ["class Student", "String name", "new Student"],
     forbiddenPatterns: [],
     type: "lesson",
   },
@@ -350,7 +461,7 @@ public class Main {
     no: "17",
     title: "static",
     description:
-      "static 変数または static メソッドを使った簡単なコードを書いてください。",
+      "static int count = 0; を宣言し、staticなaddCountメソッドで1増やしてmainから呼び出してください。出力は不要です。",
     hint: "クラス名.メソッド名 の呼び出しを意識します。",
     expectedOutput: "",
     starterCode: `public class Main {
@@ -358,7 +469,7 @@ public class Main {
 
   }
 }`,
-    requiredPatterns: ["static"],
+    requiredPatterns: ["static int count", "static void addCount", "count++", "addCount();"],
     forbiddenPatterns: [],
     type: "lesson",
   },
@@ -386,7 +497,7 @@ public class Main {
     no: "19",
     title: "ポリモーフィズム",
     description:
-      "親クラス型の変数で子クラスのオブジェクトを扱うコードを書いてください。",
+      "Parentクラスと、それを継承したChildクラスを作り、Parent型の変数にnew Child()を代入してください。出力は不要です。",
     hint: "Parent p = new Child(); の形を考えます。",
     expectedOutput: "",
     starterCode: `public class Main {
@@ -394,7 +505,7 @@ public class Main {
 
   }
 }`,
-    requiredPatterns: ["new"],
+    requiredPatterns: ["class Parent", "extends Parent", "Parent", "new Child"],
     forbiddenPatterns: [],
     type: "lesson",
   },
@@ -406,6 +517,7 @@ public class Main {
     description:
       "インターフェースまたは抽象クラスを使った簡単なコードを書いてください。",
     hint: "interface または abstract class を使います。",
+    requiredPatternGroups: [["interface", "abstract class"]],
     expectedOutput: "",
     starterCode: `public class Main {
   public static void main(String[] args) {
@@ -422,19 +534,17 @@ public class Main {
     no: "21",
     title: "パッケージとimport",
     description:
-      "Scanner を使うために import 文を書いて、整数を1つ入力して表示してください。",
-    hint: "import java.util.Scanner; を使います。",
+      "import文を使わず、完全修飾名java.util.ScannerでScannerを使って整数を1つ読み取り、表示してください。",
+    hint: "変数の型とnewの両方にjava.util.Scannerと書けば、import文を省略できます。",
     expectedOutput: "10",
-    starterCode: `import java.util.Scanner;
-
-public class Main {
+    starterCode: `public class Main {
   public static void main(String[] args) {
 
   }
 }`,
-    requiredPatterns: ["import", "Scanner"],
+    requiredPatterns: ["java.util.Scanner", "nextInt"],
     sampleInput: "10",
-    forbiddenPatterns: [],
+    forbiddenPatterns: ["import"],
     type: "lesson",
   },
 
@@ -461,15 +571,15 @@ public class Main {
     no: "23",
     title: "ファイル入出力",
     description:
-      "ファイルの読み書きに関する基本コードを書いてください。",
-    hint: "BufferedReader や FileWriter などを調べながら書きます。",
-    expectedOutput: "",
+      "Files.writeでsample.txtにJavaを書き込み、Files.readAllLinesで読み取ってJavaと表示してください。文字コードはUTF-8を指定します。",
+    hint: "Paths.get、StandardCharsets.UTF_8、Files.write、Files.readAllLinesを使います。",
+    expectedOutput: "Java",
     starterCode: `public class Main {
   public static void main(String[] args) throws Exception {
 
   }
 }`,
-    requiredPatterns: [],
+    requiredPatterns: ["Files.write", "Files.readAllLines", "StandardCharsets.UTF_8"],
     forbiddenPatterns: [],
     type: "lesson",
   },
@@ -479,9 +589,9 @@ public class Main {
     no: "24",
     title: "コレクション",
     description:
-      "ArrayList を使って文字列を追加し、1つ表示してください。",
+      "ArrayList<String>にJavaを追加し、getで取り出してJavaと表示してください。",
     hint: "ArrayList<String> list = new ArrayList<>(); を使います。",
-    expectedOutput: "",
+    expectedOutput: "Java",
     starterCode: `import java.util.ArrayList;
 
 public class Main {
@@ -489,7 +599,7 @@ public class Main {
 
   }
 }`,
-    requiredPatterns: ["ArrayList"],
+    requiredPatterns: ["ArrayList", ".add(", ".get("],
     forbiddenPatterns: [],
     type: "lesson",
   },
@@ -578,15 +688,15 @@ public class Main {
     no: "32",
     title: "総合演習",
     description:
-      "これまで学んだ内容を組み合わせるための総合演習です。",
+      "nameとscoreを持つStudentクラスを作成し、Taro（80点）とHanako（90点）をStudent配列に入れてください。sumScoresメソッドで合計点を求め、170と表示してください。",
     hint: "クラス、配列、メソッド、条件分岐などを整理して使いましょう。",
-    expectedOutput: "",
+    expectedOutput: "170",
     starterCode: `public class Main {
   public static void main(String[] args) {
 
   }
 }`,
-    requiredPatterns: [],
+    requiredPatterns: ["class Student", "Student[]", "sumScores(", "for", "return"],
     forbiddenPatterns: [],
     type: "lesson",
   },
@@ -596,8 +706,7 @@ public class Main {
 const baseAnswerCodeMap: Record<string, string> = {
   "01-java-overview": `public class Main {
   public static void main(String[] args) {
-    // JavaはWebアプリ、Androidアプリ、業務システムなどで使われます。
-    // この確認問題では出力は必要ありません。
+    System.out.println("Java");
   }
 }`,
   "02-how-to-run": `public class Main {
@@ -733,7 +842,7 @@ public class Main {
   public static void printData(String text) {
   }
 
-  public static void printData(int number) {
+  public static void printData(int number, String text) {
   }
 
   public static void main(String[] args) {
@@ -825,11 +934,9 @@ public class Main {
     Printable report = new Report();
   }
 }`,
-  "21-package-import": `import java.util.Scanner;
-
-public class Main {
+  "21-package-import": `public class Main {
   public static void main(String[] args) {
-    Scanner scanner = new Scanner(System.in);
+    java.util.Scanner scanner = new java.util.Scanner(System.in);
     int number = scanner.nextInt();
     System.out.println(number);
   }
@@ -842,12 +949,14 @@ public class Main {
     }
   }
 }`,
-  "23-file-io": `import java.io.BufferedReader;
-import java.io.FileReader;
+  "23-file-io": `import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.charset.StandardCharsets;
 
 public class Main {
   public static void main(String[] args) throws Exception {
-    BufferedReader reader = null;
+    Files.write(Paths.get("sample.txt"), "Java".getBytes(StandardCharsets.UTF_8));
+    System.out.println(Files.readAllLines(Paths.get("sample.txt"), StandardCharsets.UTF_8).get(0));
   }
 }`,
   "24-collection": `import java.util.ArrayList;
@@ -856,6 +965,7 @@ public class Main {
   public static void main(String[] args) {
     ArrayList<String> list = new ArrayList<>();
     list.add("Java");
+    System.out.println(list.get(0));
   }
 }`,
   "project-todo": `import java.util.ArrayList;
@@ -937,6 +1047,15 @@ public class Main {
       new Student("Taro", 80),
       new Student("Hanako", 90)
     };
+    System.out.println(sumScores(students));
+  }
+
+  public static int sumScores(Student[] students) {
+    int sum = 0;
+    for (Student student : students) {
+      sum += student.score;
+    }
+    return sum;
   }
 }`,
   "project-library-final": `import java.util.ArrayList;
@@ -964,6 +1083,2151 @@ const createPrintAnswerCode = (output: string): string => `public class Main {
   }
 }`;
 
+type ReviewQuestionSpec = {
+  title: string;
+  description: string;
+  hint: string;
+  sampleInput?: string;
+  expectedOutput?: string;
+  starterCode?: string;
+  answerCode: string;
+  requiredPatterns?: string[];
+  forbiddenPatterns?: string[];
+  requiredPatternGroups?: string[][];
+  testCases?: { stdin: string; expectedOutput: string }[];
+  quiz?: JavaQuiz;
+};
+
+const lessonReviewSpecs: Record<string, ReviewQuestionSpec[]> = {
+  "01-java-overview": [
+    {
+      title: "Javaの用途",
+      description: "Javaの用途として適切な組み合わせを選んでください。",
+      hint: "JavaはWebアプリ、Androidアプリ、業務システムなどで使われます。",
+      expectedOutput: "",
+      answerCode: "",
+      requiredPatterns: [],
+      quiz: {
+        choices: [{ id: "web-only", text: "Webページの見た目を指定する用途に限られる" }, { id: "applications", text: "Webアプリ、業務システム、Androidアプリなど" }, { id: "database-only", text: "データベースの検索命令を書く用途に限られる" }],
+        correctChoiceId: "applications",
+        explanation: "Javaはさまざまなアプリケーションの開発に使えます。見た目の指定を主に担うCSSや、データベースを操作するSQLとは役割が異なります。",
+      },
+    },
+    {
+      title: "Javaの特徴",
+      description: "コンパイルしたJavaのプログラムを、異なるOSで動かせる理由として適切な説明を選んでください。",
+      hint: "Javaは環境を整えることでさまざまな場所で実行できます。",
+      expectedOutput: "",
+      answerCode: "",
+      requiredPatterns: [],
+      quiz: {
+        choices: [{ id: "jvm", text: "それぞれのOSに対応したJavaの実行環境（JVM）がバイトコードを実行するから" }, { id: "browser", text: "Javaのコードは必ずブラウザ内で実行されるから" }, { id: "no-runtime", text: "Javaの実行環境を用意する必要がないから" }],
+        correctChoiceId: "jvm",
+        explanation: "Javaのソースコードは、コンパイルによってバイトコードになります。OSごとのJVMがこれを実行するため、対応する実行環境があれば異なるOSでも動かせます。",
+      },
+    },
+    {
+      title: "Javaファイル名",
+      description: "public class Mainと宣言したクラスを保存するファイル名を選んでください。",
+      hint: "このドリルでは Main.java を使って実行します。",
+      expectedOutput: "",
+      answerCode: "",
+      requiredPatterns: [],
+      quiz: {
+        choices: [{ id: "main-class", text: "Main.class" }, { id: "lowercase", text: "main.java" }, { id: "source", text: "Main.java" }],
+        correctChoiceId: "source",
+        explanation: "publicなクラス名とソースファイル名を一致させます。大文字・小文字も区別します。Main.classはコンパイル後に生成されるファイルです。",
+      },
+    },
+    {
+      title: "mainメソッド",
+      description: "このドリルで使用する、プログラムの入口となるmainメソッドの宣言を選んでください。",
+      hint: "Javaではmainメソッドから処理が始まります。",
+      expectedOutput: "",
+      answerCode: "",
+      requiredPatterns: [],
+      quiz: {
+        choices: [{ id: "return-int", text: "public static int main(String[] args)" }, { id: "entry", text: "public static void main(String[] args)" }, { id: "capital", text: "public static void Main(String[] args)" }],
+        correctChoiceId: "entry",
+        explanation: "このドリルではpublic static void main(String[] args)を入口にします。mainの大文字・小文字や戻り値の型も宣言の一部です。",
+      },
+    },
+  ],
+  "02-how-to-run": [
+    {
+      title: "コンパイルエラーの原因",
+      description: 'System.out.println("Run OK") の行でコンパイルエラーになりました。この文に不足している記号を選んでください。',
+      hint: "Javaでは多くの文の終わりに、区切りの記号が必要です。",
+      expectedOutput: "",
+      answerCode: "",
+      requiredPatterns: [],
+      quiz: {
+        choices: [{ id: "colon", text: ":（コロン）" }, { id: "comma", text: ",（カンマ）" }, { id: "semicolon", text: ";（セミコロン）" }],
+        correctChoiceId: "semicolon",
+        explanation: '正しい文はSystem.out.println("Run OK");です。文末のセミコロンがないと、コンパイルを完了できません。',
+      },
+    },
+    {
+      title: "2行の出力",
+      description: "1行目にCompile、2行目にRunと出力してください。",
+      hint: "printlnを2回使います。",
+      expectedOutput: `Compile
+Run`,
+      answerCode: `public class Main {
+  public static void main(String[] args) {
+    System.out.println("Compile");
+    System.out.println("Run");
+  }
+}`,
+      requiredPatterns: ["System.out.println"],
+    },
+    {
+      title: "実行順序",
+      description: 'mainの中に、System.out.print("A");、System.out.println("B");、System.out.println("C");の順に書きました。出力を選んでください。',
+      hint: "処理は書いた順に進みます。printとprintlnで改行の有無が違うことにも注目しましょう。",
+      expectedOutput: "",
+      answerCode: "",
+      requiredPatterns: [],
+      quiz: {
+        choices: [{ id: "lines", text: "A\nB\nC" }, { id: "joined", text: "AB\nC" }, { id: "all-joined", text: "ABC" }],
+        correctChoiceId: "joined",
+        explanation: "最初のprintは改行しません。続くprintlnのBはAの直後に表示され、そこで改行されます。そのため1行目がAB、2行目がCになります。",
+      },
+    },
+    {
+      title: "コメントと実行結果",
+      description: 'mainの1行目が // System.out.println("Hidden");、2行目が System.out.println("Visible"); です。実行結果を選んでください。',
+      hint: "//から行末まではコメントなので、処理として実行されません。",
+      expectedOutput: "",
+      answerCode: "",
+      requiredPatterns: [],
+      quiz: {
+        choices: [{ id: "visible", text: "Visible" }, { id: "both", text: "Hidden\nVisible" }, { id: "hidden", text: "Hidden" }],
+        correctChoiceId: "visible",
+        explanation: "1行目はコメントなので実行されません。実際に動くのは2行目のprintlnだけです。コメントは説明を書くほか、一時的に処理を止めるときにも使えます。",
+      },
+    },
+  ],
+  "03-hello-world": [
+    {
+      title: "改行しない出力",
+      description: "printを2回使い、Helloと半角スペース付きのJavaを同じ行につなげて表示してください。最後に引数のないprintlnで改行します。",
+      hint: 'print("Hello")、print(" Java")、println()の順に呼びます。',
+      expectedOutput: "Hello Java",
+      answerCode: `public class Main {
+  public static void main(String[] args) {
+    System.out.print("Hello");
+    System.out.print(" Java");
+    System.out.println();
+  }
+}`,
+      requiredPatterns: ["System.out.print(", "System.out.println()"],
+    },
+    {
+      title: "引用符を表示する",
+      description: 'printでダブルクォーテーション付きの"Java"を表示し、printlnで「を学ぶ」を続けて表示してください。',
+      hint: '文字列内のダブルクォーテーションは、直前にバックスラッシュを付けてエスケープします。',
+      expectedOutput: '"Java"を学ぶ',
+      answerCode: `public class Main {
+  public static void main(String[] args) {
+    System.out.print("\\"Java\\"");
+    System.out.println("を学ぶ");
+  }
+}`,
+      requiredPatterns: ["System.out.print(", "System.out.println"],
+    },
+    {
+      title: "空行を入れる",
+      description: "HelloとJavaの間に空行を1行入れて表示してください。引数のないprintlnを使います。",
+      hint: "println()は文字を表示せず、改行だけを行います。",
+      expectedOutput: `Hello
+
+Java`,
+      answerCode: `public class Main {
+  public static void main(String[] args) {
+    System.out.println("Hello");
+    System.out.println();
+    System.out.println("Java");
+  }
+}`,
+      requiredPatterns: ["System.out.println()"],
+    },
+    {
+      title: "文字列の連結",
+      description: "Hello と World を + でつなげて Hello World と出力してください。",
+      hint: "文字列同士は + で連結できます。",
+      expectedOutput: "Hello World",
+      answerCode: `public class Main {
+  public static void main(String[] args) {
+    System.out.println("Hello " + "World");
+  }
+}`,
+      requiredPatterns: ["+", "System.out.println"],
+    },
+  ],
+  "04-variables": [
+    {
+      title: "変数の値を交換する",
+      description: "firstにTaro、secondにHanakoを入れ、退避用の変数tempを使って値を交換してください。交換後のfirstとsecondを1行ずつ表示します。",
+      hint: "tempにfirstを退避してからfirstを更新し、最後にtempの値をsecondへ入れます。",
+      expectedOutput: `Hanako
+Taro`,
+      answerCode: `public class Main {
+  public static void main(String[] args) {
+    String first = "Taro";
+    String second = "Hanako";
+    String temp = first;
+    first = second;
+    second = temp;
+    System.out.println(first);
+    System.out.println(second);
+  }
+}`,
+      requiredPatterns: ["String", "temp", "first = second", "second = temp", "System.out.println"],
+      forbiddenPatterns: ['System.out.println("Hanako")', 'System.out.println("Taro")'],
+    },
+    {
+      title: "値のコピーと更新",
+      description: "originalに20を入れ、copiedにoriginalの値をコピーします。その後originalだけを30に変え、copied、originalの順に1行ずつ表示してください。",
+      hint: "intの代入では、その時点の値がコピーされます。片方を変えても、もう片方は変わりません。",
+      expectedOutput: `20
+30`,
+      answerCode: `public class Main {
+  public static void main(String[] args) {
+    int original = 20;
+    int copied = original;
+    original = 30;
+    System.out.println(copied);
+    System.out.println(original);
+  }
+}`,
+      requiredPatterns: ["int", "copied = original", "original = 30", "System.out.println"],
+      forbiddenPatterns: ["System.out.println(20)", "System.out.println(30)"],
+    },
+    {
+      title: "変数の再代入",
+      description: "int型の変数 count に 1 を入れたあと 2 を再代入して表示してください。",
+      hint: "一度作った変数には、新しい値を入れ直せます。",
+      expectedOutput: "2",
+      answerCode: `public class Main {
+  public static void main(String[] args) {
+    int count = 1;
+    count = 2;
+    System.out.println(count);
+  }
+}`,
+      requiredPatterns: ["int", "count", "System.out.println"],
+    },
+    {
+      title: "変数を連結",
+      description: "String型の変数 language に Java を入れて、I study Java と出力してください。",
+      hint: "文字列と変数は + で連結できます。",
+      expectedOutput: "I study Java",
+      answerCode: `public class Main {
+  public static void main(String[] args) {
+    String language = "Java";
+    System.out.println("I study " + language);
+  }
+}`,
+      requiredPatterns: ["String", "language", "+", "System.out.println"],
+    },
+  ],
+  "05-data-types": [
+    {
+      title: "double型",
+      description: "double型の変数 price に 12.5 を入れて表示してください。",
+      hint: "小数はdouble型で扱えます。",
+      expectedOutput: "12.5",
+      answerCode: `public class Main {
+  public static void main(String[] args) {
+    double price = 12.5;
+    System.out.println(price);
+  }
+}`,
+      requiredPatterns: ["double", "price", "System.out.println"],
+    },
+    {
+      title: "boolean型",
+      description: "boolean型の変数 isPassed に true を入れて表示してください。",
+      hint: "真偽値はboolean型で扱えます。",
+      expectedOutput: "true",
+      answerCode: `public class Main {
+  public static void main(String[] args) {
+    boolean isPassed = true;
+    System.out.println(isPassed);
+  }
+}`,
+      requiredPatterns: ["boolean", "isPassed", "System.out.println"],
+    },
+    {
+      title: "char型",
+      description: "char型の変数 rank に A を入れて表示してください。",
+      hint: "1文字はシングルクォーテーションで囲みます。",
+      expectedOutput: "A",
+      answerCode: `public class Main {
+  public static void main(String[] args) {
+    char rank = 'A';
+    System.out.println(rank);
+  }
+}`,
+      requiredPatterns: ["char", "rank", "System.out.println"],
+    },
+    {
+      title: "型の使い分け",
+      description: "int score = 75; と boolean passed = true; を用意し、75:true と出力してください。",
+      hint: "数値、文字列、真偽値を + でつなげます。",
+      expectedOutput: "75:true",
+      answerCode: `public class Main {
+  public static void main(String[] args) {
+    int score = 75;
+    boolean passed = true;
+    System.out.println(score + ":" + passed);
+  }
+}`,
+      requiredPatterns: ["int", "boolean", "System.out.println"],
+    },
+  ],
+  "06-operators": [
+    {
+      title: "余りの計算",
+      description: "10 を 3 で割った余りを表示してください。",
+      hint: "余りは % 演算子で求めます。",
+      expectedOutput: "1",
+      answerCode: `public class Main {
+  public static void main(String[] args) {
+    System.out.println(10 % 3);
+  }
+}`,
+      requiredPatterns: ["%", "System.out.println"],
+    },
+    {
+      title: "合計と平均",
+      description: "int a = 80, b = 100 を用意し、平均 90 を表示してください。",
+      hint: "(a + b) / 2 を使います。",
+      expectedOutput: "90",
+      answerCode: `public class Main {
+  public static void main(String[] args) {
+    int a = 80;
+    int b = 100;
+    System.out.println((a + b) / 2);
+  }
+}`,
+      requiredPatterns: ["+", "/", "System.out.println"],
+    },
+    {
+      title: "比較演算子",
+      description: "int score = 70; が 60 以上かどうかを表示してください。",
+      hint: "比較の結果はtrueまたはfalseになります。",
+      expectedOutput: "true",
+      answerCode: `public class Main {
+  public static void main(String[] args) {
+    int score = 70;
+    System.out.println(score >= 60);
+  }
+}`,
+      requiredPatterns: [">=", "System.out.println"],
+    },
+    {
+      title: "インクリメント",
+      description: "int count = 3; を1増やして 4 を表示してください。",
+      hint: "++ または count = count + 1 を使います。",
+      expectedOutput: "4",
+      answerCode: `public class Main {
+  public static void main(String[] args) {
+    int count = 3;
+    count++;
+    System.out.println(count);
+  }
+}`,
+      requiredPatterns: ["count", "System.out.println"],
+    },
+  ],
+  "07-input-output": [
+    {
+      title: "整数入力",
+      description: "整数を1つ入力し、そのまま表示してください。サンプル入力は 42 です。",
+      hint: "nextInt()で整数を読み取ります。",
+      sampleInput: "42",
+      expectedOutput: "42",
+      answerCode: `import java.util.Scanner;
+
+public class Main {
+  public static void main(String[] args) {
+    Scanner scanner = new Scanner(System.in);
+    int number = scanner.nextInt();
+    System.out.println(number);
+  }
+}`,
+      requiredPatterns: ["Scanner", "nextInt", "System.out.println"],
+    },
+    {
+      title: "2つの入力",
+      description: "整数を2つ入力し、合計を表示してください。サンプル入力は 3 5 です。",
+      hint: "nextInt()を2回使います。",
+      sampleInput: "3 5",
+      expectedOutput: "8",
+      answerCode: `import java.util.Scanner;
+
+public class Main {
+  public static void main(String[] args) {
+    Scanner scanner = new Scanner(System.in);
+    int a = scanner.nextInt();
+    int b = scanner.nextInt();
+    System.out.println(a + b);
+  }
+}`,
+      requiredPatterns: ["Scanner", "nextInt", "+", "System.out.println"],
+    },
+    {
+      title: "名前と年齢",
+      description: "名前と年齢を入力し、Taro is 20 と表示してください。サンプル入力は Taro 20 です。",
+      hint: "文字列はnext()、整数はnextInt()で読み取れます。",
+      sampleInput: "Taro 20",
+      expectedOutput: "Taro is 20",
+      answerCode: `import java.util.Scanner;
+
+public class Main {
+  public static void main(String[] args) {
+    Scanner scanner = new Scanner(System.in);
+    String name = scanner.next();
+    int age = scanner.nextInt();
+    System.out.println(name + " is " + age);
+  }
+}`,
+      requiredPatterns: ["Scanner", "next", "nextInt", "System.out.println"],
+    },
+    {
+      title: "入力した文字列を装飾",
+      description: "単語を入力し、[]で囲んで表示してください。サンプル入力は Java です。",
+      hint: "入力した文字列の前後に文字列を連結します。",
+      sampleInput: "Java",
+      expectedOutput: "[Java]",
+      answerCode: `import java.util.Scanner;
+
+public class Main {
+  public static void main(String[] args) {
+    Scanner scanner = new Scanner(System.in);
+    String word = scanner.next();
+    System.out.println("[" + word + "]");
+  }
+}`,
+      requiredPatterns: ["Scanner", "String", "+", "System.out.println"],
+    },
+  ],
+  "08-if": [
+    {
+      title: "偶数判定",
+      description: "整数を入力し、偶数ならEvenと表示してください。サンプル入力は 8 です。",
+      hint: "% 2 == 0 で偶数を判定できます。",
+      sampleInput: "8",
+      expectedOutput: "Even",
+      answerCode: `import java.util.Scanner;
+
+public class Main {
+  public static void main(String[] args) {
+    Scanner scanner = new Scanner(System.in);
+    int number = scanner.nextInt();
+    if (number % 2 == 0) {
+      System.out.println("Even");
+    }
+  }
+}`,
+      requiredPatterns: ["if", "%", "System.out.println"],
+    },
+    {
+      title: "合格と不合格",
+      description: "点数を入力し、60点以上ならPass、それ以外ならFailと表示してください。サンプル入力は 45 です。",
+      hint: "elseを使います。",
+      sampleInput: "45",
+      expectedOutput: "Fail",
+      answerCode: `import java.util.Scanner;
+
+public class Main {
+  public static void main(String[] args) {
+    Scanner scanner = new Scanner(System.in);
+    int score = scanner.nextInt();
+    if (score >= 60) {
+      System.out.println("Pass");
+    } else {
+      System.out.println("Fail");
+    }
+  }
+}`,
+      requiredPatterns: ["if", "else", "System.out.println"],
+    },
+    {
+      title: "正負判定",
+      description: "整数を入力し、正ならPositive、0ならZero、負ならNegativeと表示してください。サンプル入力は 0 です。",
+      hint: "else ifを使って3つに分けます。",
+      sampleInput: "0",
+      expectedOutput: "Zero",
+      answerCode: `import java.util.Scanner;
+
+public class Main {
+  public static void main(String[] args) {
+    Scanner scanner = new Scanner(System.in);
+    int number = scanner.nextInt();
+    if (number > 0) {
+      System.out.println("Positive");
+    } else if (number == 0) {
+      System.out.println("Zero");
+    } else {
+      System.out.println("Negative");
+    }
+  }
+}`,
+      requiredPatterns: ["if", "else if", "else", "System.out.println"],
+    },
+    {
+      title: "範囲判定",
+      description: "年齢を入力し、13以上19以下ならTeenと表示してください。サンプル入力は 16 です。",
+      hint: "&&で条件を組み合わせます。",
+      sampleInput: "16",
+      expectedOutput: "Teen",
+      answerCode: `import java.util.Scanner;
+
+public class Main {
+  public static void main(String[] args) {
+    Scanner scanner = new Scanner(System.in);
+    int age = scanner.nextInt();
+    if (age >= 13 && age <= 19) {
+      System.out.println("Teen");
+    }
+  }
+}`,
+      requiredPatterns: ["if", "&&", "System.out.println"],
+    },
+  ],
+  "09-switch": [
+    {
+      title: "信号の色",
+      description: "1ならRed、2ならBlue、3ならYellowと表示してください。サンプル入力は 2 です。",
+      hint: "switchとcaseで分岐します。",
+      sampleInput: "2",
+      expectedOutput: "Blue",
+      answerCode: `import java.util.Scanner;
+
+public class Main {
+  public static void main(String[] args) {
+    Scanner scanner = new Scanner(System.in);
+    int color = scanner.nextInt();
+    switch (color) {
+      case 1:
+        System.out.println("Red");
+        break;
+      case 2:
+        System.out.println("Blue");
+        break;
+      case 3:
+        System.out.println("Yellow");
+        break;
+      default:
+        break;
+    }
+  }
+}`,
+      requiredPatterns: ["switch", "case", "break", "System.out.println"],
+    },
+    {
+      title: "複数のcaseをまとめる",
+      description: "曜日番号を入力し、1〜5なら平日、6・7なら休日、それ以外なら範囲外と表示してください。複数のcaseをまとめて同じ処理につなげます。",
+      hint: "case 1:からcase 5:までは処理を書かずに並べ、共通の表示処理を1回書きます。",
+      sampleInput: "6",
+      expectedOutput: "休日",
+      answerCode: `import java.util.Scanner;
+
+public class Main {
+  public static void main(String[] args) {
+    Scanner scanner = new Scanner(System.in);
+    int day = scanner.nextInt();
+    switch (day) {
+      case 1:
+      case 2:
+      case 3:
+      case 4:
+      case 5:
+        System.out.println("平日");
+        break;
+      case 6:
+      case 7:
+        System.out.println("休日");
+        break;
+      default:
+        System.out.println("範囲外");
+        break;
+    }
+  }
+}`,
+      requiredPatterns: ["switch", "case 1: case 2:", "case 6: case 7:", "default", "System.out.println"],
+    },
+    {
+      title: "defaultの利用",
+      description: "1ならOK、それ以外ならNGと表示してください。サンプル入力は 9 です。",
+      hint: "どのcaseにも当てはまらない場合はdefaultに進みます。",
+      sampleInput: "9",
+      expectedOutput: "NG",
+      answerCode: `import java.util.Scanner;
+
+public class Main {
+  public static void main(String[] args) {
+    Scanner scanner = new Scanner(System.in);
+    int number = scanner.nextInt();
+    switch (number) {
+      case 1:
+        System.out.println("OK");
+        break;
+      default:
+        System.out.println("NG");
+        break;
+    }
+  }
+}`,
+      requiredPatterns: ["switch", "default", "System.out.println"],
+    },
+    {
+      title: "文字のswitch",
+      description: "文字列を入力し、javaならJava Courseと表示してください。サンプル入力は java です。",
+      hint: "switchは文字列にも使えます。",
+      sampleInput: "java",
+      expectedOutput: "Java Course",
+      answerCode: `import java.util.Scanner;
+
+public class Main {
+  public static void main(String[] args) {
+    Scanner scanner = new Scanner(System.in);
+    String course = scanner.next();
+    switch (course) {
+      case "java":
+        System.out.println("Java Course");
+        break;
+      default:
+        break;
+    }
+  }
+}`,
+      requiredPatterns: ["String", "switch", "case", "System.out.println"],
+    },
+  ],
+  "10-for": [
+    {
+      title: "カウントダウン",
+      description: "for文で3、2、1の順に1行ずつ表示し、繰り返しが終わった後にStartと表示してください。",
+      hint: "iを3から始め、1以上の間、i--で1ずつ減らします。Startの表示はループの外に書きます。",
+      expectedOutput: `3
+2
+1
+Start`,
+      answerCode: `public class Main {
+  public static void main(String[] args) {
+    for (int i = 3; i >= 1; i--) {
+      System.out.println(i);
+    }
+    System.out.println("Start");
+  }
+}`,
+      requiredPatterns: ["for", "--", "System.out.println"],
+      forbiddenPatterns: ["System.out.println(1);", "System.out.println(2);"],
+    },
+    {
+      title: "偶数を出力",
+      description: "for文を使って2, 4, 6を1行ずつ出力してください。",
+      hint: "iを2ずつ増やします。",
+      expectedOutput: `2
+4
+6`,
+      answerCode: `public class Main {
+  public static void main(String[] args) {
+    for (int i = 2; i <= 6; i += 2) {
+      System.out.println(i);
+    }
+  }
+}`,
+      requiredPatterns: ["for", "+=", "System.out.println"],
+    },
+    {
+      title: "合計を求める",
+      description: "for文を使って1から4までの合計10を出力してください。",
+      hint: "sum変数に足し込んで、ループ後に出力します。",
+      expectedOutput: "10",
+      answerCode: `public class Main {
+  public static void main(String[] args) {
+    int sum = 0;
+    for (int i = 1; i <= 4; i++) {
+      sum += i;
+    }
+    System.out.println(sum);
+  }
+}`,
+      requiredPatterns: ["for", "sum", "System.out.println"],
+    },
+    {
+      title: "文字を繰り返す",
+      description: "for文を使ってJavaを3回出力してください。",
+      hint: "同じ処理を指定回数だけ繰り返します。",
+      expectedOutput: `Java
+Java
+Java`,
+      answerCode: `public class Main {
+  public static void main(String[] args) {
+    for (int i = 0; i < 3; i++) {
+      System.out.println("Java");
+    }
+  }
+}`,
+      requiredPatterns: ["for", "System.out.println"],
+    },
+  ],
+  "11-while": [
+    {
+      title: "whileでカウント",
+      description: "while文を使って1から3までを1行ずつ出力してください。",
+      hint: "ループの最後で変数を1増やします。",
+      expectedOutput: `1
+2
+3`,
+      answerCode: `public class Main {
+  public static void main(String[] args) {
+    int i = 1;
+    while (i <= 3) {
+      System.out.println(i);
+      i++;
+    }
+  }
+}`,
+      requiredPatterns: ["while", "System.out.println"],
+    },
+    {
+      title: "whileで偶数",
+      description: "while文を使って2, 4, 6を出力してください。",
+      hint: "変数を2ずつ増やします。",
+      expectedOutput: `2
+4
+6`,
+      answerCode: `public class Main {
+  public static void main(String[] args) {
+    int i = 2;
+    while (i <= 6) {
+      System.out.println(i);
+      i += 2;
+    }
+  }
+}`,
+      requiredPatterns: ["while", "+=", "System.out.println"],
+    },
+    {
+      title: "0が入力されるまで集計",
+      description: "整数を順に入力し、0が出るまでの合計をwhile文で求めて表示してください。終了の合図の0は合計に含めません。",
+      hint: "最初の整数を読み取り、number != 0の間は合計に足してから次の整数を読みます。",
+      sampleInput: "4 6 0",
+      expectedOutput: "10",
+      answerCode: `import java.util.Scanner;
+
+public class Main {
+  public static void main(String[] args) {
+    Scanner scanner = new Scanner(System.in);
+    int sum = 0;
+    int number = scanner.nextInt();
+    while (number != 0) {
+      sum += number;
+      number = scanner.nextInt();
+    }
+    System.out.println(sum);
+  }
+}`,
+      requiredPatterns: ["Scanner", "nextInt", "while", "!=", "sum", "System.out.println"],
+    },
+    {
+      title: "条件で止まる",
+      description: "while文を使ってcountが3未満の間だけLoopと出力してください。",
+      hint: "count < 3 を条件にします。",
+      expectedOutput: `Loop
+Loop
+Loop`,
+      answerCode: `public class Main {
+  public static void main(String[] args) {
+    int count = 0;
+    while (count < 3) {
+      System.out.println("Loop");
+      count++;
+    }
+  }
+}`,
+      requiredPatterns: ["while", "count", "System.out.println"],
+    },
+  ],
+  "12-array": [
+    {
+      title: "配列の2番目",
+      description: "int配列 numbers に 10, 20, 30 を入れ、2番目の値20を表示してください。",
+      hint: "配列の添字は0から始まります。",
+      expectedOutput: "20",
+      answerCode: `public class Main {
+  public static void main(String[] args) {
+    int[] numbers = {10, 20, 30};
+    System.out.println(numbers[1]);
+  }
+}`,
+      requiredPatterns: ["int[]", "numbers", "[1]", "System.out.println"],
+    },
+    {
+      title: "配列の長さ",
+      description: "String配列 names に A, B, C を入れ、配列の長さ3を表示してください。",
+      hint: "配列.lengthで要素数を取得できます。",
+      expectedOutput: "3",
+      answerCode: `public class Main {
+  public static void main(String[] args) {
+    String[] names = {"A", "B", "C"};
+    System.out.println(names.length);
+  }
+}`,
+      requiredPatterns: ["String[]", ".length", "System.out.println"],
+    },
+    {
+      title: "配列をforで表示",
+      description: "int配列 scores の 80, 90 をfor文で1行ずつ表示してください。",
+      hint: "i < scores.length を条件にします。",
+      expectedOutput: `80
+90`,
+      answerCode: `public class Main {
+  public static void main(String[] args) {
+    int[] scores = {80, 90};
+    for (int i = 0; i < scores.length; i++) {
+      System.out.println(scores[i]);
+    }
+  }
+}`,
+      requiredPatterns: ["int[]", "for", ".length", "System.out.println"],
+    },
+    {
+      title: "配列の合計",
+      description: "int配列 numbers の 1, 2, 3 の合計6を表示してください。",
+      hint: "sum変数を用意して配列の値を足します。",
+      expectedOutput: "6",
+      answerCode: `public class Main {
+  public static void main(String[] args) {
+    int[] numbers = {1, 2, 3};
+    int sum = 0;
+    for (int i = 0; i < numbers.length; i++) {
+      sum += numbers[i];
+    }
+    System.out.println(sum);
+  }
+}`,
+      requiredPatterns: ["int[]", "sum", "for", "System.out.println"],
+    },
+  ],
+  "13-method": [
+    {
+      title: "引数を使って処理を再利用",
+      description: "受け取った文字列を2回表示するstatic void printTwice(String message)を作ってください。mainからHi、Javaを渡して1回ずつ呼び出します。",
+      hint: "メソッド内でmessageを2回表示します。呼び出しを2回書けば、同じ処理を異なる文字列で再利用できます。",
+      expectedOutput: `Hi
+Hi
+Java
+Java`,
+      answerCode: `public class Main {
+  public static void printTwice(String message) {
+    System.out.println(message);
+    System.out.println(message);
+  }
+
+  public static void main(String[] args) {
+    printTwice("Hi");
+    printTwice("Java");
+  }
+}`,
+      requiredPatterns: ["static void printTwice(String", "System.out.println(message)", "printTwice("],
+    },
+    {
+      title: "戻り値のあるメソッド",
+      description: "getNumberメソッドで5を返し、mainで表示してください。",
+      hint: "intを返すメソッドにはreturnを書きます。",
+      expectedOutput: "5",
+      answerCode: `public class Main {
+  public static int getNumber() {
+    return 5;
+  }
+
+  public static void main(String[] args) {
+    System.out.println(getNumber());
+  }
+}`,
+      requiredPatterns: ["static int", "return", "getNumber()"],
+    },
+    {
+      title: "引数のあるメソッド",
+      description: "printNameメソッドにTaroを渡して表示してください。",
+      hint: "String name を引数にします。",
+      expectedOutput: "Taro",
+      answerCode: `public class Main {
+  public static void printName(String name) {
+    System.out.println(name);
+  }
+
+  public static void main(String[] args) {
+    printName("Taro");
+  }
+}`,
+      requiredPatterns: ["String", "printName(", "printName("],
+    },
+    {
+      title: "計算メソッド",
+      description: "addメソッドで3と4を足し、7を表示してください。",
+      hint: "int型の引数を2つ受け取ります。",
+      expectedOutput: "7",
+      answerCode: `public class Main {
+  public static int add(int a, int b) {
+    return a + b;
+  }
+
+  public static void main(String[] args) {
+    System.out.println(add(3, 4));
+  }
+}`,
+      requiredPatterns: ["static int", "return", "add("],
+    },
+  ],
+  "14-overload": [
+    {
+      title: "intとStringのオーバーロード",
+      description: "printData(int)とprintData(String)を作り、Javaと出力してください。",
+      hint: "同じメソッド名で引数の型を変えます。",
+      expectedOutput: "Java",
+      answerCode: `public class Main {
+  public static void printData(int number) {
+    System.out.println(number);
+  }
+
+  public static void printData(String text) {
+    System.out.println(text);
+  }
+
+  public static void main(String[] args) {
+    printData("Java");
+  }
+}`,
+      requiredPatterns: ["printData(", "String", "int"],
+    },
+    {
+      title: "引数の数を変える",
+      description: "同じsumメソッド名で、引数2つ版と3つ版を作り、6を表示してください。",
+      hint: "sum(int a, int b) と sum(int a, int b, int c) を作ります。",
+      expectedOutput: "6",
+      answerCode: `public class Main {
+  public static int sum(int a, int b) {
+    return a + b;
+  }
+
+  public static int sum(int a, int b, int c) {
+    return a + b + c;
+  }
+
+  public static void main(String[] args) {
+    System.out.println(sum(1, 2, 3));
+  }
+}`,
+      requiredPatterns: ["sum(", "return", "System.out.println"],
+    },
+    {
+      title: "double版の追加",
+      description: "show(int)とshow(double)を作り、2.5を表示してください。",
+      hint: "double型の引数を受け取る同名メソッドを作ります。",
+      expectedOutput: "2.5",
+      answerCode: `public class Main {
+  public static void show(int value) {
+    System.out.println(value);
+  }
+
+  public static void show(double value) {
+    System.out.println(value);
+  }
+
+  public static void main(String[] args) {
+    show(2.5);
+  }
+}`,
+      requiredPatterns: ["show(", "double", "int"],
+    },
+    {
+      title: "オーバーロードの呼び分け",
+      description: "message()とmessage(String name)を作り、Hello Taroと表示してください。",
+      hint: "引数ありのmessageを呼び出します。",
+      expectedOutput: "Hello Taro",
+      answerCode: `public class Main {
+  public static void message() {
+    System.out.println("Hello");
+  }
+
+  public static void message(String name) {
+    System.out.println("Hello " + name);
+  }
+
+  public static void main(String[] args) {
+    message("Taro");
+  }
+}`,
+      requiredPatterns: ["message(", "String", "System.out.println"],
+    },
+  ],
+  "15-class-object": [
+    {
+      title: "クラスを作る",
+      description: "Studentクラスを作り、mainでオブジェクトを生成してください。最後にOKと出力します。",
+      hint: "class Student をMainクラスの外に書き、new Student()で生成します。",
+      expectedOutput: "OK",
+      answerCode: `class Student {
+}
+
+public class Main {
+  public static void main(String[] args) {
+    Student student = new Student();
+    System.out.println("OK");
+  }
+}`,
+      requiredPatterns: ["class Student", "new Student", "System.out.println"],
+    },
+    {
+      title: "フィールドを使う",
+      description: "Studentクラスにnameフィールドを作り、Taroを入れて表示してください。",
+      hint: "student.name = \"Taro\"; のように代入します。",
+      expectedOutput: "Taro",
+      answerCode: `class Student {
+  String name;
+}
+
+public class Main {
+  public static void main(String[] args) {
+    Student student = new Student();
+    student.name = "Taro";
+    System.out.println(student.name);
+  }
+}`,
+      requiredPatterns: ["class Student", "String name", "new Student"],
+    },
+    {
+      title: "複数オブジェクト",
+      description: "Studentオブジェクトを2つ作り、2人目のnameでHanakoを表示してください。",
+      hint: "student1とstudent2を別々に作ります。",
+      expectedOutput: "Hanako",
+      answerCode: `class Student {
+  String name;
+}
+
+public class Main {
+  public static void main(String[] args) {
+    Student student1 = new Student();
+    Student student2 = new Student();
+    student1.name = "Taro";
+    student2.name = "Hanako";
+    System.out.println(student2.name);
+  }
+}`,
+      requiredPatterns: ["new Student", "student2", "System.out.println"],
+    },
+    {
+      title: "メソッドを持つクラス",
+      description: "StudentクラスにshowNameメソッドを作り、Javaと表示してください。",
+      hint: "クラスの中にvoid showName()を定義します。",
+      expectedOutput: "Java",
+      answerCode: `class Student {
+  String name;
+
+  void showName() {
+    System.out.println(name);
+  }
+}
+
+public class Main {
+  public static void main(String[] args) {
+    Student student = new Student();
+    student.name = "Java";
+    student.showName();
+  }
+}`,
+      requiredPatterns: ["class Student", "void showName", ".showName()"],
+    },
+  ],
+  "16-constructor": [
+    {
+      title: "コンストラクタで初期化",
+      description: "Student(String name)でnameを初期化し、Taroを表示してください。",
+      hint: "this.name = name; を使います。",
+      expectedOutput: "Taro",
+      answerCode: `class Student {
+  String name;
+
+  Student(String name) {
+    this.name = name;
+  }
+}
+
+public class Main {
+  public static void main(String[] args) {
+    Student student = new Student("Taro");
+    System.out.println(student.name);
+  }
+}`,
+      requiredPatterns: ["Student(", "this.name", "new Student"],
+    },
+    {
+      title: "複数フィールド初期化",
+      description: "nameとscoreをコンストラクタで受け取り、80を表示してください。",
+      hint: "コンストラクタの引数を2つにします。",
+      expectedOutput: "80",
+      answerCode: `class Student {
+  String name;
+  int score;
+
+  Student(String name, int score) {
+    this.name = name;
+    this.score = score;
+  }
+}
+
+public class Main {
+  public static void main(String[] args) {
+    Student student = new Student("Taro", 80);
+    System.out.println(student.score);
+  }
+}`,
+      requiredPatterns: ["Student(", "this.score", "new Student"],
+    },
+    {
+      title: "初期化した値をメソッドで表示",
+      description: "Bookクラスを作り、コンストラクタでtitleを受け取り、showTitleでJava入門を表示してください。",
+      hint: "コンストラクタとインスタンスメソッドを組み合わせます。",
+      expectedOutput: "Java入門",
+      answerCode: `class Book {
+  String title;
+
+  Book(String title) {
+    this.title = title;
+  }
+
+  void showTitle() {
+    System.out.println(title);
+  }
+}
+
+public class Main {
+  public static void main(String[] args) {
+    Book book = new Book("Java入門");
+    book.showTitle();
+  }
+}`,
+      requiredPatterns: ["Book(", "this.title", "showTitle"],
+    },
+    {
+      title: "デフォルト値を設定",
+      description: "Counterクラスのコンストラクタでcountに1を入れ、1を表示してください。",
+      hint: "引数なしコンストラクタを使います。",
+      expectedOutput: "1",
+      answerCode: `class Counter {
+  int count;
+
+  Counter() {
+    count = 1;
+  }
+}
+
+public class Main {
+  public static void main(String[] args) {
+    Counter counter = new Counter();
+    System.out.println(counter.count);
+  }
+}`,
+      requiredPatterns: ["Counter()", "new Counter", "System.out.println"],
+    },
+  ],
+  "17-static": [
+    {
+      title: "staticメソッド",
+      description: "staticメソッドhelloを作り、mainから呼び出してHelloと表示してください。",
+      hint: "static void hello() を定義します。",
+      expectedOutput: "Hello",
+      answerCode: `public class Main {
+  static void hello() {
+    System.out.println("Hello");
+  }
+
+  public static void main(String[] args) {
+    hello();
+  }
+}`,
+      requiredPatterns: ["static void", "hello();"],
+    },
+    {
+      title: "static変数",
+      description: "static int count = 3; を作り、countを表示してください。",
+      hint: "クラスに属する変数としてstaticを付けます。",
+      expectedOutput: "3",
+      answerCode: `public class Main {
+  static int count = 3;
+
+  public static void main(String[] args) {
+    System.out.println(count);
+  }
+}`,
+      requiredPatterns: ["static int", "count", "System.out.println"],
+    },
+    {
+      title: "static変数を増やす",
+      description: "static変数countをメソッドで1増やし、2を表示してください。",
+      hint: "addメソッドでcount++します。",
+      expectedOutput: "2",
+      answerCode: `public class Main {
+  static int count = 1;
+
+  static void add() {
+    count++;
+  }
+
+  public static void main(String[] args) {
+    add();
+    System.out.println(count);
+  }
+}`,
+      requiredPatterns: ["static", "count++", "add();"],
+    },
+    {
+      title: "クラス名で呼び出す",
+      description: "Tool.print() を呼び出してOKと表示してください。",
+      hint: "別クラスのstaticメソッドはクラス名.メソッド名で呼べます。",
+      expectedOutput: "OK",
+      answerCode: `class Tool {
+  static void print() {
+    System.out.println("OK");
+  }
+}
+
+public class Main {
+  public static void main(String[] args) {
+    Tool.print();
+  }
+}`,
+      requiredPatterns: ["static void", "Tool.print()"],
+    },
+  ],
+  "18-inheritance": [
+    {
+      title: "extendsを使う",
+      description: "Animalを継承したDogクラスを作り、Dogと表示してください。",
+      hint: "class Dog extends Animal と書きます。",
+      expectedOutput: "Dog",
+      answerCode: `class Animal {
+}
+
+class Dog extends Animal {
+}
+
+public class Main {
+  public static void main(String[] args) {
+    Dog dog = new Dog();
+    System.out.println("Dog");
+  }
+}`,
+      requiredPatterns: ["extends", "new Dog"],
+    },
+    {
+      title: "親クラスのメソッド",
+      description: "親クラスAnimalのspeakメソッドをDogオブジェクトから呼び出し、Animalと表示してください。",
+      hint: "継承すると親クラスのメソッドを使えます。",
+      expectedOutput: "Animal",
+      answerCode: `class Animal {
+  void speak() {
+    System.out.println("Animal");
+  }
+}
+
+class Dog extends Animal {
+}
+
+public class Main {
+  public static void main(String[] args) {
+    Dog dog = new Dog();
+    dog.speak();
+  }
+}`,
+      requiredPatterns: ["extends", ".speak()"],
+    },
+    {
+      title: "メソッドの上書き",
+      description: "Dogでspeakメソッドを上書きし、Wanと表示してください。",
+      hint: "子クラスに同じ名前のメソッドを書きます。",
+      expectedOutput: "Wan",
+      answerCode: `class Animal {
+  void speak() {
+    System.out.println("Animal");
+  }
+}
+
+class Dog extends Animal {
+  void speak() {
+    System.out.println("Wan");
+  }
+}
+
+public class Main {
+  public static void main(String[] args) {
+    Dog dog = new Dog();
+    dog.speak();
+  }
+}`,
+      requiredPatterns: ["extends", "void speak", ".speak()"],
+    },
+    {
+      title: "superを使う",
+      description: "子クラスから親クラスのメソッドをsuperで呼び、Parentと表示してください。",
+      hint: "super.show(); の形を使います。",
+      expectedOutput: "Parent",
+      answerCode: `class Parent {
+  void show() {
+    System.out.println("Parent");
+  }
+}
+
+class Child extends Parent {
+  void callParent() {
+    super.show();
+  }
+}
+
+public class Main {
+  public static void main(String[] args) {
+    Child child = new Child();
+    child.callParent();
+  }
+}`,
+      requiredPatterns: ["extends", "super.", "callParent"],
+    },
+  ],
+  "19-polymorphism": [
+    {
+      title: "親型の変数",
+      description: "Animal型の変数にDogオブジェクトを入れ、OKと表示してください。",
+      hint: "Animal animal = new Dog(); の形です。",
+      expectedOutput: "OK",
+      answerCode: `class Animal {
+}
+
+class Dog extends Animal {
+}
+
+public class Main {
+  public static void main(String[] args) {
+    Animal animal = new Dog();
+    System.out.println("OK");
+  }
+}`,
+      requiredPatterns: ["Animal", "new Dog"],
+    },
+    {
+      title: "動的なメソッド呼び出し",
+      description: "Animal型の変数からDogのspeakを呼び、Wanと表示してください。",
+      hint: "オーバーライドしたメソッドが実行されます。",
+      expectedOutput: "Wan",
+      answerCode: `class Animal {
+  void speak() {
+    System.out.println("Animal");
+  }
+}
+
+class Dog extends Animal {
+  void speak() {
+    System.out.println("Wan");
+  }
+}
+
+public class Main {
+  public static void main(String[] args) {
+    Animal animal = new Dog();
+    animal.speak();
+  }
+}`,
+      requiredPatterns: ["Animal", "new Dog", ".speak()"],
+    },
+    {
+      title: "配列でまとめる",
+      description: "Animal配列にDogを入れ、speakでWanと表示してください。",
+      hint: "親型の配列に子クラスのオブジェクトを入れられます。",
+      expectedOutput: "Wan",
+      answerCode: `class Animal {
+  void speak() {
+    System.out.println("Animal");
+  }
+}
+
+class Dog extends Animal {
+  void speak() {
+    System.out.println("Wan");
+  }
+}
+
+public class Main {
+  public static void main(String[] args) {
+    Animal[] animals = {new Dog()};
+    animals[0].speak();
+  }
+}`,
+      requiredPatterns: ["Animal[]", "new Dog", ".speak()"],
+    },
+    {
+      title: "instanceof",
+      description: "Animal型の変数がDogかどうかを判定し、Dogと表示してください。",
+      hint: "instanceofで実際の型を確認できます。",
+      expectedOutput: "Dog",
+      answerCode: `class Animal {
+}
+
+class Dog extends Animal {
+}
+
+public class Main {
+  public static void main(String[] args) {
+    Animal animal = new Dog();
+    if (animal instanceof Dog) {
+      System.out.println("Dog");
+    }
+  }
+}`,
+      requiredPatterns: ["instanceof", "if", "System.out.println"],
+    },
+  ],
+  "20-abstract-interface": [
+    {
+      title: "interfaceを実装",
+      description: "Printableインターフェースを実装したReportクラスを作り、Printと表示してください。",
+      hint: "implementsを使います。",
+      expectedOutput: "Print",
+      answerCode: `interface Printable {
+  void print();
+}
+
+class Report implements Printable {
+  public void print() {
+    System.out.println("Print");
+  }
+}
+
+public class Main {
+  public static void main(String[] args) {
+    Report report = new Report();
+    report.print();
+  }
+}`,
+      requiredPatterns: ["interface", "implements", "public void print"],
+    },
+    {
+      title: "インターフェース型",
+      description: "Printable型の変数にReportを入れ、OKと表示してください。",
+      hint: "Printable printable = new Report(); の形です。",
+      expectedOutput: "OK",
+      answerCode: `interface Printable {
+  void print();
+}
+
+class Report implements Printable {
+  public void print() {
+    System.out.println("OK");
+  }
+}
+
+public class Main {
+  public static void main(String[] args) {
+    Printable printable = new Report();
+    printable.print();
+  }
+}`,
+      requiredPatterns: ["interface", "Printable", "new Report"],
+    },
+    {
+      title: "abstract class",
+      description: "抽象クラスBaseを継承したChildを作り、Runと表示してください。",
+      hint: "abstract class と extends を使います。",
+      expectedOutput: "Run",
+      answerCode: `abstract class Base {
+  abstract void run();
+}
+
+class Child extends Base {
+  void run() {
+    System.out.println("Run");
+  }
+}
+
+public class Main {
+  public static void main(String[] args) {
+    Child child = new Child();
+    child.run();
+  }
+}`,
+      requiredPatterns: ["abstract class", "extends", "void run"],
+    },
+    {
+      title: "複数実装の考え方",
+      description: "RunnableTaskインターフェースをTaskに実装し、Taskと表示してください。",
+      hint: "インターフェース名と実装クラス名を分けて書きます。",
+      expectedOutput: "Task",
+      answerCode: `interface RunnableTask {
+  void run();
+}
+
+class Task implements RunnableTask {
+  public void run() {
+    System.out.println("Task");
+  }
+}
+
+public class Main {
+  public static void main(String[] args) {
+    RunnableTask task = new Task();
+    task.run();
+  }
+}`,
+      requiredPatterns: ["interface", "implements", "RunnableTask"],
+    },
+  ],
+  "21-package-import": [
+    {
+      title: "Randomのimport",
+      description: "Randomをimportし、nextInt(1)の結果0を表示してください。",
+      hint: "import java.util.Random; を書きます。",
+      expectedOutput: "0",
+      answerCode: `import java.util.Random;
+
+public class Main {
+  public static void main(String[] args) {
+    Random random = new Random();
+    System.out.println(random.nextInt(1));
+  }
+}`,
+      requiredPatterns: ["import", "Random", "nextInt"],
+    },
+    {
+      title: "static import",
+      description: "Math.maxをstatic importし、クラス名を付けずにmax(3, 7)を呼び出して7と表示してください。",
+      hint: "import static java.lang.Math.max;と書くと、Math.を省略できます。maxは2つの値の大きい方を返します。",
+      expectedOutput: "7",
+      answerCode: `import static java.lang.Math.max;
+
+public class Main {
+  public static void main(String[] args) {
+    System.out.println(max(3, 7));
+  }
+}`,
+      requiredPatterns: ["import static java.lang.Math.max", "max("],
+      forbiddenPatterns: ["Math.max("],
+    },
+    {
+      title: "複数import",
+      description: "ScannerとArrayListをimportし、入力したJavaをリストに入れて表示してください。",
+      hint: "importを2行書きます。",
+      sampleInput: "Java",
+      expectedOutput: "Java",
+      answerCode: `import java.util.Scanner;
+import java.util.ArrayList;
+
+public class Main {
+  public static void main(String[] args) {
+    Scanner scanner = new Scanner(System.in);
+    ArrayList<String> list = new ArrayList<>();
+    list.add(scanner.next());
+    System.out.println(list.get(0));
+  }
+}`,
+      requiredPatterns: ["import", "Scanner", "ArrayList"],
+    },
+    {
+      title: "日付書式クラスのimport",
+      description: "LocalDateとDateTimeFormatterをimportし、2026年1月1日を2026/01/01の形式で表示してください。",
+      hint: 'DateTimeFormatter.ofPattern("yyyy/MM/dd")で書式を作り、date.format(formatter)で変換します。',
+      expectedOutput: "2026/01/01",
+      answerCode: `import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+
+public class Main {
+  public static void main(String[] args) {
+    LocalDate date = LocalDate.of(2026, 1, 1);
+    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy/MM/dd");
+    System.out.println(date.format(formatter));
+  }
+}`,
+      requiredPatterns: ["import java.time.format.DateTimeFormatter", "DateTimeFormatter.ofPattern", ".format(", "System.out.println"],
+    },
+  ],
+  "22-exception": [
+    {
+      title: "try-catchの基本",
+      description: "文字列10を整数に変換し、10を表示してください。try-catchを使います。",
+      hint: "Integer.parseIntをtryの中で使います。",
+      expectedOutput: "10",
+      answerCode: `public class Main {
+  public static void main(String[] args) {
+    try {
+      int number = Integer.parseInt("10");
+      System.out.println(number);
+    } catch (Exception e) {
+      System.out.println("Error");
+    }
+  }
+}`,
+      requiredPatterns: ["try", "catch", "Integer.parseInt"],
+    },
+    {
+      title: "例外時の処理",
+      description: "文字列abcを整数に変換しようとして、例外時にErrorと表示してください。",
+      hint: "変換できない文字列はNumberFormatExceptionになります。",
+      expectedOutput: "Error",
+      answerCode: `public class Main {
+  public static void main(String[] args) {
+    try {
+      int number = Integer.parseInt("abc");
+      System.out.println(number);
+    } catch (Exception e) {
+      System.out.println("Error");
+    }
+  }
+}`,
+      requiredPatterns: ["try", "catch", "System.out.println"],
+    },
+    {
+      title: "finally",
+      description: "try-catch-finallyを使い、最後にDoneと表示してください。",
+      hint: "finallyは例外の有無に関係なく実行されます。",
+      expectedOutput: "Done",
+      answerCode: `public class Main {
+  public static void main(String[] args) {
+    try {
+      int number = 1;
+    } catch (Exception e) {
+      System.out.println("Error");
+    } finally {
+      System.out.println("Done");
+    }
+  }
+}`,
+      requiredPatterns: ["try", "catch", "finally"],
+    },
+    {
+      title: "throws",
+      description: "mainメソッドにthrows Exceptionを書き、OKと表示してください。",
+      hint: "メソッド宣言に throws Exception を付けます。",
+      expectedOutput: "OK",
+      answerCode: `public class Main {
+  public static void main(String[] args) throws Exception {
+    System.out.println("OK");
+  }
+}`,
+      requiredPatterns: ["throws Exception", "System.out.println"],
+    },
+  ],
+  "23-file-io": [
+    {
+      title: "BufferedReaderの宣言",
+      description: "BufferedReader型の変数readerをnullで宣言し、OKと表示してください。",
+      hint: "import java.io.BufferedReader; を使います。",
+      expectedOutput: "OK",
+      answerCode: `import java.io.BufferedReader;
+
+public class Main {
+  public static void main(String[] args) throws Exception {
+    BufferedReader reader = null;
+    System.out.println("OK");
+  }
+}`,
+      requiredPatterns: ["BufferedReader", "throws Exception"],
+    },
+    {
+      title: "FileWriterの宣言",
+      description: "FileWriter型の変数writerをnullで宣言し、OKと表示してください。",
+      hint: "import java.io.FileWriter; を使います。",
+      expectedOutput: "OK",
+      answerCode: `import java.io.FileWriter;
+
+public class Main {
+  public static void main(String[] args) throws Exception {
+    FileWriter writer = null;
+    System.out.println("OK");
+  }
+}`,
+      requiredPatterns: ["FileWriter", "throws Exception"],
+    },
+    {
+      title: "try-with-resourcesの形",
+      description: "try-with-resourcesの構文を使い、Doneと表示してください。StringReaderを使います。",
+      hint: "try (StringReader reader = new StringReader(\"A\")) の形です。",
+      expectedOutput: "Done",
+      answerCode: `import java.io.StringReader;
+
+public class Main {
+  public static void main(String[] args) throws Exception {
+    try (StringReader reader = new StringReader("A")) {
+      System.out.println("Done");
+    }
+  }
+}`,
+      requiredPatterns: ["try", "StringReader", "new StringReader"],
+    },
+    {
+      title: "IOExceptionのcatch",
+      description: "IOExceptionをcatchする形を書き、OKと表示してください。",
+      hint: "try内でthrow new IOException()し、catch (IOException e)でOKと表示します。",
+      expectedOutput: "OK",
+      answerCode: `import java.io.IOException;
+
+public class Main {
+  public static void main(String[] args) {
+    try {
+      throw new IOException();
+    } catch (IOException e) {
+      System.out.println("OK");
+    }
+  }
+}`,
+      requiredPatterns: ["IOException", "try", "catch"],
+    },
+  ],
+  "24-collection": [
+    {
+      title: "リストの更新と削除",
+      description: "ArrayListにJavaとCを追加します。setで先頭をPythonに変更し、removeで2番目の要素を削除してください。先頭の値と残った要素数を1行ずつ表示します。",
+      hint: 'list.set(0, "Python")で置き換え、list.remove(1)で添字1の要素を削除します。',
+      expectedOutput: `Python
+1`,
+      answerCode: `import java.util.ArrayList;
+
+public class Main {
+  public static void main(String[] args) {
+    ArrayList<String> list = new ArrayList<>();
+    list.add("Java");
+    list.add("C");
+    list.set(0, "Python");
+    list.remove(1);
+    System.out.println(list.get(0));
+    System.out.println(list.size());
+  }
+}`,
+      requiredPatterns: ["ArrayList", ".add", ".set(", ".remove(", ".get", ".size()"],
+    },
+    {
+      title: "リストのサイズ",
+      description: "ArrayListにAとBを追加し、サイズ2を表示してください。",
+      hint: "size()で要素数を取得できます。",
+      expectedOutput: "2",
+      answerCode: `import java.util.ArrayList;
+
+public class Main {
+  public static void main(String[] args) {
+    ArrayList<String> list = new ArrayList<>();
+    list.add("A");
+    list.add("B");
+    System.out.println(list.size());
+  }
+}`,
+      requiredPatterns: ["ArrayList", ".size()", "System.out.println"],
+    },
+    {
+      title: "拡張for文",
+      description: "ArrayListのAとBを拡張for文で1行ずつ表示してください。",
+      hint: "for (String item : list) の形を使います。",
+      expectedOutput: `A
+B`,
+      answerCode: `import java.util.ArrayList;
+
+public class Main {
+  public static void main(String[] args) {
+    ArrayList<String> list = new ArrayList<>();
+    list.add("A");
+    list.add("B");
+    for (String item : list) {
+      System.out.println(item);
+    }
+  }
+}`,
+      requiredPatterns: ["ArrayList", "for", ":"],
+    },
+    {
+      title: "HashMap",
+      description: "HashMapにkey score、value 80を入れて80を表示してください。",
+      hint: "putとgetを使います。",
+      expectedOutput: "80",
+      answerCode: `import java.util.HashMap;
+
+public class Main {
+  public static void main(String[] args) {
+    HashMap<String, Integer> map = new HashMap<>();
+    map.put("score", 80);
+    System.out.println(map.get("score"));
+  }
+}`,
+      requiredPatterns: ["HashMap", ".put", ".get"],
+    },
+  ],
+  "25-generics": [
+    {
+      title: "型を指定できるBoxクラス",
+      description: "ジェネリクスを使ったBox<T>クラスを作成してください。コンストラクタでT型の値を受け取り、getメソッドで返します。Box<String>にJavaを保存して取り出し、表示してください。",
+      hint: "class Box<T>、T型のフィールドvalue、Tを返すget()を定義します。型を変えればIntegerなども保存できます。",
+      expectedOutput: "Java",
+      starterCode: `public class Main {
+  public static void main(String[] args) {
+    // ここに入力してください
+  }
+}`,
+      answerCode: `class Box<T> {
+  private T value;
+
+  Box(T value) {
+    this.value = value;
+  }
+
+  T get() {
+    return value;
+  }
+}
+
+public class Main {
+  public static void main(String[] args) {
+    Box<String> box = new Box<>("Java");
+    System.out.println(box.get());
+  }
+}`,
+      requiredPatterns: ["class Box<T>", "T value", "T get()", "Box<String>", ".get()"],
+    },
+    {
+      title: "Integerのリスト",
+      description: "ArrayList<Integer>に10を入れて表示してください。",
+      hint: "intのラッパークラスはIntegerです。",
+      expectedOutput: "10",
+      answerCode: `import java.util.ArrayList;
+
+public class Main {
+  public static void main(String[] args) {
+    ArrayList<Integer> numbers = new ArrayList<>();
+    numbers.add(10);
+    System.out.println(numbers.get(0));
+  }
+}`,
+      requiredPatterns: ["ArrayList<Integer>", ".add", ".get"],
+    },
+    {
+      title: "メソッドのジェネリクス",
+      description: "printメソッドをジェネリクスで作り、Helloを表示してください。",
+      hint: "<T> をメソッド宣言に付けます。",
+      expectedOutput: "Hello",
+      answerCode: `public class Main {
+  public static <T> void print(T value) {
+    System.out.println(value);
+  }
+
+  public static void main(String[] args) {
+    print("Hello");
+  }
+}`,
+      requiredPatterns: ["<T>", "print(", "System.out.println"],
+    },
+    {
+      title: "型安全な取り出し",
+      description: "ArrayList<String>から取り出した値をString変数に入れ、OKを表示してください。",
+      hint: "ジェネリクスを使うとキャストなしで取り出せます。",
+      expectedOutput: "OK",
+      answerCode: `import java.util.ArrayList;
+
+public class Main {
+  public static void main(String[] args) {
+    ArrayList<String> list = new ArrayList<>();
+    list.add("OK");
+    String value = list.get(0);
+    System.out.println(value);
+  }
+}`,
+      requiredPatterns: ["ArrayList<String>", "String value", ".get"],
+    },
+  ],
+  "26-lambda": [
+    {
+      title: "Runnableのラムダ",
+      description: "Runnableをラムダ式で作り、Runと表示してください。",
+      hint: "() -> { ... } の形です。",
+      expectedOutput: "Run",
+      answerCode: `public class Main {
+  public static void main(String[] args) {
+    Runnable runnable = () -> {
+      System.out.println("Run");
+    };
+    runnable.run();
+  }
+}`,
+      requiredPatterns: ["->", "Runnable", ".run()"],
+    },
+    {
+      title: "Functionのラムダ",
+      description: "Function<Integer, Integer>で数を2倍にし、10を表示してください。",
+      hint: "x -> x * 2 を使います。",
+      expectedOutput: "10",
+      answerCode: `import java.util.function.Function;
+
+public class Main {
+  public static void main(String[] args) {
+    Function<Integer, Integer> doubleValue = x -> x * 2;
+    System.out.println(doubleValue.apply(5));
+  }
+}`,
+      requiredPatterns: ["->", "Function", ".apply"],
+    },
+    {
+      title: "Predicateのラムダ",
+      description: "Predicate<Integer>で偶数判定を作り、trueを表示してください。",
+      hint: "x -> x % 2 == 0 を使います。",
+      expectedOutput: "true",
+      answerCode: `import java.util.function.Predicate;
+
+public class Main {
+  public static void main(String[] args) {
+    Predicate<Integer> isEven = x -> x % 2 == 0;
+    System.out.println(isEven.test(4));
+  }
+}`,
+      requiredPatterns: ["->", "Predicate", ".test"],
+    },
+    {
+      title: "forEachとラムダ",
+      description: "リストのJavaをforEachとラムダで表示してください。",
+      hint: "list.forEach(item -> ... ) を使います。",
+      expectedOutput: "Java",
+      answerCode: `import java.util.ArrayList;
+
+public class Main {
+  public static void main(String[] args) {
+    ArrayList<String> list = new ArrayList<>();
+    list.add("Java");
+    list.forEach(item -> System.out.println(item));
+  }
+}`,
+      requiredPatterns: ["->", "forEach", "System.out.println"],
+    },
+  ],
+  "27-stream-api": [
+    {
+      title: "streamで数える",
+      description: "リスト1,2,3から2より大きい数を数え、1を表示してください。",
+      hint: "stream、filter、countを使います。",
+      expectedOutput: "1",
+      answerCode: `import java.util.Arrays;
+import java.util.List;
+
+public class Main {
+  public static void main(String[] args) {
+    List<Integer> numbers = Arrays.asList(1, 2, 3);
+    long count = numbers.stream().filter(n -> n > 2).count();
+    System.out.println(count);
+  }
+}`,
+      requiredPatterns: [".stream()", ".filter", ".count"],
+    },
+    {
+      title: "mapで変換",
+      description: "リスト1,2,3を2倍にして合計12を表示してください。",
+      hint: "mapToIntとsumを使います。",
+      expectedOutput: "12",
+      answerCode: `import java.util.Arrays;
+import java.util.List;
+
+public class Main {
+  public static void main(String[] args) {
+    List<Integer> numbers = Arrays.asList(1, 2, 3);
+    int sum = numbers.stream().mapToInt(n -> n * 2).sum();
+    System.out.println(sum);
+  }
+}`,
+      requiredPatterns: [".stream()", "mapToInt", ".sum"],
+    },
+    {
+      title: "filterで抽出",
+      description: "Java, C, Pythonから文字数が4のJavaだけを表示してください。",
+      hint: "filter(word -> word.length() == 4) を使います。",
+      expectedOutput: "Java",
+      answerCode: `import java.util.Arrays;
+import java.util.List;
+
+public class Main {
+  public static void main(String[] args) {
+    List<String> words = Arrays.asList("Java", "C", "Python");
+    words.stream()
+      .filter(word -> word.length() == 4)
+      .forEach(word -> System.out.println(word));
+  }
+}`,
+      requiredPatterns: [".stream()", ".filter", ".forEach"],
+    },
+    {
+      title: "sorted",
+      description: "3,1,2をstreamで昇順に並べ、1 2 3を1行ずつ表示してください。",
+      hint: "sortedを使います。",
+      expectedOutput: `1
+2
+3`,
+      answerCode: `import java.util.Arrays;
+import java.util.List;
+
+public class Main {
+  public static void main(String[] args) {
+    List<Integer> numbers = Arrays.asList(3, 1, 2);
+    numbers.stream()
+      .sorted()
+      .forEach(number -> System.out.println(number));
+  }
+}`,
+      requiredPatterns: [".stream()", ".sorted", ".forEach"],
+    },
+  ],
+  "28-date-time": [
+    {
+      title: "LocalDateの作成",
+      description: "LocalDateで2026-07-21を作成し、表示してください。",
+      hint: "LocalDate.of(2026, 7, 21) を使います。",
+      expectedOutput: "2026-07-21",
+      answerCode: `import java.time.LocalDate;
+
+public class Main {
+  public static void main(String[] args) {
+    LocalDate date = LocalDate.of(2026, 7, 21);
+    System.out.println(date);
+  }
+}`,
+      requiredPatterns: ["LocalDate", ".of", "System.out.println"],
+    },
+    {
+      title: "日付を足す",
+      description: "2026-07-21の3日後を表示してください。",
+      hint: "plusDays(3) を使います。",
+      expectedOutput: "2026-07-24",
+      answerCode: `import java.time.LocalDate;
+
+public class Main {
+  public static void main(String[] args) {
+    LocalDate date = LocalDate.of(2026, 7, 21);
+    System.out.println(date.plusDays(3));
+  }
+}`,
+      requiredPatterns: ["LocalDate", "plusDays", "System.out.println"],
+    },
+    {
+      title: "年月日を取り出す",
+      description: "2026-07-21から年だけを取り出して2026を表示してください。",
+      hint: "getYear()を使います。",
+      expectedOutput: "2026",
+      answerCode: `import java.time.LocalDate;
+
+public class Main {
+  public static void main(String[] args) {
+    LocalDate date = LocalDate.of(2026, 7, 21);
+    System.out.println(date.getYear());
+  }
+}`,
+      requiredPatterns: ["LocalDate", "getYear", "System.out.println"],
+    },
+    {
+      title: "LocalDateTime",
+      description: "LocalDateTimeで2026-07-21T10:30を作成し、表示してください。",
+      hint: "LocalDateTime.of(2026, 7, 21, 10, 30) を使います。",
+      expectedOutput: "2026-07-21T10:30",
+      answerCode: `import java.time.LocalDateTime;
+
+public class Main {
+  public static void main(String[] args) {
+    LocalDateTime dateTime = LocalDateTime.of(2026, 7, 21, 10, 30);
+    System.out.println(dateTime);
+  }
+}`,
+      requiredPatterns: ["LocalDateTime", ".of", "System.out.println"],
+    },
+  ],
+  "32-final-exercise": [
+    {
+      title: "配列と条件分岐",
+      description: "点数80, 55, 90のうち60以上の数を数え、2を表示してください。",
+      hint: "配列、for文、if文を組み合わせます。",
+      expectedOutput: "2",
+      answerCode: `public class Main {
+  public static void main(String[] args) {
+    int[] scores = {80, 55, 90};
+    int count = 0;
+    for (int i = 0; i < scores.length; i++) {
+      if (scores[i] >= 60) {
+        count++;
+      }
+    }
+    System.out.println(count);
+  }
+}`,
+      requiredPatterns: ["int[]", "for", "if", "count"],
+    },
+    {
+      title: "クラスと配列",
+      description: "Studentクラスの配列を作り、1人目の名前Taroを表示してください。",
+      hint: "クラス、コンストラクタ、配列を組み合わせます。",
+      expectedOutput: "Taro",
+      answerCode: `class Student {
+  String name;
+
+  Student(String name) {
+    this.name = name;
+  }
+}
+
+public class Main {
+  public static void main(String[] args) {
+    Student[] students = {
+      new Student("Taro"),
+      new Student("Hanako")
+    };
+    System.out.println(students[0].name);
+  }
+}`,
+      requiredPatterns: ["class Student", "Student[]", "new Student"],
+    },
+    {
+      title: "メソッドで判定",
+      description: "isPassメソッドで60以上を判定し、trueを表示してください。",
+      hint: "booleanを返すメソッドを作ります。",
+      expectedOutput: "true",
+      answerCode: `public class Main {
+  public static boolean isPass(int score) {
+    return score >= 60;
+  }
+
+  public static void main(String[] args) {
+    System.out.println(isPass(80));
+  }
+}`,
+      requiredPatterns: ["boolean", "return", "isPass"],
+    },
+    {
+      title: "総合ミニ処理",
+      description: "ArrayListに3つの点数を入れ、合計240を表示してください。",
+      hint: "ArrayList、拡張for文、合計変数を使います。",
+      expectedOutput: "240",
+      answerCode: `import java.util.ArrayList;
+
+public class Main {
+  public static void main(String[] args) {
+    ArrayList<Integer> scores = new ArrayList<>();
+    scores.add(80);
+    scores.add(70);
+    scores.add(90);
+    int sum = 0;
+    for (int score : scores) {
+      sum += score;
+    }
+    System.out.println(sum);
+  }
+}`,
+      requiredPatterns: ["ArrayList", "for", "sum"],
+    },
+  ],
+};
+
 const customJavaQuestionSets: Record<string, JavaQuestion[]> = {};
 
 const makeReviewQuestion = (
@@ -972,6 +3236,23 @@ const makeReviewQuestion = (
   output: string,
   focus: string
 ): JavaQuestion => {
+  const spec = lessonReviewSpecs[base.id]?.[index - 2];
+
+  if (spec) {
+    return {
+      ...base,
+      ...spec,
+      id: `${base.id}-q${index}`,
+      no: `${base.no}-${index}`,
+      title: `${base.title} ${spec.title}`,
+      starterCode: spec.starterCode ?? base.starterCode,
+      requiredPatterns: spec.requiredPatterns ?? base.requiredPatterns ?? [],
+      forbiddenPatterns: spec.forbiddenPatterns ?? [],
+      requiredPatternGroups: spec.requiredPatternGroups ?? [],
+      sampleInput: spec.sampleInput,
+    };
+  }
+
   return {
     ...base,
     id: `${base.id}-q${index}`,
@@ -1009,10 +3290,10 @@ const expandQuestionSet = (base: JavaQuestion): JavaQuestion[] => {
 
   return [
     baseQuestion,
-    makeReviewQuestion(base, 2, "Practice 1", "基本の書き方"),
-    makeReviewQuestion(base, 3, "Practice 2", "値や処理の流れ"),
-    makeReviewQuestion(base, 4, "Practice 3", "読みやすいコード"),
-    makeReviewQuestion(base, 5, "Practice 4", "自分で書き切ること"),
+    makeReviewQuestion(base, 2, "確認1", "基本の書き方"),
+    makeReviewQuestion(base, 3, "確認2", "値や処理の流れ"),
+    makeReviewQuestion(base, 4, "確認3", "読みやすいコード"),
+    makeReviewQuestion(base, 5, "確認4", "自分で書き切ること"),
   ];
 };
 
@@ -1025,6 +3306,19 @@ export const javaQuestionMap: Record<string, JavaQuestion[]> = {
   ),
   ...javaExerciseQuestionMap,
 };
+
+for (const questions of Object.values(javaQuestionMap)) {
+  for (const question of questions) {
+    question.verificationCode = javaVerifications[question.id];
+    const cases = [
+      { stdin: question.sampleInput ?? "", expectedOutput: question.expectedOutput ?? "" },
+      ...(javaTestCases[question.id] ?? []),
+    ];
+    question.testCases = cases.filter((testCase, index) =>
+      cases.findIndex((other) => other.stdin === testCase.stdin && other.expectedOutput === testCase.expectedOutput) === index
+    );
+  }
+}
 
 export type JavaQuestionEntry = JavaQuestion & {
   topicId: string;
