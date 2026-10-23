@@ -5,6 +5,8 @@ import { gradeJavaQuestion, gradeJavaQuiz } from "@/lib/javaGrading";
 
 import { cQuestionEntriesById } from "@/data/cQuestions";
 import { gradeCQuestion } from "@/lib/cGrading";
+import { pythonQuestionEntriesById } from "@/data/pythonQuestions";
+import { gradePythonQuestion } from "@/lib/pythonGrading";
 
 export async function POST(req: NextRequest) {
   try {
@@ -31,10 +33,22 @@ export async function POST(req: NextRequest) {
         exitCode: result.statusId, statusDescription: result.statusDescription, grading });
     }
     if (body.language === "python") {
-      const result = await executePython(body.code, body.stdin ?? "");
+      const question = typeof body.questionId === "string" && Object.hasOwn(pythonQuestionEntriesById, body.questionId)
+        ? pythonQuestionEntriesById[body.questionId] : undefined;
+      if (body.questionId !== undefined && !question) {
+        return NextResponse.json({ success: false, error: "問題が見つかりません。" }, { status: 400 });
+      }
+      const results = new Map<string, ReturnType<typeof executePython>>();
+      const execute: typeof executePython = (code, stdin) => {
+        const key = JSON.stringify([code, stdin]);
+        if (!results.has(key)) results.set(key, executePython(code, stdin));
+        return results.get(key)!;
+      };
+      const result = await execute(body.code, body.stdin ?? "");
+      const grading = question ? await gradePythonQuestion(question, body.code, execute) : undefined;
       return NextResponse.json({
         success: true, stdout: result.stdout, stderr: result.stderr,
-        exitCode: result.statusId, statusDescription: result.statusDescription,
+        exitCode: result.statusId, statusDescription: result.statusDescription, grading,
       });
     }
     const question = typeof body.questionId === "string" && Object.hasOwn(javaQuestionEntriesById, body.questionId)

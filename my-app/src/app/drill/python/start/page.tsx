@@ -32,6 +32,7 @@ type ExecuteApiSuccessResponse = {
   stdout: string;
   stderr: string;
   exitCode: number;
+  grading?: { correct: boolean; message: string; passedCount: number; testCount: number };
 };
 
 type ExecuteApiErrorResponse = {
@@ -54,7 +55,9 @@ export default function DrillPythonStartPage() {
   const [output, setOutput] = useState("");
   const [errorOutput, setErrorOutput] = useState("");
   const [isRunning, setIsRunning] = useState(false);
-  const [isCorrect, setIsCorrect] = useState(false);
+  const [isCorrectResult, setIsCorrect] = useState(false);
+  const [submittedCode, setSubmittedCode] = useState("");
+  const isCorrect = isCorrectResult && code === submittedCode;
   const [judgeMessage, setJudgeMessage] = useState("");
   const [isProgressUpdated, setIsProgressUpdated] = useState(false);
 
@@ -153,35 +156,6 @@ export default function DrillPythonStartPage() {
     return (currentNumber / totalCount) * 100;
   }, [session, currentNumber, totalCount]);
 
-  const normalizeOutput = (text: string) => {
-    return text.replace(/\r\n/g, "\n").trim();
-  };
-
-  const normalizeCode = (text: string) => {
-    return text.replace(/\r\n/g, "\n");
-  };
-
-  const validateCodePatterns = (sourceCode: string) => {
-    const normalizedCode = normalizeCode(sourceCode);
-    const requiredPatterns = currentQuestion?.requiredPatterns ?? [];
-    const forbiddenPatterns = currentQuestion?.forbiddenPatterns ?? [];
-
-    const missingPatterns = requiredPatterns.filter(
-      (pattern) => !normalizedCode.includes(pattern)
-    );
-
-    const foundForbiddenPatterns = forbiddenPatterns.filter((pattern) =>
-      normalizedCode.includes(pattern)
-    );
-
-    return {
-      isValid:
-        missingPatterns.length === 0 && foundForbiddenPatterns.length === 0,
-      missingPatterns,
-      foundForbiddenPatterns,
-    };
-  };
-
   const updateProgressInFirestore = async (
     questionId: string,
     title: string
@@ -247,7 +221,7 @@ export default function DrillPythonStartPage() {
   };
 
   const handleRun = async () => {
-    if (!currentQuestion || !currentTopic || !currentQuestionId) return;
+    if (!currentQuestion || !currentTopic || !currentQuestionId || isRunning) return;
 
     setIsRunning(true);
     setOutput("");
@@ -264,6 +238,7 @@ export default function DrillPythonStartPage() {
         },
         body: JSON.stringify({
           language: "python",
+          questionId: currentQuestionId,
           code,
           stdin,
         }),
@@ -293,11 +268,9 @@ export default function DrillPythonStartPage() {
         return;
       }
 
-      const actual = normalizeOutput(stdout);
-      const expected = normalizeOutput(currentQuestion.expectedOutput ?? "");
-      const codeValidation = validateCodePatterns(code);
+      setSubmittedCode(code);
 
-      if (actual === expected && codeValidation.isValid) {
+      if (data.grading?.correct) {
         setIsCorrect(true);
         setShowAnswer(false);
 
@@ -310,7 +283,7 @@ export default function DrillPythonStartPage() {
             setIsProgressUpdated(true);
 
             if (updated) {
-              setJudgeMessage("正解です。進捗を保存しました。");
+              setJudgeMessage(currentQuestion.project ? `「${currentQuestion.title}」が完成しました！進捗を保存しました。` : "正解です。進捗を保存しました。");
             } else {
               setJudgeMessage("正解です。すでに保存済みの問題です。");
             }
@@ -324,29 +297,8 @@ export default function DrillPythonStartPage() {
       } else {
         setIsCorrect(false);
 
-        if (actual === expected && !codeValidation.isValid) {
-          if (codeValidation.missingPatterns.length > 0) {
-            setJudgeMessage(
-              `出力は正しいですが、必要なコード要素が不足しています: ${codeValidation.missingPatterns.join(
-                ", "
-              )}`
-            );
-            setShowAnswer(false);
-            return;
-          }
+        setJudgeMessage(data.grading?.message ?? "採点結果を取得できませんでした。");
 
-          if (codeValidation.foundForbiddenPatterns.length > 0) {
-            setJudgeMessage(
-              `出力は正しいですが、禁止された書き方が含まれています: ${codeValidation.foundForbiddenPatterns.join(
-                ", "
-              )}`
-            );
-            setShowAnswer(false);
-            return;
-          }
-        }
-
-        setJudgeMessage("不正解です。出力結果を確認してください。");
         setShowAnswer(false);
       }
     } catch (error) {
@@ -621,6 +573,20 @@ export default function DrillPythonStartPage() {
                   </p>
                 </div>
 
+                {currentQuestion.project && (
+                  <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm leading-7">
+                    <p className="font-bold text-emerald-900">制作のゴール</p>
+                    {currentQuestion.project.optional && <p className="font-bold text-purple-800">任意の発展課題（必修の達成率には含みません）</p>}
+                    <p>{currentQuestion.project.goal}</p>
+                    {currentQuestion.project.previousQuestionId && <p className="mt-2">前段階：{pythonQuestionEntriesById[currentQuestion.project.previousQuestionId]?.title}。エディターには前段階の見本を用意しています。</p>}
+                    <p className="mt-3 font-bold">これまでに学んだ内容</p>
+                    <p>{currentQuestion.project.prerequisiteTopicIds.map((id) => getPythonQuestions(id)[0]?.title).join("・")}</p>
+                    <ol className="mt-3 list-inside list-decimal space-y-1">
+                      {currentQuestion.project.steps.map((step) => <li key={step}>{step}</li>)}
+                    </ol>
+                  </div>
+                )}
+
                 <button
                   onClick={() => setShowHint((prev) => !prev)}
                   className="w-full rounded-lg border bg-white px-4 py-3 text-left font-bold hover:bg-slate-50"
@@ -655,6 +621,7 @@ export default function DrillPythonStartPage() {
                     <pre className="mt-2 whitespace-pre-wrap rounded-md bg-white p-3 font-mono text-sm leading-6">
                       {currentQuestion.answerCode ?? currentQuestion.starterCode}
                     </pre>
+                    <p className="mt-3">考え方：{currentQuestion.explanation ?? currentQuestion.hint}</p>
                   </div>
                 )}
 

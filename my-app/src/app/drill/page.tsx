@@ -15,7 +15,7 @@ const languages: LanguageCard[] = [
     name: "Python",
     href: "/drill/python",
     status: "公開中",
-    description: "基礎文法から成績集計アプリまで、実行しながら練習できます。",
+    description: "160問の演習で、基礎文法から保存・復元できるタスク管理まで練習できます。",
     available: true,
     actionLabel: "問題を選ぶ",
   },

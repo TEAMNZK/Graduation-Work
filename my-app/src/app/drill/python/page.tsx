@@ -6,6 +6,9 @@ import AuthGuard from "@/components/AuthGuard";
 import AppHeader from "@/components/AppHeader";
 import { pythonCurriculum } from "@/data/pythonCurriculum";
 import { getPythonQuestions, hasPythonQuestions } from "@/data/pythonQuestions";
+import { onAuthStateChanged } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
+import { auth, db } from "@/lib/firebase";
 
 const STORAGE_KEY = "drill-python-session";
 
@@ -22,6 +25,22 @@ export default function DrillPythonPage() {
   const [selectedTopics, setSelectedTopics] = useState<string[]>([]);
   const [hasInterruptedSession, setHasInterruptedSession] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [solvedQuestionIds, setSolvedQuestionIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    let active = true;
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (!user) { if (active) setSolvedQuestionIds([]); return; }
+      try {
+        const snapshot = await getDoc(doc(db, "users", user.uid));
+        const solved = snapshot.data()?.progress?.solvedTopics;
+        if (active) setSolvedQuestionIds(Array.isArray(solved) ? solved.filter((id): id is string => typeof id === "string") : []);
+      } catch (error) {
+        console.error("制作目標の進捗を取得できませんでした:", error);
+      }
+    });
+    return () => { active = false; unsubscribe(); };
+  }, []);
 
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -89,7 +108,7 @@ export default function DrillPythonPage() {
   };
 
   const handleSelectAll = () => {
-    setSelectedTopics(selectableQuestionItems.map((item) => item.id));
+    setSelectedTopics(selectableQuestionItems.filter((item) => !item.project?.optional).map((item) => item.id));
   };
 
   const handleClearAll = () => {
@@ -105,7 +124,7 @@ export default function DrillPythonPage() {
   const handleSelectSection = (
     items: (typeof pythonCurriculum)[number]["items"]
   ) => {
-    const sectionTopicIds = getSelectableSectionItems(items).map(
+    const sectionTopicIds = getSelectableSectionItems(items).filter((item) => !item.project?.optional).map(
       (item) => item.id
     );
 
@@ -123,8 +142,8 @@ export default function DrillPythonPage() {
   };
 
   const handleStart = () => {
-    const validSelectedTopics = selectedTopics.filter(
-      (topicId) => hasPythonQuestions(topicId)
+    const validSelectedTopics = questionItems.map((item) => item.id).filter(
+      (topicId) => selectedTopics.includes(topicId) && hasPythonQuestions(topicId)
     );
 
     if (validSelectedTopics.length === 0) {
@@ -198,8 +217,8 @@ export default function DrillPythonPage() {
                 実装済みの問題を選んで出題を開始します
               </h2>
               <p className="mt-3 text-sm leading-7 text-gray-700">
-                基礎文法から総合演習まで、章ごとに整理されています。
-                通常問題と成績集計アプリを、コード実行と採点で練習できます。
+                お会計・成績集計・タスク管理を作り、最後に保存・復元できるタスク管理アプリへ育てます。
+                各章の通常問題で準備して、最後に制作へ挑戦しましょう。選択した問題は学習順に出題します。
               </p>
             </div>
 
@@ -234,7 +253,7 @@ export default function DrillPythonPage() {
                   onClick={handleSelectAll}
                   className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium hover:bg-gray-50"
                 >
-                  すべて選択
+                  必修をすべて選択
                 </button>
 
                 <button
@@ -300,6 +319,13 @@ export default function DrillPythonPage() {
             </div>
           </div>
 
+          <div className="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 p-6">
+            <h2 className="text-xl font-bold text-emerald-900">作れるものを増やそう</h2>
+            <p className="mt-2 text-sm text-emerald-900">完成した制作物 {questionItems.filter((item) => item.project && !item.project.optional && getPythonQuestions(item.id).every((question) => solvedQuestionIds.includes(question.id))).length} / {questionItems.filter((item) => item.project && !item.project.optional).length}</p>
+            <p className="mt-1 text-sm text-emerald-800">正解して保存した制作課題が、あなたの完成作品になります。</p>
+            <p className="mt-1 text-sm text-emerald-800">第4章の保存版は、JSON保存と検証・復元の2段階をクリアすると完成です。</p>
+          </div>
+
           {/* カリキュラム一覧 */}
           <div className="space-y-6">
             {pythonCurriculum.map((section) => (
@@ -343,7 +369,7 @@ export default function DrillPythonPage() {
                             disabled={!hasSelectableItems}
                             className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-xs font-bold hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-50"
                           >
-                            章を選択
+                            章の必修を選択
                           </button>
                           <button
                             type="button"
@@ -396,6 +422,7 @@ export default function DrillPythonPage() {
                                 <h3 className="text-lg font-bold">
                                   {item.title}
                                 </h3>
+                                <span className="text-xs text-gray-500">全{getPythonQuestions(item.id).length}問</span>
                               </div>
 
                               <p className="mt-2 text-sm text-gray-600">
@@ -407,6 +434,19 @@ export default function DrillPythonPage() {
                                   ? "ここまでの内容を使って小作品を作る演習です。"
                                   : "これまでの学習をまとめる総合演習です。"}
                               </p>
+                              {item.project && (
+                                <div className="mt-3 space-y-2 text-sm">
+                                  {item.project.optional && <p className="font-bold text-purple-800">任意の発展課題：完成後に追加挑戦できます</p>}
+                                  <p className="font-bold text-emerald-800">完成目標：{item.project.goal}</p>
+                                  {getPythonQuestions(item.id).length > 1 && <p>制作ステップ：{getPythonQuestions(item.id).filter((question) => solvedQuestionIds.includes(question.id)).length} / {getPythonQuestions(item.id).length} クリア</p>}
+                                  <p className="text-gray-600">使う内容：{item.project.prerequisiteTopicIds.map((id) => getPythonQuestions(id)[0]?.title).join("・")}</p>
+                                  <p className="font-medium text-emerald-800">
+                                    {getPythonQuestions(item.id).every((question) => solvedQuestionIds.includes(question.id))
+                                      ? "制作物が完成しました！再挑戦もできます。"
+                                      : `準備の演習：${item.project.prerequisiteTopicIds.filter((id) => getPythonQuestions(id).every((question) => solvedQuestionIds.includes(question.id))).length} / ${item.project.prerequisiteTopicIds.length} 項目クリア`}
+                                  </p>
+                                </div>
+                              )}
                             </div>
                           </div>
 

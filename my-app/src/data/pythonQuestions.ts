@@ -1,3 +1,12 @@
+import { pythonBasics } from "./pythonLessons/basics";
+import { pythonLoops } from "./pythonLessons/loops";
+import { pythonCollections } from "./pythonLessons/collections";
+import { pythonFunctions } from "./pythonLessons/functions";
+import { pythonText } from "./pythonLessons/text";
+import { pythonStorage } from "./pythonLessons/storage";
+import { pythonProjects } from "./pythonProjects";
+import { pythonLegacyCases, pythonLegacyVerifications } from "./pythonLegacyTests";
+
 export type PythonQuestion = {
   id: string;
   no: string;
@@ -11,6 +20,14 @@ export type PythonQuestion = {
   requiredPatterns?: string[];
   forbiddenPatterns?: string[];
   type: "lesson" | "mini_project" | "final_project";
+  topicId?: string;
+  explanation?: string;
+  testCases?: { stdin:string; expectedOutput:string; initialFiles?:Record<string,string>; fileChecks?:{path:string;text?:string;json?:unknown}[] }[];
+  requiredNodes?: string[];
+  verificationCode?: string;
+  recursiveFunctions?: string[];
+  minLoopDepth?: number;
+  project?: { goal:string; prerequisiteTopicIds:string[]; steps:string[]; previousQuestionId?:string; optional?:boolean };
 };
 
 const questions: PythonQuestion[] = [
@@ -441,14 +458,27 @@ const questions: PythonQuestion[] = [
   }
 ];
 
-export const pythonQuestionMap = questions.reduce<Record<string, PythonQuestion[]>>(
+for (const question of questions) {
+  question.testCases=pythonLegacyCases[question.id] ?? [{stdin:question.sampleInput ?? "",expectedOutput:question.expectedOutput}];
+  if(!question.testCases.some(testCase=>testCase.stdin===(question.sampleInput??"")))question.testCases.unshift({stdin:question.sampleInput??"",expectedOutput:question.expectedOutput});
+  question.verificationCode=pythonLegacyVerifications[question.id];
+  if(question.id.startsWith("python-score-app-"))question.project={goal:"クラス全体の成績を集計できるアプリを作る。",prerequisiteTopicIds:["python-list","python-for","python-function"],steps:["人数と点数を読み取る","合計・平均や合否を集計する","人数が1人の場合や合格境界を確認する"]};
+}
+export const pythonTopicOrder = [
+  "python-hello","python-variables","python-arithmetic","python-input","python-if","python-logic","python-project-checkout",
+  "python-for","python-while","python-nested","python-list","python-tuple","python-set","python-range","python-search","python-sort","python-dict","python-function","python-score-app",
+  "python-string","python-comprehension","python-validation","python-records","python-project-tasks",
+  "python-exception","python-class","python-recursion","python-files","python-json","python-project-task-storage",
+];
+const groupedQuestions = [...questions,...pythonBasics,...pythonLoops,...pythonCollections,...pythonFunctions,...pythonText,...pythonStorage,...pythonProjects].reduce<Record<string, PythonQuestion[]>>(
   (topicMap, question) => {
-    const topicId = question.id.replace(/-q\d+$/, "");
+    const topicId = question.topicId ?? question.id.replace(/-q\d+$/, "");
     (topicMap[topicId] ??= []).push(question);
     return topicMap;
   },
   {}
 );
+export const pythonQuestionMap = Object.fromEntries(pythonTopicOrder.map((topicId,index) => [topicId,groupedQuestions[topicId].map(question=>({...question,no:question.type==="lesson"?String(index+1).padStart(2,"0"):question.no}))]));
 
 export const pythonQuestionEntriesById = Object.fromEntries(
   Object.entries(pythonQuestionMap).flatMap(([topicId, items]) =>
