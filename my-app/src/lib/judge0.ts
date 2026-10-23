@@ -54,6 +54,12 @@ async function executeCode(code: string, stdin: string, languageId: number): Pro
     }
     ({ token } = await submission.json() as { token?: string });
     if (!token) throw unavailable();
+    //応答時間確認用ログ挿入箇所
+    console.log("[Judge0 受付完了]", {
+      token,
+      受付まで秒: ((Date.now() - startedAt) / 1000).toFixed(2),
+    });
+    // 挿入範囲終わり
     phase = "polling";
     while (Date.now() < deadline) {
       await new Promise((resolve) => setTimeout(resolve, Math.min(2000, deadline - Date.now())));
@@ -67,6 +73,15 @@ async function executeCode(code: string, stdin: string, languageId: number): Pro
       }
       const result = await response.json() as Judge0Result;
       statusId = result.status?.id;
+      // 応答時間確認用ログ挿入箇所
+      console.log("[Judge0 状態]", {
+        token,
+        経過秒: ((Date.now() - startedAt) / 1000).toFixed(2),
+        statusId,
+        状態: result.status?.description,
+      });
+      // 挿入範囲終わり
+
       if (statusId === 1 || statusId === 2) continue;
       if (!statusId || statusId === 13) throw unavailable();
       return {
