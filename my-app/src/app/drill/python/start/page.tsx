@@ -250,7 +250,7 @@ export default function DrillPythonStartPage() {
         setErrorOutput(
           data.success === false ? data.error : "コード実行に失敗しました。"
         );
-        setJudgeMessage("不正解です。");
+        setJudgeMessage("採点できませんでした。時間をおいて再実行してください。");
         setShowAnswer(false);
         return;
       }
@@ -305,7 +305,7 @@ export default function DrillPythonStartPage() {
       console.error("実行API呼び出しエラー:", error);
       setErrorOutput("コード実行APIの呼び出しに失敗しました。");
       setIsCorrect(false);
-      setJudgeMessage("不正解です。");
+      setJudgeMessage("採点できませんでした。時間をおいて再実行してください。");
       setShowAnswer(false);
     } finally {
       setIsRunning(false);

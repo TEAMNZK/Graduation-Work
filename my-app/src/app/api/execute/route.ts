@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { javaQuestionEntriesById } from "@/data/javaQuestions";
 import { executeJava, executePython, executeC } from "@/lib/judge0";
 import { gradeJavaQuestion, gradeJavaQuiz } from "@/lib/javaGrading";
+import { ExecutionServiceError } from "@/lib/executionError";
 
 import { cQuestionEntriesById } from "@/data/cQuestions";
 import { gradeCQuestion } from "@/lib/cGrading";
@@ -77,6 +78,11 @@ export async function POST(req: NextRequest) {
       exitCode: result.statusId, statusDescription: result.statusDescription, grading,
     });
   } catch (error) {
+    if (error instanceof ExecutionServiceError) {
+      console.error("execute API service error:", { code: error.code, ...error.details });
+      return NextResponse.json({ success: false, code: error.code, error: error.message },
+        { status: error.code === "EXECUTION_TIMEOUT" ? 504 : 503 });
+    }
     console.error("execute API error:", error);
     return NextResponse.json({ success: false, error: "実行または採点に失敗しました。時間をおいて再実行してください。" }, { status: 502 });
   }
