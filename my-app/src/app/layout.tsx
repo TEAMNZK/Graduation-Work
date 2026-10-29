@@ -1,9 +1,14 @@
 import type { Metadata } from "next";
+import favicon from "../../public/images/favicon.png";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Code Lord Note",
   description: "プログラミング学習支援システム",
+  icons: {
+    icon: { url: favicon.src, type: "image/png" },
+    shortcut: favicon.src,
+  },
 };
 
 export default function RootLayout({
