@@ -13,6 +13,7 @@ import {
   setDoc,
 } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
+import { cLearningNotes } from "@/data/cLearningNotes";
 import {
   getCQuestions,
   cQuestionEntriesById,
@@ -55,11 +56,21 @@ export default function DrillCStartPage() {
   const [output, setOutput] = useState("");
   const [errorOutput, setErrorOutput] = useState("");
   const [isRunning, setIsRunning] = useState(false);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [isCorrectResult, setIsCorrect] = useState(false);
   const [submittedCode, setSubmittedCode] = useState("");
   const isCorrect = isCorrectResult && code === submittedCode;
   const [judgeMessage, setJudgeMessage] = useState("");
   const [isProgressUpdated, setIsProgressUpdated] = useState(false);
+
+  useEffect(() => {
+    if (!isRunning) return;
+    const startedAt = performance.now();
+    const timer = window.setInterval(() => {
+      setElapsedSeconds(Math.floor((performance.now() - startedAt) / 1000));
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [isRunning]);
 
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -133,6 +144,7 @@ export default function DrillCStartPage() {
     : null;
 
   const currentTopic = currentQuestion?.topicId ?? "";
+  const learningNotes = cLearningNotes[currentTopic];
 
   const sampleOutputDisplay = useMemo(() => {
     if (!currentQuestion) {
@@ -223,6 +235,7 @@ export default function DrillCStartPage() {
   const handleRun = async () => {
     if (!currentQuestion || !currentTopic || !currentQuestionId || isRunning) return;
 
+    setElapsedSeconds(0);
     setIsRunning(true);
     setOutput("");
     setErrorOutput("");
@@ -364,6 +377,7 @@ export default function DrillCStartPage() {
   const handleEditorKeyDown = async (
     e: React.KeyboardEvent<HTMLTextAreaElement>
   ) => {
+    if (isRunning) return;
     const textarea = e.currentTarget;
     const value = code;
     const start = textarea.selectionStart;
@@ -610,6 +624,7 @@ export default function DrillCStartPage() {
 
                 <button
                   onClick={handleGiveUp}
+                  disabled={isRunning}
                   className="w-full rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-left font-bold text-amber-700 hover:bg-amber-100"
                 >
                   問題をあきらめる
@@ -645,13 +660,20 @@ export default function DrillCStartPage() {
                   disabled={isRunning}
                   className="rounded-lg bg-emerald-500 px-5 py-2 text-sm font-bold text-white hover:bg-emerald-600 disabled:opacity-60"
                 >
-                  {isRunning ? "実行中..." : "実行"}
+                  {isRunning ? `実行・採点中（${elapsedSeconds}秒）` : "実行"}
                 </button>
               </div>
 
               <div className="p-4">
+                {isRunning && (
+                  <div role="status" className="mb-3 rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900">
+                    実行・採点中です。複数の入力で動作を確認するため、1分以上かかる場合があります。
+                    {elapsedSeconds >= 20 && " 実行サービスの混雑により、結果の取得に時間がかかっている可能性があります。"}
+                  </div>
+                )}
                 <textarea
                   ref={editorRef}
+                  readOnly={isRunning}
                   value={code}
                   onChange={(e) => setCode(e.target.value)}
                   onKeyDown={handleEditorKeyDown}
@@ -674,6 +696,7 @@ export default function DrillCStartPage() {
                     </label>
                     <textarea
                       value={stdin}
+                      readOnly={isRunning}
                       onChange={(e) => setStdin(e.target.value)}
                       placeholder="必要な場合だけ入力してください"
                       className="min-h-[100px] w-full rounded-lg border bg-slate-50 p-3 font-mono text-sm outline-none focus:border-blue-300 focus:bg-white"
@@ -688,7 +711,7 @@ export default function DrillCStartPage() {
                   <div className="min-h-[260px] whitespace-pre-wrap rounded-lg border bg-[#031b22] p-4 font-mono text-sm text-emerald-300">
                     {output && `実行結果:\n${output}`}
                     {errorOutput && `エラー出力:\n${errorOutput}`}
-                    {!output && !errorOutput && "ここに実行結果が表示されます。"}
+                    {!output && !errorOutput && (isRunning ? "実行結果と採点結果を取得しています…" : "ここに実行結果が表示されます。")}
                   </div>
                 </div>
               </div>
@@ -715,9 +738,18 @@ export default function DrillCStartPage() {
                     </div>
                   )}
 
+                  {learningNotes && (isCorrect || showAnswer) && (
+                    <section className="mt-4 rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-slate-800">
+                      <h3 className="font-bold">理解のポイント：{learningNotes.title}</h3>
+                      <ul className="mt-2 list-disc space-y-2 pl-5">
+                        {learningNotes.points.map((point) => <li key={point}>{point}</li>)}
+                      </ul>
+                    </section>
+                  )}
+
                   <button
                     onClick={handleNext}
-                    disabled={!isCorrect}
+                    disabled={!isCorrect || isRunning}
                     className={`mt-4 w-full rounded-lg px-4 py-3 font-bold shadow-sm ${
                       isCorrect
                         ? "border bg-emerald-500 text-white hover:bg-emerald-600"

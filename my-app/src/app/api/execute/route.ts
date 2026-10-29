@@ -29,28 +29,24 @@ export async function POST(req: NextRequest) {
         return results.get(key)!;
       };
 
-      //応答時間確認用ログ挿入箇所
-      // const result = await execute(body.code, body.stdin ?? "");
-      // const grading = question ? await gradeCQuestion(question, body.code, execute) : undefined;
-      
       const startedAt = performance.now();
 
       const result = await execute(body.code, body.stdin ?? "");
       const executionFinishedAt = performance.now();
 
       const grading = question
-        ? await gradeJavaQuestion(question, body.code, execute)
+        ? await gradeCQuestion(question, body.code, execute)
         : undefined;
 
       const gradingFinishedAt = performance.now();
 
       console.log("[実行時間]", {
+        language: "c",
         questionId: body.questionId,
         表示用実行秒: ((executionFinishedAt - startedAt) / 1000).toFixed(2),
         追加採点秒: ((gradingFinishedAt - executionFinishedAt) / 1000).toFixed(2),
         合計秒: ((gradingFinishedAt - startedAt) / 1000).toFixed(2),
       });
-      //挿入範囲終わり
 
       return NextResponse.json({ success: true, stdout: result.stdout, stderr: result.stderr,
         exitCode: result.statusId, statusDescription: result.statusDescription, grading });

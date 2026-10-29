@@ -43,7 +43,15 @@ export async function gradeCQuestion(question: CQuestion, code: string, execute:
   let passedCount = 0;
   for (const testCase of question.testCases) {
     const testedCode = addCVerification(code, question, testCase);
+    const startedAt = performance.now();
     const result = await execute(testedCode, testCase.stdin);
+    console.log("[C 採点テスト]", {
+      questionId: question.id,
+      testNumber: passedCount + 1,
+      testCount: question.testCases.length,
+      elapsedSeconds: ((performance.now() - startedAt) / 1000).toFixed(2),
+      statusId: result.statusId,
+    });
     if (result.statusId !== 3 || result.stderr || normalize(result.stdout) !== normalize(testCase.expectedOutput)) {
       return { correct: false, message: `テスト${passedCount + 1}/${question.testCases.length}に合格しませんでした。出力・境界条件${question.verificationCode ? "・指定関数の仕様" : ""}${testCase.fileChecks?.length ? "・ファイルの保存内容" : ""}を確認してください。`, passedCount, testCount: question.testCases.length };
     }

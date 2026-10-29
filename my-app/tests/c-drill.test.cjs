@@ -6,6 +6,32 @@ const { cCurriculum } = load("src/data/cCurriculum.ts");
 const { gradeCQuestion, validateCCode, addCVerification } = load("src/lib/cGrading.ts");
 const accepted = (stdout) => ({ stdout, stderr: "", statusId: 3, statusDescription: "Accepted" });
 
+test("C API uses C wrappers for function and file verification", async () => {
+  for (const questionId of ["c-function-max", "c-files-binary"]) {
+    const question = questions[questionId];
+    const calls = [];
+    const { POST } = load("src/app/api/execute/route.ts", {
+      "@/lib/judge0": {
+        executeC: async (code) => {
+          calls.push(code);
+          // The visible run succeeds, but the additional contract/file check fails.
+          return code.includes("#define main c_student_main")
+            ? { ...accepted(""), statusId: 6, stderr: "verification failed" }
+            : accepted(question.expectedOutput);
+        },
+      },
+    });
+    const response = await POST({ json: async () => ({ language: "c", questionId, code: question.answerCode, stdin: question.sampleInput }) });
+    const data = await response.json();
+    assert.equal(response.status, 200);
+    assert.equal(data.grading.correct, false, questionId);
+    assert.ok(calls.some(code => code.includes("#define main c_student_main")), questionId);
+    if (questionId === "c-files-binary") {
+      assert.ok(calls.some(code => code.includes("fread(&actual")));
+    }
+  }
+});
+
 test("C curriculum has unique prefixed IDs and cases for every topic", () => {
   assert.equal(Object.keys(questions).length, 167);
   assert.deepEqual(cCurriculum.flatMap((section) => section.items.map((item) => item.id)), Object.keys(cQuestionMap));
