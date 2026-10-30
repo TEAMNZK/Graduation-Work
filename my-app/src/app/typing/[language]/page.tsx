@@ -1,6 +1,5 @@
-import Link from "next/link";
 import AuthGuard from "@/components/AuthGuard";
-import TypingGame from "@/components/TypingGame";
+import TypingLobby from "@/components/TypingLobby";
 import { questionsByLanguage } from "@/lib/questions";
 import { notFound } from "next/navigation";
 
@@ -14,25 +13,17 @@ export default async function TypingLanguagePage({
   params,
 }: TypingLanguagePageProps) {
   const { language } = await params;
-  const questions = questionsByLanguage[language];
-
-  if (!questions) {
+  // 定義済みの言語だけを受け付け、存在しない言語は404にする。
+  if (!Object.hasOwn(questionsByLanguage, language)) {
     notFound();
   }
+  const questions = questionsByLanguage[language];
 
   return (
     <AuthGuard>
       <main className="min-h-screen bg-gray-100 text-gray-900">
-        <div className="mx-auto max-w-4xl px-6 pt-6">
-          <Link
-            href="/typing"
-            className="inline-flex items-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium shadow-sm transition hover:bg-gray-50"
-          >
-            ← 言語選択に戻る
-          </Link>
-        </div>
-
-        <TypingGame key={language} questions={questions} />
+        {/* 全言語で開始前に待機画面を表示する。キャッシュも共通利用する。 */}
+        <TypingLobby key={language} questions={questions} />
       </main>
     </AuthGuard>
   );

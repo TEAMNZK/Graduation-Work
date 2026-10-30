@@ -7,11 +7,15 @@ import {
   getCharStatus,
   ignoredKeys,
 } from "@/lib/typingUtils";
+import { saveTypingScore } from "@/lib/typingScores";
 import type { Question } from "@/lib/questions";
 
 type TypingGameProps = {
   questions: Question[];
+  onReturnToLobby?: () => void;
 };
+
+type SaveStatus = "idle" | "saving" | "saved" | "error";
 
 // ゲームの制限時間を120秒に設定する
 const GAME_TIME = 120;
@@ -41,27 +45,45 @@ function getRank(score: number) {
   return "D";
 }
 
-export default function TypingGame({ questions }: TypingGameProps) {
+export default function TypingGame({ questions, onReturnToLobby }: TypingGameProps) {
   const [shuffledQuestions, setShuffledQuestions] = useState<Question[]>(() =>
     shuffleQuestions(questions)
   );
+
   const [questionIndex, setQuestionIndex] = useState(0);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [mistakeIndex, setMistakeIndex] = useState<number | null>(null);
   const [totalMistakes, setTotalMistakes] = useState(0);
   const [correctChars, setCorrectChars] = useState(0);
   const [isFinished, setIsFinished] = useState(false);
+
   const [lastMistakeAtIndex, setLastMistakeAtIndex] = useState<number | null>(
     null
   );
+
   const [timeLeft, setTimeLeft] = useState(GAME_TIME);
 
+  // Firestoreへの保存状態
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
+  const [saveError, setSaveError] = useState("");
+
   const hiddenInputRef = useRef<HTMLInputElement | null>(null);
+
+  // 同じゲーム結果を複数回保存しないために使用する
+  const hasSavedScoreRef = useRef(false);
 
   const currentQuestion = shuffledQuestions[questionIndex];
   const isGameFinished = isFinished || !currentQuestion;
   const targetText = currentQuestion?.text ?? "";
+
+  // questionIndexは完了済みの問題数として利用する
   const solvedCount = questionIndex;
+
+  // 保存する言語名
+  const gameLanguage =
+    shuffledQuestions[0]?.language ??
+    questions[0]?.language ??
+    "unknown";
 
   // 正確率を計算する
   const accuracy = useMemo(() => {
@@ -73,6 +95,7 @@ export default function TypingGame({ questions }: TypingGameProps) {
 
   // 円形タイマーの残量を計算する
   const timerProgress = timeLeft / GAME_TIME;
+
   const timerDashOffset =
     TIMER_CIRCUMFERENCE - TIMER_CIRCUMFERENCE * timerProgress;
 
@@ -109,6 +132,58 @@ export default function TypingGame({ questions }: TypingGameProps) {
     return () => clearInterval(timer);
   }, [isGameFinished]);
 
+  // ゲーム終了時にFirestoreへ結果を1回だけ保存する
+  useEffect(() => {
+    if (!isGameFinished) return;
+
+    // 問題データが存在しない場合は保存しない
+    if (questions.length === 0 || gameLanguage === "unknown") return;
+
+    // すでに保存済みの場合は何もしない
+    if (hasSavedScoreRef.current) return;
+
+    hasSavedScoreRef.current = true;
+
+    const saveResult = async () => {
+      setSaveStatus("saving");
+      setSaveError("");
+
+      try {
+        await saveTypingScore({
+          language: gameLanguage,
+          score,
+          solvedCount,
+          totalMistakes,
+          accuracy,
+          rank,
+        });
+
+        setSaveStatus("saved");
+      } catch (error) {
+        console.error("タイピング結果の保存に失敗しました。", error);
+
+        setSaveStatus("error");
+
+        if (error instanceof Error) {
+          setSaveError(error.message);
+        } else {
+          setSaveError("タイピング結果の保存に失敗しました。");
+        }
+      }
+    };
+
+    void saveResult();
+  }, [
+    isGameFinished,
+    questions.length,
+    gameLanguage,
+    score,
+    solvedCount,
+    totalMistakes,
+    accuracy,
+    rank,
+  ]);
+
   // 次の問題へ進む
   const moveToNextQuestion = () => {
     const nextIndex = questionIndex + 1;
@@ -126,7 +201,9 @@ export default function TypingGame({ questions }: TypingGameProps) {
   };
 
   // キー入力を1文字ずつ判定する
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (
+    event: React.KeyboardEvent<HTMLInputElement>
+  ) => {
     if (isGameFinished) return;
 
     const key = event.key;
@@ -184,7 +261,14 @@ export default function TypingGame({ questions }: TypingGameProps) {
     setLastMistakeAtIndex(null);
     setTimeLeft(GAME_TIME);
 
-    hiddenInputRef.current?.focus();
+    // Firestore保存状態も初期化する
+    setSaveStatus("idle");
+    setSaveError("");
+    hasSavedScoreRef.current = false;
+
+    setTimeout(() => {
+      hiddenInputRef.current?.focus();
+    }, 0);
   };
 
   const styles: Record<string, string> = {
@@ -229,7 +313,9 @@ export default function TypingGame({ questions }: TypingGameProps) {
             CLEARED
           </p>
 
-          <p className="mt-2 text-lg font-bold text-gray-900">{solvedCount}</p>
+          <p className="mt-2 text-lg font-bold text-gray-900">
+            {solvedCount}
+          </p>
         </div>
 
         <div className="rounded-2xl border border-gray-200 bg-white px-5 py-4 shadow-sm">
@@ -247,7 +333,9 @@ export default function TypingGame({ questions }: TypingGameProps) {
             ACCURACY
           </p>
 
-          <p className="mt-2 text-lg font-bold text-blue-600">{accuracy}%</p>
+          <p className="mt-2 text-lg font-bold text-blue-600">
+            {accuracy}%
+          </p>
         </div>
 
         {/* 円形タイマー */}
@@ -282,7 +370,8 @@ export default function TypingGame({ questions }: TypingGameProps) {
                 strokeDasharray={TIMER_CIRCUMFERENCE}
                 strokeDashoffset={timerDashOffset}
                 style={{
-                  transition: "stroke-dashoffset 1s linear, stroke 0.3s ease",
+                  transition:
+                    "stroke-dashoffset 1s linear, stroke 0.3s ease",
                   filter: isDangerTime
                     ? "drop-shadow(0 0 6px rgba(220, 38, 38, 0.6))"
                     : "none",
@@ -318,8 +407,40 @@ export default function TypingGame({ questions }: TypingGameProps) {
         /* 結果画面 */
         <div className="rounded-2xl bg-white p-8 shadow">
           <div className="mb-8 text-center">
-            <p className="mb-2 text-sm font-medium text-gray-500">RESULT</p>
+            <p className="mb-2 text-sm font-medium text-gray-500">
+              RESULT
+            </p>
+
             <h2 className="text-3xl font-bold">ゲーム終了</h2>
+
+            {/* Firestore保存状態 */}
+            <div className="mt-4 min-h-6 text-sm">
+              {saveStatus === "saving" && (
+                <p className="font-medium text-blue-600">
+                  結果をFirestoreに保存しています...
+                </p>
+              )}
+
+              {saveStatus === "saved" && (
+                <p className="font-medium text-green-600">
+                  結果をFirestoreに保存しました。
+                </p>
+              )}
+
+              {saveStatus === "error" && (
+                <div className="text-red-600">
+                  <p className="font-medium">
+                    結果をFirestoreに保存できませんでした。
+                  </p>
+
+                  {saveError && (
+                    <p className="mt-1 text-xs">
+                      {saveError}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="mb-8 grid grid-cols-2 gap-6">
@@ -328,7 +449,9 @@ export default function TypingGame({ questions }: TypingGameProps) {
                 スコア
               </p>
 
-              <p className="text-5xl font-extrabold text-blue-600">{score}</p>
+              <p className="text-5xl font-extrabold text-blue-600">
+                {score}
+              </p>
             </div>
 
             <div className="rounded-2xl border border-gray-200 bg-gray-50 p-6 text-center">
@@ -336,41 +459,67 @@ export default function TypingGame({ questions }: TypingGameProps) {
                 ランク
               </p>
 
-              <p className="text-5xl font-extrabold text-amber-500">{rank}</p>
+              <p className="text-5xl font-extrabold text-amber-500">
+                {rank}
+              </p>
             </div>
           </div>
 
           <div className="mb-8 grid grid-cols-3 gap-4">
             <div className="rounded-xl border border-gray-200 p-4 text-center">
-              <p className="text-sm text-gray-500">解いた問題数</p>
-              <p className="mt-1 text-2xl font-bold">{solvedCount}</p>
+              <p className="text-sm text-gray-500">
+                解いた問題数
+              </p>
+
+              <p className="mt-1 text-2xl font-bold">
+                {solvedCount}
+              </p>
             </div>
 
             <div className="rounded-xl border border-gray-200 p-4 text-center">
-              <p className="text-sm text-gray-500">ミス数</p>
-              <p className="mt-1 text-2xl font-bold">{totalMistakes}</p>
+              <p className="text-sm text-gray-500">
+                ミス数
+              </p>
+
+              <p className="mt-1 text-2xl font-bold">
+                {totalMistakes}
+              </p>
             </div>
 
             <div className="rounded-xl border border-gray-200 p-4 text-center">
-              <p className="text-sm text-gray-500">正確率</p>
-              <p className="mt-1 text-2xl font-bold">{accuracy}%</p>
+              <p className="text-sm text-gray-500">
+                正確率
+              </p>
+
+              <p className="mt-1 text-2xl font-bold">
+                {accuracy}%
+              </p>
             </div>
           </div>
 
           <div className="flex items-center justify-center gap-3">
+            {/* 保存完了を待ってから待機画面へ戻る */}
+            {onReturnToLobby && (
+              <button type="button" onClick={onReturnToLobby}
+                disabled={saveStatus === "idle" || saveStatus === "saving"}
+                className="rounded-xl border border-blue-300 px-6 py-3 text-blue-700 hover:bg-blue-50 disabled:cursor-wait disabled:opacity-50">
+                待機画面へ戻る
+              </button>
+            )}
             <button
+              type="button"
               onClick={resetGame}
               className="rounded-xl bg-black px-6 py-3 text-white transition hover:bg-gray-800"
             >
               もう一度遊ぶ
             </button>
 
-            <Link
+            {!onReturnToLobby && <Link
               href="/typing"
               className="rounded-xl border border-gray-300 bg-white px-6 py-3 text-center text-gray-800 transition hover:bg-gray-50"
             >
               言語選択へ戻る
-            </Link>
+            </Link>}
           </div>
         </div>
       ) : (
@@ -382,6 +531,7 @@ export default function TypingGame({ questions }: TypingGameProps) {
             </p>
 
             <button
+              type="button"
               onClick={finishGame}
               className="rounded-lg border border-red-300 bg-red-50 px-4 py-2 text-sm font-medium text-red-600 transition hover:bg-red-100"
             >
@@ -398,7 +548,10 @@ export default function TypingGame({ questions }: TypingGameProps) {
               });
 
               return (
-                <span key={`${char}-${index}`} className={styles[status]}>
+                <span
+                  key={`${char}-${index}`}
+                  className={styles[status]}
+                >
                   {char === " " ? "·" : char}
                 </span>
               );
@@ -407,7 +560,11 @@ export default function TypingGame({ questions }: TypingGameProps) {
 
           <div className="space-y-1 text-sm text-gray-600">
             <p>半角英数字で入力してください。</p>
-            <p>Shift / Control / Alt などの修飾キー単体は判定しません。</p>
+
+            <p>
+              Shift / Control / Alt などの修飾キー単体は判定しません。
+            </p>
+
             <p>・はスペースを表します。</p>
           </div>
 

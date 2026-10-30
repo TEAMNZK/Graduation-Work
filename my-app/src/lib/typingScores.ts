@@ -1,5 +1,6 @@
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
+import { rememberSavedScore } from "@/lib/typingScoreCache";
 
 /**
  * タイピングゲーム終了時に保存するデータ。
@@ -52,6 +53,9 @@ export async function saveTypingScore(
       createdAt: serverTimestamp(),
     }
   );
+
+  // 保存済みデータを画面用キャッシュに反映し、読み直しを避ける。
+  rememberSavedScore(documentReference.id, { ...result, userId: user.uid, userName });
 
   // 保存されたドキュメントのIDを返す
   return documentReference.id;

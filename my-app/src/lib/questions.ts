@@ -66,24 +66,4 @@ export const questionsByLanguage: Record<string, Question[]> = {
       level: 2,
     },
   ],
-  javascript: [
-    {
-      id: 1,
-      language: "JavaScript",
-      text: "console.log('Hello World');",
-      level: 1,
-    },
-    {
-      id: 2,
-      language: "JavaScript",
-      text: "let score = 0;",
-      level: 1,
-    },
-    {
-      id: 3,
-      language: "JavaScript",
-      text: "if (x > 10) { return x; }",
-      level: 2,
-    },
-  ],
 };

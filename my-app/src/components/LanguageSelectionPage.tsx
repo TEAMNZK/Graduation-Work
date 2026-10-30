@@ -17,6 +17,7 @@ type LanguageSelectionPageProps = {
   title: string;
   description: string;
   activeKey: NavKey;
+  showSummary?: boolean;
   highlightLabel: string;
   highlightTitle: string;
   highlightDescription: string;
@@ -29,6 +30,7 @@ export default function LanguageSelectionPage({
   title,
   description,
   activeKey,
+  showSummary = true,
   highlightLabel,
   highlightTitle,
   highlightDescription,
@@ -49,6 +51,8 @@ export default function LanguageSelectionPage({
         />
 
         <section className="mx-auto max-w-7xl px-6 py-8">
+          {/* 紹介・公開数の枠は画面ごとに表示を切り替える */}
+          {showSummary && (
           <div className="mb-6 grid grid-cols-1 gap-4 lg:grid-cols-[1.3fr_1fr]">
             <div className="rounded-lg border border-blue-100 bg-blue-50 p-6">
               <p className="text-sm font-medium text-blue-700">
@@ -68,6 +72,8 @@ export default function LanguageSelectionPage({
               <p className="mt-2 text-sm text-gray-600">{countDescription}</p>
             </div>
           </div>
+
+          )}
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {languages.map((language) =>
