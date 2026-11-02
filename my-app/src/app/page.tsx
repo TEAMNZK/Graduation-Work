@@ -8,7 +8,7 @@ export default function Home() {
     <main className={styles.page}>
       <header className={styles.header}>
         <Link href="/" className={styles.brand} aria-label="Code Lord Note ホーム">
-          <Image src={logo} alt="CodeLoadNote" sizes="(max-width: 700px) 88vw, 510px" preload className={styles.logo} />
+          <Image src={logo} alt="Code Lord Note" sizes="(max-width: 700px) 88vw, 510px" preload className={styles.logo} />
         </Link>
         <nav className={styles.navigation} aria-label="アカウント">
           <Link href="/login" className={styles.login}>ログイン</Link>

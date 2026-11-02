@@ -1,6 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
+import logo from "../../public/images/logo.png";
+import styles from "./AppHeader.module.css";
 
 type NavKey = "textbook" | "drill" | "articles" | "typing";
 
@@ -23,8 +26,8 @@ const getNavClassName = (isActive: boolean) =>
   [
     "rounded-lg border px-5 py-2 text-sm font-bold transition",
     isActive
-      ? "border-blue-200 bg-blue-50 text-blue-700"
-      : "border-gray-200 bg-gray-50 text-gray-900 hover:bg-gray-100",
+      ? "border-blue-300 bg-blue-50 text-blue-700 shadow-sm"
+      : "border-white/90 bg-white/85 text-slate-800 hover:bg-white",
   ].join(" ");
 
 export default function AppHeader({
@@ -35,14 +38,24 @@ export default function AppHeader({
   action,
 }: AppHeaderProps) {
   return (
-    <header className="border-b border-gray-200 bg-white">
+    <header className={styles.header}>
       <div className="mx-auto flex max-w-7xl flex-col gap-5 px-6 py-5">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div>
-            <p className="text-sm font-bold tracking-widest text-blue-600">
-              CODE LORD NOTE
-            </p>
-            <h1 className="mt-1 text-2xl font-bold">{title}</h1>
+            <Link
+              href="/dashboard"
+              aria-label="Code Lord Note ダッシュボードへ"
+              className="block w-[240px] max-w-full rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-blue-600 sm:w-[300px]"
+            >
+              <Image
+                src={logo}
+                alt="Code Lord Note"
+                sizes="(max-width: 640px) 240px, 300px"
+                preload
+                className="h-auto w-full"
+              />
+            </Link>
+            <h1 className="mt-2 text-2xl font-bold text-slate-900">{title}</h1>
             {description && (
               <p className="mt-2 text-sm text-gray-600">{description}</p>
             )}

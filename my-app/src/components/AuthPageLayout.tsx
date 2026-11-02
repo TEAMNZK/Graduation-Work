@@ -10,7 +10,7 @@ export default function AuthPageLayout({ mode, children }: { mode: "login" | "si
     <main className={styles.page}>
       <header className={styles.header}>
         <Link href="/" className={styles.brand} aria-label="Code Lord Note ホーム">
-          <Image src={logo} alt="CodeLoadNote" sizes="(max-width: 760px) 65vw, 510px" preload />
+          <Image src={logo} alt="Code Lord Note" sizes="(max-width: 760px) 65vw, 510px" preload />
         </Link>
         <Link href={isSignup ? "/login" : "/signup"} className={styles.headerLink}>{isSignup ? "ログイン" : "新規登録"}<span aria-hidden="true">↗</span></Link>
       </header>
