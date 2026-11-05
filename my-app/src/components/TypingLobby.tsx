@@ -1,5 +1,7 @@
 "use client";
 
+import { onAuthStateChanged } from "firebase/auth";
+import { TYPING_MODES, type TypingMode } from "@/lib/typingModes";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { collection, limit, orderBy, query, where } from "firebase/firestore";
@@ -12,41 +14,46 @@ import { loadCachedScores, scoreCacheKey } from "@/lib/typingScoreCache";
 type RankingEntry = { id: string; userName: string; score: number; rank: string };
 
 // リアルタイム購読をせず、取得済みランキングを再利用する。
-function Ranking({ language }: { language: string }) {
+function Ranking({ language, mode }: { language: string; mode: TypingMode }) {
   const [entries, setEntries] = useState<RankingEntry[]>([]);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
   const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
     const rankingQuery = query(collection(db, "typingScores"),
-      where("language", "==", language), orderBy("score", "desc"), limit(10));
-    let active = true;
-    const userId = auth.currentUser?.uid;
-    if (!userId) return;
-    void loadCachedScores(scoreCacheKey("ranking", userId, language), rankingQuery).then((rows) => {
-      if (!active) return;
-      const results: RankingEntry[] = [];
-      rows.forEach((document) => {
-        const data = document.data;
-        // 不完全な記録があっても画面全体を壊さない。
-        if (typeof data.score !== "number" || !Number.isFinite(data.score)) return;
-        results.push({ id: document.id,
-          userName: typeof data.userName === "string" ? data.userName : "ユーザー",
-          score: data.score, rank: typeof data.rank === "string" ? data.rank : "—" });
+      where("language", "==", language), where("mode", "==", mode), orderBy("score", "desc"), limit(10));
+    let generation = 0;
+    const stopAuth = onAuthStateChanged(auth, (user) => {
+      const currentGeneration = ++generation;
+      setEntries([]);
+      if (!user) { setEntries([]); setStatus("ready"); return; }
+      setStatus("loading");
+      const userId = user.uid;
+      void loadCachedScores(scoreCacheKey("ranking", userId, language, mode), rankingQuery).then((rows) => {
+        if (currentGeneration !== generation) return;
+        const results: RankingEntry[] = [];
+        rows.forEach((document) => {
+          const data = document.data;
+          // 不完全な記録があっても画面全体を壊さない。
+          if (typeof data.score !== "number" || !Number.isFinite(data.score)) return;
+          results.push({ id: document.id,
+            userName: typeof data.userName === "string" ? data.userName : "ユーザー",
+            score: data.score, rank: typeof data.rank === "string" ? data.rank : "—" });
+        });
+        setEntries(results);
+        setStatus("ready");
+      }).catch((error) => {
+        if (currentGeneration !== generation) return;
+        console.error("ランキングの取得に失敗しました。", error);
+        setStatus("error");
       });
-      setEntries(results);
-      setStatus("ready");
-    }).catch((error) => {
-      if (!active) return;
-      console.error("ランキングの取得に失敗しました。", error);
-      setStatus("error");
     });
-    return () => { active = false; };
-  }, [language, retryCount]);
+    return () => { generation += 1; stopAuth(); };
+  }, [language, mode, retryCount]);
 
   return (
     <section className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm" aria-labelledby="ranking-title">
-      <h2 id="ranking-title" className="text-xl font-bold">{language} ランキング</h2>
+      <h2 id="ranking-title" className="text-xl font-bold">{language} {TYPING_MODES[mode].label} ランキング</h2>
       <p className="mt-2 text-sm text-gray-500">プレイ記録の上位10件。同じユーザーの記録も掲載されます。同点は同順位です。最新の記録が反映されるまで時間がかかる場合があります。</p>
       <div className="mt-6" aria-live="polite">
         {status === "loading" && <p className="text-gray-600">ランキングを読み込み中...</p>}
@@ -72,11 +79,12 @@ function Ranking({ language }: { language: string }) {
 }
 
 export default function TypingLobby({ questions }: { questions: Question[] }) {
+  const [mode, setMode] = useState<TypingMode>("standard");
   const [isPlaying, setIsPlaying] = useState(false);
   const language = questions[0]?.language ?? "Java";
 
   // スタート後にゲームをマウントするので、待機中は計時・保存しない。
-  if (isPlaying) return <TypingGame questions={questions} onReturnToLobby={() => setIsPlaying(false)} />;
+  if (isPlaying) return <TypingGame questions={questions} mode={mode} onReturnToLobby={() => setIsPlaying(false)} />;
 
   return (
     <div className="mx-auto max-w-5xl space-y-6 p-6">
@@ -86,13 +94,25 @@ export default function TypingLobby({ questions }: { questions: Question[] }) {
         <h1 className="mt-3 text-3xl font-bold">{language} タイピング</h1>
         <p className="mt-3 leading-7 text-gray-600">{language}のコードを入力して、速さと正確さを磨きましょう。準備ができたらゲームを開始してください。</p>
         <ul className="mt-6 space-y-2 text-sm text-gray-600">
-          <li>制限時間は120秒。すべての問題を入力すると、その時点で終了します。</li>
+          <li>制限時間は{TYPING_MODES[mode].seconds}秒。すべての問題を入力すると、その時点で終了します。</li>
           <li>半角英数字で入力してください。問題中の「・」はスペースです。</li>
           <li>スコアは解いた問題数と正確率で決まります。</li>
         </ul>
+        <fieldset className="mt-6">
+          <legend className="font-semibold text-gray-800">プレイモード</legend>
+          <div className="mt-3 flex flex-wrap gap-3">
+            {(Object.keys(TYPING_MODES) as TypingMode[]).map((value) => (
+              <label key={value} className={`flex cursor-pointer items-center gap-3 rounded-xl border px-5 py-4 ${mode === value ? "border-blue-600 bg-blue-50 text-blue-800" : "border-gray-300"}`}>
+                <input type="radio" name="typing-mode" value={value} checked={mode === value} onChange={() => setMode(value)} />
+                {TYPING_MODES[value].label}（{TYPING_MODES[value].seconds}秒）
+              </label>
+            ))}
+          </div>
+          <p className="mt-2 text-sm text-gray-500">ランキングはモードごとに集計します。モード導入前の記録はプレイ履歴で確認できます。</p>
+        </fieldset>
         <button type="button" onClick={() => setIsPlaying(true)} disabled={questions.length === 0} className="mt-8 rounded-xl bg-blue-600 px-10 py-4 text-lg font-bold text-white transition hover:bg-blue-700 disabled:opacity-50">ゲームスタート</button>
       </section>
-      <Ranking language={language} />
+      <Ranking key={`${language}-${mode}`} language={language} mode={mode} />
       <TypingHistory language={language} />
     </div>
   );

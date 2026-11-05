@@ -1,5 +1,6 @@
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
+import type { TypingMode } from "@/lib/typingModes";
 import { rememberSavedScore } from "@/lib/typingScoreCache";
 
 /**
@@ -7,6 +8,7 @@ import { rememberSavedScore } from "@/lib/typingScoreCache";
  */
 export type TypingScoreInput = {
   language: string;
+  mode: TypingMode;
   score: number;
   solvedCount: number;
   totalMistakes: number;
@@ -43,6 +45,7 @@ export async function saveTypingScore(
       userId: user.uid,
       userName,
       language: result.language,
+      mode: result.mode,
       score: result.score,
       solvedCount: result.solvedCount,
       totalMistakes: result.totalMistakes,

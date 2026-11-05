@@ -1,5 +1,6 @@
 "use client";
 
+import { TYPING_MODES, type TypingMode } from "@/lib/typingModes";
 import { useEffect, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { collection, limit, orderBy, query, Timestamp, where } from "firebase/firestore";
@@ -8,6 +9,7 @@ import { loadCachedScores, scoreCacheKey } from "@/lib/typingScoreCache";
 
 type HistoryEntry = {
   id: string;
+  mode: TypingMode;
   createdAt: Timestamp | null;
   score: number;
   rank: string;
@@ -47,7 +49,7 @@ export default function TypingHistory({ language }: { language: string }) {
           const data = document.data;
           // 不完全な古い記録を表示しても数値欄が壊れないようにする。
           const numberOrZero = (value: unknown) => typeof value === "number" && Number.isFinite(value) ? value : 0;
-          results.push({ id: document.id,
+          results.push({ id: document.id, mode: data.mode === "long" ? "long" : "standard",
             createdAt: data.createdAt instanceof Timestamp ? data.createdAt : null,
             score: numberOrZero(data.score), rank: typeof data.rank === "string" ? data.rank : "—",
             solvedCount: numberOrZero(data.solvedCount), totalMistakes: numberOrZero(data.totalMistakes),
@@ -82,11 +84,11 @@ export default function TypingHistory({ language }: { language: string }) {
           <table className="w-full min-w-[640px] text-left text-sm">
             <caption className="sr-only">自分の{language}の最近20件のプレイ履歴</caption>
             <thead className="border-b border-gray-200 text-gray-500"><tr>
-              {["日時", "言語", "スコア", "ランク", "問題数", "ミス数", "正確率"].map((label) => <th key={label} scope="col" className="py-3 pr-4">{label}</th>)}
+              {["日時", "言語", "モード", "スコア", "ランク", "問題数", "ミス数", "正確率"].map((label) => <th key={label} scope="col" className="py-3 pr-4">{label}</th>)}
             </tr></thead>
             <tbody>{entries.map((entry) => <tr key={entry.id} className="border-b border-gray-100">
               <td className="whitespace-nowrap py-4 pr-4">{entry.createdAt ? dateFormatter.format(entry.createdAt.toDate()) : "保存中"}</td>
-              <td className="pr-4">{language}</td><td className="pr-4 font-bold text-blue-700">{entry.score} 点</td>
+              <td className="pr-4">{language}</td><td className="whitespace-nowrap pr-4">{TYPING_MODES[entry.mode].label}</td><td className="pr-4 font-bold text-blue-700">{entry.score} 点</td>
               <td className="pr-4">{entry.rank}</td><td className="pr-4">{entry.solvedCount}</td>
               <td className="pr-4">{entry.totalMistakes}</td><td>{entry.accuracy}%</td>
             </tr>)}</tbody>

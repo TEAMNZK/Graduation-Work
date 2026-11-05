@@ -5,8 +5,8 @@ const CACHE_MS = 5 * 60 * 1000;
 const cache = new Map<string, { expiresAt: number; rows: CachedScore[] }>();
 const pending = new Map<string, Promise<CachedScore[]>>();
 
-export function scoreCacheKey(kind: "ranking" | "history", userId: string, language: string) {
-  return JSON.stringify([kind, userId, language]);
+export function scoreCacheKey(kind: "ranking" | "history", userId: string, language: string, mode?: string) {
+  return JSON.stringify([kind, userId, language, mode ?? "all"]);
 }
 
 // 同一の取得要求をまとめ、画面を往復しても5分間はサーバーから読み直さない。
@@ -28,7 +28,7 @@ export function loadCachedScores(key: string, scoreQuery: Query): Promise<Cached
 export function rememberSavedScore(id: string, data: DocumentData) {
   const row: CachedScore = { id, data: { ...data, createdAt: Timestamp.now() } };
   for (const kind of ["ranking", "history"] as const) {
-    const key = scoreCacheKey(kind, data.userId, data.language);
+    const key = scoreCacheKey(kind, data.userId, data.language, kind === "ranking" ? data.mode : undefined);
     const running = pending.get(key);
     // 取得途中に保存が完了しても、サーバー応答で新記録を消さない。
     if (running) void running.then(() => rememberSavedScore(id, data)).catch(() => undefined);

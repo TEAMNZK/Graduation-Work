@@ -8,17 +8,17 @@ import {
   ignoredKeys,
 } from "@/lib/typingUtils";
 import { saveTypingScore } from "@/lib/typingScores";
+import { TYPING_MODES, type TypingMode } from "@/lib/typingModes";
 import type { Question } from "@/lib/questions";
 
 type TypingGameProps = {
   questions: Question[];
+  mode?: TypingMode;
   onReturnToLobby?: () => void;
 };
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
 
-// ゲームの制限時間を120秒に設定する
-const GAME_TIME = 120;
 
 const TIMER_RADIUS = 42;
 const TIMER_STROKE = 8;
@@ -45,7 +45,8 @@ function getRank(score: number) {
   return "D";
 }
 
-export default function TypingGame({ questions, onReturnToLobby }: TypingGameProps) {
+export default function TypingGame({ questions, mode = "standard", onReturnToLobby }: TypingGameProps) {
+  const gameTime = TYPING_MODES[mode].seconds;
   const [shuffledQuestions, setShuffledQuestions] = useState<Question[]>(() =>
     shuffleQuestions(questions)
   );
@@ -61,7 +62,7 @@ export default function TypingGame({ questions, onReturnToLobby }: TypingGamePro
     null
   );
 
-  const [timeLeft, setTimeLeft] = useState(GAME_TIME);
+  const [timeLeft, setTimeLeft] = useState<number>(gameTime);
 
   // Firestoreへの保存状態
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
@@ -94,7 +95,7 @@ export default function TypingGame({ questions, onReturnToLobby }: TypingGamePro
   const rank = getRank(score);
 
   // 円形タイマーの残量を計算する
-  const timerProgress = timeLeft / GAME_TIME;
+  const timerProgress = timeLeft / gameTime;
 
   const timerDashOffset =
     TIMER_CIRCUMFERENCE - TIMER_CIRCUMFERENCE * timerProgress;
@@ -151,6 +152,7 @@ export default function TypingGame({ questions, onReturnToLobby }: TypingGamePro
       try {
         await saveTypingScore({
           language: gameLanguage,
+          mode,
           score,
           solvedCount,
           totalMistakes,
@@ -177,6 +179,7 @@ export default function TypingGame({ questions, onReturnToLobby }: TypingGamePro
     isGameFinished,
     questions.length,
     gameLanguage,
+    mode,
     score,
     solvedCount,
     totalMistakes,
@@ -259,7 +262,7 @@ export default function TypingGame({ questions, onReturnToLobby }: TypingGamePro
     setCorrectChars(0);
     setIsFinished(false);
     setLastMistakeAtIndex(null);
-    setTimeLeft(GAME_TIME);
+    setTimeLeft(gameTime);
 
     // Firestore保存状態も初期化する
     setSaveStatus("idle");
@@ -289,6 +292,9 @@ export default function TypingGame({ questions, onReturnToLobby }: TypingGamePro
           プログラミング言語タイピングゲーム
         </h1>
 
+        <p className="mt-2 font-semibold text-blue-700">
+          {TYPING_MODES[mode].label}（{gameTime}秒）
+        </p>
         <p className="mt-2 text-sm text-gray-600">
           制限時間内に、できるだけ多くの問題を正確に入力します。
         </p>
