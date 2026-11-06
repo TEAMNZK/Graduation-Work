@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { javaQuestionEntriesById } from "@/data/javaQuestions";
 import { executeJava, executePython, executeC } from "@/lib/judge0";
 import { gradeJavaQuestion, gradeJavaQuiz } from "@/lib/javaGrading";
+import { ExecutionServiceError } from "@/lib/executionError";
 
 import { cQuestionEntriesById } from "@/data/cQuestions";
 import { gradeCQuestion } from "@/lib/cGrading";
@@ -27,8 +28,26 @@ export async function POST(req: NextRequest) {
         if (!results.has(key)) results.set(key, executeC(code, stdin));
         return results.get(key)!;
       };
+
+      const startedAt = performance.now();
+
       const result = await execute(body.code, body.stdin ?? "");
-      const grading = question ? await gradeCQuestion(question, body.code, execute) : undefined;
+      const executionFinishedAt = performance.now();
+
+      const grading = question
+        ? await gradeCQuestion(question, body.code, execute)
+        : undefined;
+
+      const gradingFinishedAt = performance.now();
+
+      console.log("[実行時間]", {
+        language: "c",
+        questionId: body.questionId,
+        表示用実行秒: ((executionFinishedAt - startedAt) / 1000).toFixed(2),
+        追加採点秒: ((gradingFinishedAt - executionFinishedAt) / 1000).toFixed(2),
+        合計秒: ((gradingFinishedAt - startedAt) / 1000).toFixed(2),
+      });
+
       return NextResponse.json({ success: true, stdout: result.stdout, stderr: result.stderr,
         exitCode: result.statusId, statusDescription: result.statusDescription, grading });
     }
@@ -77,6 +96,11 @@ export async function POST(req: NextRequest) {
       exitCode: result.statusId, statusDescription: result.statusDescription, grading,
     });
   } catch (error) {
+    if (error instanceof ExecutionServiceError) {
+      console.error("execute API service error:", { code: error.code, ...error.details });
+      return NextResponse.json({ success: false, code: error.code, error: error.message },
+        { status: error.code === "EXECUTION_TIMEOUT" ? 504 : 503 });
+    }
     console.error("execute API error:", error);
     return NextResponse.json({ success: false, error: "実行または採点に失敗しました。時間をおいて再実行してください。" }, { status: 502 });
   }
