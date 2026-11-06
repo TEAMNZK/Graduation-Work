@@ -56,9 +56,11 @@ export default function AppHeader({
               />
             </Link>
             <h1 className="mt-2 text-2xl font-bold text-slate-900">{title}</h1>
-            {description && (
-              <p className="mt-2 text-sm text-gray-600">{description}</p>
-            )}
+            <div className="mt-2 min-h-5">
+              {description && (
+                <p className="text-sm text-gray-600">{description}</p>
+              )}
+            </div>
           </div>
 
           {action && <div className="shrink-0">{action}</div>}

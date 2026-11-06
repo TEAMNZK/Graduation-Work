@@ -21,6 +21,11 @@
   background: linear-gradient(0deg, rgb(255 255 255 / 55%), transparent 45%);
 }
 
+/* Keep headers aligned when only one page needs a vertical scrollbar. */
+:global(html):has(.header) {
+  scrollbar-gutter: stable;
+}
+
 @media (max-width: 640px) {
   .header {
     background-size: cover;
