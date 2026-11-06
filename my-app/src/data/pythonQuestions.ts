@@ -1,4 +1,5 @@
 import { pythonBasics } from "./pythonLessons/basics";
+import { numberDrillTopics } from "@/lib/drillNumbering";
 import { pythonLoops } from "./pythonLessons/loops";
 import { pythonCollections } from "./pythonLessons/collections";
 import { pythonFunctions } from "./pythonLessons/functions";
@@ -478,7 +479,9 @@ const groupedQuestions = [...questions,...pythonBasics,...pythonLoops,...pythonC
   },
   {}
 );
-export const pythonQuestionMap = Object.fromEntries(pythonTopicOrder.map((topicId,index) => [topicId,groupedQuestions[topicId].map(question=>({...question,no:question.type==="lesson"?String(index+1).padStart(2,"0"):question.no}))]));
+export const { questionMap: pythonQuestionMap, topicNumbers: pythonTopicNumbers } = numberDrillTopics(
+  Object.fromEntries(pythonTopicOrder.map(topicId => [topicId, groupedQuestions[topicId]]))
+);
 
 export const pythonQuestionEntriesById = Object.fromEntries(
   Object.entries(pythonQuestionMap).flatMap(([topicId, items]) =>

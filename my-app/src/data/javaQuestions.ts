@@ -1,4 +1,5 @@
 import { javaExerciseQuestionMap } from "@/data/javaExerciseQuestions";
+import { numberDrillTopics } from "@/lib/drillNumbering";
 import { javaTestCases } from "@/data/javaTestCases";
 import { javaVerifications } from "@/data/javaVerifications";
 
@@ -3297,7 +3298,7 @@ const expandQuestionSet = (base: JavaQuestion): JavaQuestion[] => {
   ];
 };
 
-export const javaQuestionMap: Record<string, JavaQuestion[]> = {
+const unnumberedJavaQuestionMap: Record<string, JavaQuestion[]> = {
   ...Object.fromEntries(
     Object.entries(baseJavaQuestionMap).map(([topicId, question]) => [
       topicId,
@@ -3306,6 +3307,8 @@ export const javaQuestionMap: Record<string, JavaQuestion[]> = {
   ),
   ...javaExerciseQuestionMap,
 };
+
+export const { questionMap: javaQuestionMap, topicNumbers: javaTopicNumbers } = numberDrillTopics(unnumberedJavaQuestionMap);
 
 for (const questions of Object.values(javaQuestionMap)) {
   for (const question of questions) {

@@ -1,3 +1,5 @@
+import { javaTopicNumbers } from "./javaQuestions";
+
 export type JavaCurriculumItem = {
   id: string;
   no: string;
@@ -12,7 +14,7 @@ export type JavaCurriculumSection = {
   items: JavaCurriculumItem[];
 };
 
-export const javaCurriculum: JavaCurriculumSection[] = [
+const curriculum: JavaCurriculumSection[] = [
   {
     id: "chapter1",
     sectionTitle: "第1章 基礎文法",
@@ -83,3 +85,8 @@ export const javaCurriculum: JavaCurriculumSection[] = [
     ],
   },
 ];
+
+export const javaCurriculum: JavaCurriculumSection[] = curriculum.map(section => ({
+  ...section,
+  items: section.items.map(item => ({ ...item, no: javaTopicNumbers[item.id] ?? item.no })),
+}));

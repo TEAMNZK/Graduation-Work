@@ -1,4 +1,5 @@
 import { cProjects } from "./cProjects";
+import { numberDrillTopics } from "@/lib/drillNumbering";
 import { cInventoryStages, cInventoryFlags } from "./cInventoryProject";
 import { basicLessons } from "./cLessons/basics";
 import { controlLessons } from "./cLessons/control";
@@ -64,11 +65,12 @@ for (const question of [...basicLessons, ...controlLessons, ...arrayLessons, ...
 }
 lessonQuestionMap["c-function"][0].verificationCode = "if(square(-3)!=9||square(0)!=0||square(7)!=49)return 91;";
 lessonQuestionMap["c-pointer"][0].verificationCode = "int a=-3,b=8;swap(&a,&b);if(a!=8||b!=-3)return 91;";
-export const cQuestionMap: Record<string, CQuestion[]> = Object.fromEntries(cLearningPath.map((topicId) =>
+const unnumberedCQuestionMap: Record<string, CQuestion[]> = Object.fromEntries(cLearningPath.map((topicId) =>
   [topicId, (lessonQuestionMap[topicId] ?? (topicId === "c-project-inventory-advanced" ? cInventoryStages : topicId === "c-project-inventory-flags" ? [cInventoryFlags] : [cProjects[topicId]])).map((question) => ({
     ...question, no: question.type === "lesson" ? String(cLearningPath.indexOf(topicId)+1).padStart(2,"0") : question.no,
   }))]
 ));
+export const { questionMap: cQuestionMap, topicNumbers: cTopicNumbers } = numberDrillTopics(unnumberedCQuestionMap);
 export const cCoreQuestionMap = Object.fromEntries(Object.entries(cQuestionMap).filter(([,questions]) => !questions[0].project?.optional));
 export const cQuestionEntriesById = Object.fromEntries(Object.entries(cQuestionMap).flatMap(([topicId, questions]) =>
   questions.map((question, index) => [question.id, { ...question, topicId, questionIndex: index, questionCount: questions.length }])

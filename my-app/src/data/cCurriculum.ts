@@ -1,4 +1,4 @@
-import { cQuestionMap } from "./cQuestions";
+import { cQuestionMap, cTopicNumbers } from "./cQuestions";
 
 const chapters = [
   { id: "c-basics", sectionTitle: "第1章 入力と判断 → お会計アプリ", description: "出力・変数・演算・条件分岐を学び、買い物で使える計算アプリを作ります。", topics: ["c-hello", "c-variables", "c-input", "c-numeric", "c-if", "c-logic", "c-switch", "c-project-checkout"] },
@@ -18,6 +18,6 @@ export const cCurriculum = chapters.map(({ topics, ...chapter }) => ({
       "c-recursion":"再帰", "c-records":"構造体配列と台帳", "c-bits":"ビット演算", "c-enum":"列挙型", "c-macro":"マクロ",
       "c-memory":"動的メモリ", "c-files":"ファイル操作",
     };
-    return { id, no: question.no, title: titles[id] ?? question.title, type: question.type, project: question.project };
+    return { id, no: cTopicNumbers[id], title: titles[id] ?? question.title, type: question.type, project: question.project };
   }),
 }));
