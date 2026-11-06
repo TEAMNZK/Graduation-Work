@@ -27,14 +27,6 @@ const languages: LanguageCard[] = [
     available: true,
     actionLabel: "練習を始める",
   },
-  {
-    name: "JavaScript",
-    href: "/typing/javascript",
-    status: "公開中",
-    description: "JavaScriptのコード入力を通して、頻出構文を練習できます。",
-    available: true,
-    actionLabel: "練習を始める",
-  },
 ];
 
 export default function TypingPage() {
@@ -43,9 +35,10 @@ export default function TypingPage() {
       title="タイピング練習"
       description="練習したい言語を選んで、コード入力の速度と正確さを高められます。"
       activeKey="typing"
+      showSummary={false}
       highlightLabel="現在利用できるタイピング練習"
-      highlightTitle="4言語のタイピング練習を公開中です"
-      highlightDescription="Java、Python、C、JavaScriptの短いコードを使って、制限時間内にどれだけ正確に入力できるか練習できます。"
+      highlightTitle="3言語のタイピング練習を公開中です"
+      highlightDescription="Java、Python、Cの短いコードを使って、制限時間内にどれだけ正確に入力できるか練習できます。"
       countLabel="公開中"
       countDescription="言語のタイピング練習が利用できます。"
       languages={languages}

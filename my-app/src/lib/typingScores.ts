@@ -1,11 +1,14 @@
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
+import type { TypingMode } from "@/lib/typingModes";
+import { rememberSavedScore } from "@/lib/typingScoreCache";
 
 /**
  * タイピングゲーム終了時に保存するデータ。
  */
 export type TypingScoreInput = {
   language: string;
+  mode: TypingMode;
   score: number;
   solvedCount: number;
   totalMistakes: number;
@@ -42,6 +45,7 @@ export async function saveTypingScore(
       userId: user.uid,
       userName,
       language: result.language,
+      mode: result.mode,
       score: result.score,
       solvedCount: result.solvedCount,
       totalMistakes: result.totalMistakes,
@@ -52,6 +56,9 @@ export async function saveTypingScore(
       createdAt: serverTimestamp(),
     }
   );
+
+  // 保存済みデータを画面用キャッシュに反映し、読み直しを避ける。
+  rememberSavedScore(documentReference.id, { ...result, userId: user.uid, userName });
 
   // 保存されたドキュメントのIDを返す
   return documentReference.id;
