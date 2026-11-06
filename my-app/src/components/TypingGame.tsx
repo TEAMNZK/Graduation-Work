@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   calculateAccuracy,
+  calculateTypingResult,
   getCharStatus,
   ignoredKeys,
 } from "@/lib/typingUtils";
@@ -36,15 +37,6 @@ function shuffleQuestions(items: Question[]) {
   return copied;
 }
 
-// スコアに応じてランクを返す
-function getRank(score: number) {
-  if (score >= 250) return "S";
-  if (score >= 180) return "A";
-  if (score >= 120) return "B";
-  if (score >= 60) return "C";
-  return "D";
-}
-
 export default function TypingGame({ questions, mode = "standard", onReturnToLobby }: TypingGameProps) {
   const gameTime = TYPING_MODES[mode].seconds;
   const [shuffledQuestions, setShuffledQuestions] = useState<Question[]>(() =>
@@ -52,15 +44,13 @@ export default function TypingGame({ questions, mode = "standard", onReturnToLob
   );
 
   const [questionIndex, setQuestionIndex] = useState(0);
+  const [solvedCount, setSolvedCount] = useState(0);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [mistakeIndex, setMistakeIndex] = useState<number | null>(null);
   const [totalMistakes, setTotalMistakes] = useState(0);
   const [correctChars, setCorrectChars] = useState(0);
   const [isFinished, setIsFinished] = useState(false);
-
-  const [lastMistakeAtIndex, setLastMistakeAtIndex] = useState<number | null>(
-    null
-  );
+  const [countdown, setCountdown] = useState(3);
 
   const [timeLeft, setTimeLeft] = useState<number>(gameTime);
 
@@ -77,9 +67,6 @@ export default function TypingGame({ questions, mode = "standard", onReturnToLob
   const isGameFinished = isFinished || !currentQuestion;
   const targetText = currentQuestion?.text ?? "";
 
-  // questionIndexは完了済みの問題数として利用する
-  const solvedCount = questionIndex;
-
   // 保存する言語名
   const gameLanguage =
     shuffledQuestions[0]?.language ??
@@ -91,8 +78,7 @@ export default function TypingGame({ questions, mode = "standard", onReturnToLob
     return calculateAccuracy(correctChars, totalMistakes);
   }, [correctChars, totalMistakes]);
 
-  const score = Math.round(solvedCount * accuracy);
-  const rank = getRank(score);
+  const { score, rank } = calculateTypingResult(correctChars, totalMistakes, gameTime);
 
   // 円形タイマーの残量を計算する
   const timerProgress = timeLeft / gameTime;
@@ -109,14 +95,20 @@ export default function TypingGame({ questions, mode = "standard", onReturnToLob
 
   const isDangerTime = timeLeft <= 10 && !isGameFinished;
 
-  // ページ表示時に入力欄へフォーカスする
+  // 準備中は制限時間を減らさず、3秒後に入力を開始する。
   useEffect(() => {
-    hiddenInputRef.current?.focus();
-  }, []);
+    if (isGameFinished || countdown === 0) return;
+    const timer = setTimeout(() => setCountdown((prev) => prev - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [countdown, isGameFinished]);
+
+  useEffect(() => {
+    if (countdown === 0 && !isGameFinished) hiddenInputRef.current?.focus();
+  }, [countdown, isGameFinished]);
 
   // 制限時間を1秒ずつ減らす
   useEffect(() => {
-    if (isGameFinished) return;
+    if (isGameFinished || countdown > 0) return;
 
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
@@ -131,7 +123,7 @@ export default function TypingGame({ questions, mode = "standard", onReturnToLob
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [isGameFinished]);
+  }, [isGameFinished, countdown]);
 
   // ゲーム終了時にFirestoreへ結果を1回だけ保存する
   useEffect(() => {
@@ -190,31 +182,41 @@ export default function TypingGame({ questions, mode = "standard", onReturnToLob
   // 次の問題へ進む
   const moveToNextQuestion = () => {
     const nextIndex = questionIndex + 1;
+    setSolvedCount((prev) => prev + 1);
 
     if (nextIndex >= shuffledQuestions.length) {
+      const nextQuestions = shuffleQuestions(questions);
+      // 周回の境目で直前と同じ問題が続くことを避ける。
+      const differentIndex = nextQuestions.findIndex(
+        (question) => question.text !== targetText
+      );
+      if (differentIndex > 0) {
+        [nextQuestions[0], nextQuestions[differentIndex]] =
+          [nextQuestions[differentIndex], nextQuestions[0]];
+      }
+      setShuffledQuestions(nextQuestions);
+      setQuestionIndex(0);
+    } else {
       setQuestionIndex(nextIndex);
-      setIsFinished(true);
-      return;
     }
 
-    setQuestionIndex(nextIndex);
     setCurrentIndex(0);
     setMistakeIndex(null);
-    setLastMistakeAtIndex(null);
   };
 
   // キー入力を1文字ずつ判定する
   const handleKeyDown = (
     event: React.KeyboardEvent<HTMLInputElement>
   ) => {
-    if (isGameFinished) return;
+    if (isGameFinished || countdown > 0 || timeLeft <= 0) return;
 
     const key = event.key;
 
     // Shiftなどの修飾キー単体は判定しない
-    if (ignoredKeys.includes(key)) return;
+    if (ignoredKeys.includes(key) || event.ctrlKey || event.metaKey || event.altKey) return;
 
     event.preventDefault();
+    if (key.length !== 1 || event.nativeEvent.isComposing) return;
 
     const expectedChar = targetText[currentIndex];
 
@@ -225,13 +227,10 @@ export default function TypingGame({ questions, mode = "standard", onReturnToLob
       setCurrentIndex((prev) => prev + 1);
       setCorrectChars((prev) => prev + 1);
       setMistakeIndex(null);
-      setLastMistakeAtIndex(null);
 
       // 問題を最後まで入力したら次の問題へ進む
       if (currentIndex + 1 === targetText.length) {
-        setTimeout(() => {
-          moveToNextQuestion();
-        }, 200);
+        moveToNextQuestion();
       }
 
       return;
@@ -240,11 +239,7 @@ export default function TypingGame({ questions, mode = "standard", onReturnToLob
     // 間違えた文字を赤く表示する
     setMistakeIndex(currentIndex);
 
-    // 同じ文字位置でのミスは1回だけ数える
-    if (lastMistakeAtIndex !== currentIndex) {
-      setTotalMistakes((prev) => prev + 1);
-      setLastMistakeAtIndex(currentIndex);
-    }
+    setTotalMistakes((prev) => prev + 1);
   };
 
   // 途中でゲームを終了する
@@ -256,12 +251,13 @@ export default function TypingGame({ questions, mode = "standard", onReturnToLob
   const resetGame = () => {
     setShuffledQuestions(shuffleQuestions(questions));
     setQuestionIndex(0);
+    setSolvedCount(0);
     setCurrentIndex(0);
     setMistakeIndex(null);
     setTotalMistakes(0);
     setCorrectChars(0);
     setIsFinished(false);
-    setLastMistakeAtIndex(null);
+    setCountdown(3);
     setTimeLeft(gameTime);
 
     // Firestore保存状態も初期化する
@@ -269,9 +265,6 @@ export default function TypingGame({ questions, mode = "standard", onReturnToLob
     setSaveError("");
     hasSavedScoreRef.current = false;
 
-    setTimeout(() => {
-      hiddenInputRef.current?.focus();
-    }, 0);
   };
 
   const styles: Record<string, string> = {
@@ -458,6 +451,9 @@ export default function TypingGame({ questions, mode = "standard", onReturnToLob
               <p className="text-5xl font-extrabold text-blue-600">
                 {score}
               </p>
+              <p className="mt-3 text-xs text-gray-600">
+                正解文字数 × 正確率（入力途中も加点）
+              </p>
             </div>
 
             <div className="rounded-2xl border border-gray-200 bg-gray-50 p-6 text-center">
@@ -467,6 +463,9 @@ export default function TypingGame({ questions, mode = "standard", onReturnToLob
 
               <p className="text-5xl font-extrabold text-amber-500">
                 {rank}
+              </p>
+              <p className="mt-3 text-xs text-gray-600">
+                制限時間1分あたりの得点：S 180 / A 120 / B 80 / C 40
               </p>
             </div>
           </div>
@@ -528,12 +527,19 @@ export default function TypingGame({ questions, mode = "standard", onReturnToLob
             </Link>}
           </div>
         </div>
+      ) : countdown > 0 ? (
+        <div className="rounded-2xl bg-white p-12 text-center shadow" role="status" aria-live="polite" aria-atomic="true">
+          <p className="text-lg font-semibold text-gray-700">まもなくスタート</p>
+          <p className="my-6 text-8xl font-bold tabular-nums text-blue-600">{countdown}</p>
+          <p className="text-sm text-gray-600">半角英数に切り替えて準備してください。</p>
+        </div>
       ) : (
         /* プレイ画面 */
         <div className="rounded-2xl bg-white p-6 shadow">
           <div className="mb-4 flex items-center justify-between gap-4">
             <p className="text-sm font-medium text-gray-600">
-              問題 {questionIndex + 1}
+              問題 {solvedCount + 1}
+              {currentQuestion?.topic && `：${currentQuestion.topic}`}
             </p>
 
             <button
@@ -545,7 +551,10 @@ export default function TypingGame({ questions, mode = "standard", onReturnToLob
             </button>
           </div>
 
-          <div className="mb-4 rounded-2xl border-2 border-gray-200 bg-gray-50 p-6 font-mono text-2xl leading-loose break-words">
+          <div
+            className="mb-4 rounded-2xl border-2 border-gray-200 bg-gray-50 p-6 font-mono text-2xl leading-loose break-words"
+            style={{ fontFamily: 'Consolas, "Cascadia Mono", monospace' }}
+          >
             {targetText.split("").map((char, index) => {
               const status = getCharStatus({
                 index,
@@ -558,13 +567,14 @@ export default function TypingGame({ questions, mode = "standard", onReturnToLob
                   key={`${char}-${index}`}
                   className={styles[status]}
                 >
-                  {char === " " ? "·" : char}
+                  {char === " " ? "・" : char}
                 </span>
               );
             })}
           </div>
 
           <div className="space-y-1 text-sm text-gray-600">
+            <p>教科書・ドリルの学習項目に沿ったコードの一部分です。宣言やimportは省略しています。</p>
             <p>半角英数字で入力してください。</p>
 
             <p>
