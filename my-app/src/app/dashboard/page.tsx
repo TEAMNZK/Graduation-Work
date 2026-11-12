@@ -7,6 +7,7 @@ import { doc, getDoc } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import AuthGuard from "@/components/AuthGuard";
 import AppHeader from "@/components/AppHeader";
+import DashboardTypingRanking from "@/components/DashboardTypingRanking";
 import { javaQuestionMap, javaQuestionEntriesById } from "@/data/javaQuestions";
 import { pythonQuestionMap, pythonQuestionEntriesById } from "@/data/pythonQuestions";
 import { cCoreQuestionMap, cRequiredQuestionEntriesById } from "@/data/cQuestions";
@@ -33,13 +34,7 @@ const recommendedArticles = [
   "JavaScriptでできること",
 ];
 
-const rankingData = [
-  { name: "ユーザーA", score: 3200 },
-  { name: "ユーザーB", score: 2800 },
-  { name: "ユーザーC", score: 2500 },
-  { name: "ユーザーD", score: 2100 },
-  { name: "ユーザーE", score: 1800 },
-];
+
 
 export default function DashboardPage() {
   const [user, setUser] = useState<User | null>(null);
@@ -216,24 +211,7 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              <div className="rounded-2xl bg-white p-4 shadow-sm">
-                <h3 className="mb-3 text-lg font-bold">タイピング練習ランキング</h3>
-                <ol className="space-y-2">
-                  {rankingData.map((item, index) => (
-                    <li
-                      key={index}
-                      className="flex items-center justify-between rounded-xl border border-gray-200 bg-gray-50 px-3 py-3"
-                    >
-                      <span className="font-medium">
-                        {index + 1}位 {item.name}
-                      </span>
-                      <span className="text-sm text-gray-600">
-                        {item.score} 点
-                      </span>
-                    </li>
-                  ))}
-                </ol>
-              </div>
+              <DashboardTypingRanking />
             </aside>
 
             {/* 中央 */}
