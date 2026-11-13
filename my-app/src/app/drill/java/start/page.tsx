@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import AuthGuard from "@/components/AuthGuard";
+import SampleCode from "@/components/SampleCode";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -663,12 +664,11 @@ export default function DrillJavaStartPage() {
 
                 {showAnswer && canShowAnswer && (
                   <div className="min-w-0 rounded-lg border border-blue-100 bg-blue-50 p-4 text-sm leading-7">
-                    {currentQuestion.quiz ? "正しい答え:" : "見本コード:"}
-                    <pre tabIndex={0} aria-label="見本の内容（縦横にスクロールできます）" className="mt-2 max-h-[60vh] max-w-full overflow-auto whitespace-pre rounded-md bg-white p-3 font-mono text-sm leading-6">
-                      {currentQuestion.quiz
-                        ? currentQuestion.quiz.choices.find((choice) => choice.id === currentQuestion.quiz?.correctChoiceId)?.text
-                        : currentQuestion.answerCode ?? currentQuestion.starterCode}
-                    </pre>
+                    <SampleCode key={currentQuestion.id}
+                      title={currentQuestion.quiz ? "正しい答え" : "見本コード"}
+                      code={currentQuestion.quiz
+                        ? currentQuestion.quiz.choices.find((choice) => choice.id === currentQuestion.quiz?.correctChoiceId)?.text ?? ""
+                        : currentQuestion.answerCode ?? currentQuestion.starterCode} />
                   </div>
                 )}
 

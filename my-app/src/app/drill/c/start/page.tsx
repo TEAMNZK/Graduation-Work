@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import AuthGuard from "@/components/AuthGuard";
+import SampleCode from "@/components/SampleCode";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -632,10 +633,7 @@ export default function DrillCStartPage() {
 
                 {showAnswer && canShowAnswer && (
                   <div className="min-w-0 rounded-lg border border-blue-100 bg-blue-50 p-4 text-sm leading-7">
-                    見本コード:
-                    <pre tabIndex={0} aria-label="見本コード（縦横にスクロールできます）" className="mt-2 max-h-[60vh] max-w-full overflow-auto whitespace-pre rounded-md bg-white p-3 font-mono text-sm leading-6">
-                      {currentQuestion.answerCode ?? currentQuestion.starterCode}
-                    </pre>
+                    <SampleCode key={currentQuestion.id} code={currentQuestion.answerCode ?? currentQuestion.starterCode} />
                     <p className="mt-3">考え方：{currentQuestion.explanation ?? currentQuestion.hint}</p>
                   </div>
                 )}
