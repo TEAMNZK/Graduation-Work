@@ -93,11 +93,14 @@ export default function TypingLobby({ questions }: { questions: Question[] }) {
         <p className="text-sm font-bold tracking-widest text-blue-600">TYPING GAME</p>
         <h1 className="mt-3 text-3xl font-bold">{language} タイピング</h1>
         <p className="mt-3 leading-7 text-gray-600">{language}のコードを入力して、速さと正確さを磨きましょう。準備ができたらゲームを開始してください。</p>
-        <ul className="mt-6 space-y-2 text-sm text-gray-600">
-          <li>制限時間は{TYPING_MODES[mode].seconds}秒。すべての問題を入力すると、その時点で終了します。</li>
-          <li>半角英数字で入力してください。問題中の「・」はスペースです。</li>
-          <li>スコアは解いた問題数と正確率で決まります。</li>
-        </ul>
+        <div className="mt-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+          <p className="font-bold">開始前に確認してください</p>
+          <ul className="mt-2 list-inside list-disc space-y-2">
+            <li>制限時間は{TYPING_MODES[mode].seconds}秒。問題は繰り返し出題されます。</li>
+            <li className="font-semibold">半角英数字で入力してください。<strong>⎵</strong> はスペースキーで入力します。</li>
+            <li>正しく打てた1文字につき1点。タイプミス1回につき1点減点します。</li>
+          </ul>
+        </div>
         <fieldset className="mt-6">
           <legend className="font-semibold text-gray-800">プレイモード</legend>
           <div className="mt-3 flex flex-wrap gap-3">

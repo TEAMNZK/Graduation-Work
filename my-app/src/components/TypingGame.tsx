@@ -289,7 +289,7 @@ export default function TypingGame({ questions, mode = "standard", onReturnToLob
           {TYPING_MODES[mode].label}（{gameTime}秒）
         </p>
         <p className="mt-2 text-sm text-gray-600">
-          制限時間内に、できるだけ多くの問題を正確に入力します。
+          ミスを恐れず、制限時間内にできるだけ多くのコードを打ってみましょう。
         </p>
       </div>
 
@@ -452,7 +452,7 @@ export default function TypingGame({ questions, mode = "standard", onReturnToLob
                 {score}
               </p>
               <p className="mt-3 text-xs text-gray-600">
-                正解文字数 × 正確率（入力途中も加点）
+                正しく打てた1文字につき1点、タイプミス1回につき−1点（入力途中も加点）
               </p>
             </div>
 
@@ -465,7 +465,7 @@ export default function TypingGame({ questions, mode = "standard", onReturnToLob
                 {rank}
               </p>
               <p className="mt-3 text-xs text-gray-600">
-                制限時間1分あたりの得点：S 180 / A 120 / B 80 / C 40
+                制限時間1分あたりの得点：S 120 / A 90 / B 60 / C 40
               </p>
             </div>
           </div>
@@ -528,10 +528,14 @@ export default function TypingGame({ questions, mode = "standard", onReturnToLob
           </div>
         </div>
       ) : countdown > 0 ? (
-        <div className="rounded-2xl bg-white p-12 text-center shadow" role="status" aria-live="polite" aria-atomic="true">
-          <p className="text-lg font-semibold text-gray-700">まもなくスタート</p>
-          <p className="my-6 text-8xl font-bold tabular-nums text-blue-600">{countdown}</p>
-          <p className="text-sm text-gray-600">半角英数に切り替えて準備してください。</p>
+        <div className="overflow-hidden rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 via-white to-violet-100 p-8 text-center shadow-lg sm:p-12" role="status" aria-live="polite" aria-atomic="true">
+          <p className="text-lg font-bold tracking-wider text-blue-800">まもなくスタート</p>
+          <div key={countdown} className="relative mx-auto my-6 flex h-52 w-52 items-center justify-center">
+            <div aria-hidden="true" className="typing-countdown-ring absolute inset-0 rounded-full border-4 border-blue-200 border-t-blue-600 border-r-violet-500" />
+            <div aria-hidden="true" className="typing-countdown-wave absolute inset-3 rounded-full border-2 border-violet-300 bg-blue-100/40" />
+            <p className="typing-countdown-number relative text-9xl font-black tabular-nums text-blue-600 drop-shadow-lg">{countdown}</p>
+          </div>
+          <p className="mx-auto max-w-md rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 font-semibold text-amber-900">半角英数に切り替えて準備してください。</p>
         </div>
       ) : (
         /* プレイ画面 */
@@ -567,21 +571,22 @@ export default function TypingGame({ questions, mode = "standard", onReturnToLob
                   key={`${char}-${index}`}
                   className={styles[status]}
                 >
-                  {char === " " ? "・" : char}
+                  {char === " " ? "⎵" : char}
                 </span>
               );
             })}
           </div>
 
-          <div className="space-y-1 text-sm text-gray-600">
+          <div className="space-y-2 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+            <p className="font-bold">入力時のポイント</p>
             <p>教科書・ドリルの学習項目に沿ったコードの一部分です。宣言やimportは省略しています。</p>
-            <p>半角英数字で入力してください。</p>
+            <p className="font-semibold">半角英数字で入力してください。</p>
 
             <p>
               Shift / Control / Alt などの修飾キー単体は判定しません。
             </p>
 
-            <p>・はスペースを表します。</p>
+            <p className="font-semibold"><strong>⎵</strong> はスペースを表します。スペースキーで入力してください。</p>
           </div>
 
           <input

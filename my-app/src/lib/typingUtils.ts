@@ -37,20 +37,18 @@ export function calculateAccuracy(
   return Math.round((correctChars / totalInputs) * 100);
 }
 
-// 途中まで入力した文字も加点し、表示用に丸める前の正確率で採点する。
+// 正しく入力できた文字を1文字1点で加点し、タイプミス1回につき1点減点する。
 export function calculateTypingResult(
   correctChars: number,
   totalMistakes: number,
   gameSeconds: number
 ) {
-  const totalInputs = correctChars + totalMistakes;
-  const ratio = totalInputs === 0 ? 0 : correctChars / totalInputs;
-  const score = Math.round(correctChars * ratio);
+  const score = correctChars - totalMistakes;
   // 制限時間あたりの得点で比較するため、途中終了でランクは上がらない。
   const pointsPerMinute = gameSeconds > 0 ? score * 60 / gameSeconds : 0;
-  const rank = pointsPerMinute >= 180 ? "S"
-    : pointsPerMinute >= 120 ? "A"
-    : pointsPerMinute >= 80 ? "B"
+  const rank = pointsPerMinute >= 120 ? "S"
+    : pointsPerMinute >= 90 ? "A"
+    : pointsPerMinute >= 60 ? "B"
     : pointsPerMinute >= 40 ? "C" : "D";
 
   return { score, rank };

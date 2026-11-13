@@ -8,17 +8,17 @@ test("未入力は0点・正確率0%・Dランク", () => {
   assert.deepEqual(calculateTypingResult(0, 0, 120), { score: 0, rank: "D" });
 });
 
-test("文字数を加点し、ミスが増えると得点と正確率が下がる", () => {
+test("正しい入力1文字につき1点、タイプミス1回につき1点減点する", () => {
   assert.equal(calculateTypingResult(100, 0, 120).score, 100);
-  assert.equal(calculateTypingResult(100, 25, 120).score, 80);
+  assert.equal(calculateTypingResult(100, 25, 120).score, 75);
   assert.equal(calculateAccuracy(100, 25), 80);
-  assert.equal(calculateTypingResult(100, 100, 120).score, 50);
+  assert.equal(calculateTypingResult(100, 100, 120).score, 0);
   assert.equal(calculateTypingResult(1, 0, 120).score, 1);
 });
 
 test("ランクの全境界と両モードの時間補正", () => {
   for (const seconds of [120, 300]) {
-    for (const [rate, rank] of [[0, "D"], [40, "C"], [80, "B"], [120, "A"], [180, "S"]]) {
+    for (const [rate, rank] of [[0, "D"], [40, "C"], [60, "B"], [90, "A"], [120, "S"]]) {
       const chars = rate * seconds / 60;
       assert.equal(calculateTypingResult(chars, 0, seconds).rank, rank);
       if (chars > 0) assert.notEqual(calculateTypingResult(chars - 1, 0, seconds).rank, rank);
@@ -26,8 +26,10 @@ test("ランクの全境界と両モードの時間補正", () => {
   }
 });
 
-test("採点には表示用の丸めた正確率を使用しない", () => {
-  assert.equal(calculateTypingResult(200, 1, 120).score, 199);
+test("減点後のスコアでランクを判定し、ミスが正しい入力を超えると負の得点になる", () => {
+  assert.deepEqual(calculateTypingResult(180, 1, 120), { score: 179, rank: "B" });
+  assert.deepEqual(calculateTypingResult(10, 15, 120), { score: -5, rank: "D" });
+  assert.deepEqual(calculateTypingResult(0, 1, 120), { score: -1, rank: "D" });
 });
 
 test("各言語30問、ID重複なし、余分な空白や入力不能な文字なし", () => {
