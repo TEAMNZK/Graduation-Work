@@ -8,16 +8,25 @@ test('Judge0 tolerates queues beyond ten polls and distinguishes service failure
   const original = { fetch: global.fetch, setTimeout: global.setTimeout, now: Date.now };
   let now = 0;
   let polls = 0;
+  const delays = [];
   const response = (body, status = 200) => ({ ok: status < 400, status, json: async () => body });
   Date.now = () => now;
-  global.setTimeout = (callback, ms) => { now += ms; callback(); };
+  global.setTimeout = (callback, ms) => { delays.push(ms); now += ms; callback(); };
   try {
+    global.fetch = async (_url, options) => response(options.method === 'POST'
+      ? { token: 'fast-token' }
+      : { status: { id: 3, description: 'Accepted' }, stdout: Buffer.from('fast').toString('base64') });
+    assert.equal((await executeJava('class Main {}', '')).stdout, 'fast');
+    assert.equal(now, 250, 'completed submissions should not wait two seconds');
+    delays.length = 0;
     global.fetch = async (_url, options) => options.method === 'POST'
       ? response({ token: 'test-token' }, 201)
       : response(++polls <= 12 ? { status: { id: 1 } }
         : { status: { id: 3, description: 'Accepted' }, stdout: Buffer.from('Hello Java\n').toString('base64') });
     assert.equal((await executeJava('class Main {}', '')).stdout, 'Hello Java\n');
     assert.equal(polls, 13);
+    assert.deepEqual(delays.slice(0, 5), [250, 500, 1000, 2000, 2000]);
+    assert.ok(delays.every(ms => ms <= 2000));
 
     global.fetch = async (_url, options) => response(options.method === 'POST'
       ? { token: 'test-token' } : { status: { id: 1 } });

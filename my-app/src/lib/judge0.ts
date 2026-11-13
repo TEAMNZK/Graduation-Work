@@ -61,8 +61,10 @@ async function executeCode(code: string, stdin: string, languageId: number): Pro
     });
     // 挿入範囲終わり
     phase = "polling";
+    // 短い実行は早く検出し、混雑が続く場合は問い合わせ頻度を抑える。
+    let pollDelayMs = 250;
     while (Date.now() < deadline) {
-      await new Promise((resolve) => setTimeout(resolve, Math.min(2000, deadline - Date.now())));
+      await new Promise((resolve) => setTimeout(resolve, Math.min(pollDelayMs, deadline - Date.now())));
       if (Date.now() >= deadline) break;
       const response = await fetch(`${baseUrl}/submissions/${encodeURIComponent(token)}?base64_encoded=true`, {
         signal: AbortSignal.timeout(Math.min(15000, Math.max(1, deadline - Date.now()))), cache: "no-store",
@@ -82,7 +84,10 @@ async function executeCode(code: string, stdin: string, languageId: number): Pro
       });
       // 挿入範囲終わり
 
-      if (statusId === 1 || statusId === 2) continue;
+      if (statusId === 1 || statusId === 2) {
+        pollDelayMs = Math.min(pollDelayMs * 2, 2000);
+        continue;
+      }
       if (!statusId || statusId === 13) throw unavailable();
       return {
         stdout: decode(result.stdout),
