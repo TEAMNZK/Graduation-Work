@@ -562,7 +562,7 @@ export default function DrillCStartPage() {
 
         <section className="mx-auto max-w-[1600px] px-4 py-4">
           <div className="grid grid-cols-1 gap-4 xl:grid-cols-[340px_minmax(0,1fr)_380px]">
-            <aside className="rounded-lg border border-slate-200 bg-white shadow-sm">
+            <aside className="min-w-0 rounded-lg border border-slate-200 bg-white shadow-sm">
               <div className="border-b px-5 py-4">
                 <div className="flex items-center justify-between">
                   <div>
@@ -631,9 +631,9 @@ export default function DrillCStartPage() {
                 </button>
 
                 {showAnswer && canShowAnswer && (
-                  <div className="rounded-lg border border-blue-100 bg-blue-50 p-4 text-sm leading-7">
+                  <div className="min-w-0 rounded-lg border border-blue-100 bg-blue-50 p-4 text-sm leading-7">
                     見本コード:
-                    <pre className="mt-2 whitespace-pre-wrap rounded-md bg-white p-3 font-mono text-sm leading-6">
+                    <pre tabIndex={0} aria-label="見本コード（縦横にスクロールできます）" className="mt-2 max-h-[60vh] max-w-full overflow-auto whitespace-pre rounded-md bg-white p-3 font-mono text-sm leading-6">
                       {currentQuestion.answerCode ?? currentQuestion.starterCode}
                     </pre>
                     <p className="mt-3">考え方：{currentQuestion.explanation ?? currentQuestion.hint}</p>
