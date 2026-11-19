@@ -81,7 +81,7 @@ export default function SignupPage() {
           </div>
         {error && <p className={styles.error} role="alert">{error}</p>}
         <button type="submit" disabled={isLoading} className={styles.submit}>
-          {isLoading ? "登録中..." : "新規登録"}<span aria-hidden="true">→</span>
+          {isLoading ? "登録中..." : "新規登録"}
         </button>
       </form>
     </AuthPageLayout>
