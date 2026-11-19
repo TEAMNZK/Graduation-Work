@@ -29,13 +29,6 @@ type UserData = {
   progress?: UserProgress;
 };
 
-const recommendedArticles = [
-  "Python入門の始め方",
-  "JavaScriptでできること",
-];
-
-
-
 export default function DashboardPage() {
   const [user, setUser] = useState<User | null>(null);
   const [userData, setUserData] = useState<UserData | null>(null);
@@ -190,20 +183,6 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 gap-6 xl:grid-cols-[260px_1fr]">
             {/* 左 */}
             <aside className="space-y-5">
-              <div className="rounded-2xl bg-white p-5 shadow-sm">
-                <h3 className="mb-4 text-lg font-bold">おすすめ記事</h3>
-                <ul className="space-y-3">
-                  {recommendedArticles.map((article, index) => (
-                    <li
-                      key={index}
-                      className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm hover:bg-gray-100"
-                    >
-                      {article}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
               <div className="rounded-2xl bg-white p-4 shadow-sm">
                 <h3 className="mb-3 text-lg font-bold">学習中の言語</h3>
                 <div className="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 font-bold">
@@ -282,7 +261,7 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
                 <Link
                   href="/textbook"
                   className="rounded-2xl bg-white p-8 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
@@ -300,16 +279,6 @@ export default function DashboardPage() {
                   <h3 className="text-2xl font-bold">ドリル</h3>
                   <p className="mt-3 text-sm leading-7 text-gray-600">
                     問題を解いて理解度を確認できます。
-                  </p>
-                </Link>
-
-                <Link
-                  href="/articles"
-                  className="rounded-2xl bg-white p-8 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-                >
-                  <h3 className="text-2xl font-bold">記事</h3>
-                  <p className="mt-3 text-sm leading-7 text-gray-600">
-                    学習に役立つ記事や補足情報を読めます。
                   </p>
                 </Link>
 

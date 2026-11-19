@@ -5,7 +5,7 @@ import Image from "next/image";
 import logo from "../../public/images/logo.png";
 import styles from "./AppHeader.module.css";
 
-type NavKey = "textbook" | "drill" | "articles" | "typing";
+export type NavKey = "textbook" | "drill" | "typing";
 
 type AppHeaderProps = {
   title: string;
@@ -18,7 +18,6 @@ type AppHeaderProps = {
 const navItems: { key: NavKey; href: string; label: string }[] = [
   { key: "textbook", href: "/textbook", label: "教科書" },
   { key: "drill", href: "/drill", label: "ドリル" },
-  { key: "articles", href: "/articles", label: "記事" },
   { key: "typing", href: "/typing", label: "タイピング練習" },
 ];
 

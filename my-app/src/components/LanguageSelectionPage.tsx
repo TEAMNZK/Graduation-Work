@@ -1,8 +1,6 @@
 import Link from "next/link";
 import AuthGuard from "@/components/AuthGuard";
-import AppHeader from "@/components/AppHeader";
-
-type NavKey = "textbook" | "drill" | "articles" | "typing";
+import AppHeader, { type NavKey } from "@/components/AppHeader";
 
 export type LanguageCard = {
   name: string;
