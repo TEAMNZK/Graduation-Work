@@ -6,6 +6,9 @@
 .field input { width: 100%; min-height: 54px; padding: 12px 14px; border: 1px solid #d9e1f0; border-radius: 10px; background: #f8faff; color: #182a5b; font-size: 16px; transition: border-color .2s, box-shadow .2s; }
 .field input::placeholder { color: #8c98b0; }
 .field input:focus { outline: none; background: #fff; border-color: #6174f8; box-shadow: 0 0 0 3px rgb(91 112 245 / 14%); }
+.passwordField { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+.passwordToggle { min-width: 64px; padding: 0 8px; border: 1px solid #d9e1f0; border-radius: 10px; color: #485ec7; font-size: 14px; font-weight: 700; cursor: pointer; }
+.passwordToggle:hover { background: #f0f3ff; }
 .hint { margin-top: 7px; font-size: 11px; color: #6d7b97; }
 .submit { display: flex; align-items: center; justify-content: center; gap: 18px; min-height: 56px; margin-top: 4px; border-radius: 100px; background: var(--action-gradient); color: #fff; font-size: 16px; font-weight: 700; box-shadow: 0 7px 18px rgb(77 88 233 / 20%); cursor: pointer; transition: transform .2s, box-shadow .2s; }
 .submit:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 10px 24px rgb(77 88 233 / 30%); }

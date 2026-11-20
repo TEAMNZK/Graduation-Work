@@ -160,12 +160,20 @@ export default function DashboardPage() {
         <AppHeader
           title="ダッシュボード"
           action={
-            <button
-              onClick={handleLogout}
-              className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-bold hover:bg-gray-50"
-            >
-              ログアウト
-            </button>
+            <div className="flex flex-wrap gap-2">
+              <Link
+                href="/account"
+                className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-bold hover:bg-gray-50"
+              >
+                アカウント設定
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-bold hover:bg-gray-50"
+              >
+                ログアウト
+              </button>
+            </div>
           }
         />
 

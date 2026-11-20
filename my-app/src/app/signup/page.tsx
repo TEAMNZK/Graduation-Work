@@ -12,6 +12,7 @@ export default function SignupPage() {
   const [userName, setUserName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
@@ -77,7 +78,31 @@ export default function SignupPage() {
           </div>
           <div className={styles.field}>
             <label htmlFor="signup-password">パスワード</label>
-            <input id="signup-password" name="password" type="password" autoComplete="new-password" placeholder="6文字以上のパスワード" value={password} onChange={(e) => setPassword(e.target.value)} required disabled={isLoading} minLength={6} />
+            <div className={styles.passwordField}>
+              <input
+                id="signup-password"
+                name="password"
+                type={isPasswordVisible ? "text" : "password"}
+                autoComplete="new-password"
+                autoCapitalize="none"
+                spellCheck={false}
+                placeholder="6文字以上のパスワード"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                disabled={isLoading}
+                minLength={6}
+              />
+              <button
+                type="button"
+                className={styles.passwordToggle}
+                aria-controls="signup-password"
+                aria-label={isPasswordVisible ? "パスワードを非表示" : "パスワードを表示"}
+                onClick={() => setIsPasswordVisible((visible) => !visible)}
+              >
+                {isPasswordVisible ? "非表示" : "表示"}
+              </button>
+            </div>
           </div>
         {error && <p className={styles.error} role="alert">{error}</p>}
         <button type="submit" disabled={isLoading} className={styles.submit}>

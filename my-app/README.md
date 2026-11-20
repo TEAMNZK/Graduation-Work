@@ -42,6 +42,17 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ローカルではPython 3.8の文法指定でも解析しますが、これはPython 3.8実機の代わりではありません。使用する構文と標準ライブラリは既存のJudge0設定（言語ID 71）に合わせています。保存・復元は同じ実行内で検証し、別リクエスト間でファイルを保持する機能ではありません。
 
+## アカウントの削除
+
+ダッシュボードの「アカウント設定」から、現在のパスワードと確認チェックを使って退会できます。Firestore の `users/{uid}` と、`typingScores` のうち `userId` が本人の UID と一致する記録を削除した後、Firebase Authentication のアカウントを削除します。
+
+デプロイ先の Firestore ルールで、ログイン中のユーザーによる本人のスコアのクエリと、以下の所有者条件での削除を許可してください。既存の各コレクションの `match` に対応する条件を追加し、既存の読み取り・作成・更新ルールは維持してください。
+
+- `/users/{uid}` の削除条件は `request.auth != null && request.auth.uid == uid` です。
+- `/typingScores/{scoreId}` の削除条件は `request.auth != null && resource.data.userId == request.auth.uid` です。
+
+Firestore と Authentication をまたぐ一括トランザクションは使えないため、通信エラー等の発生時はすでに削除されたデータが残らない状態で再試行します。本番適用前にテストアカウントで、本人のデータだけが削除されることを確認してください。
+
 ## Getting Started
 
 First, run the development server:
