@@ -27,14 +27,6 @@ const languages: LanguageCard[] = [
     available: true,
     actionLabel: "問題を選ぶ",
   },
-  {
-    name: "JavaScript",
-    href: "/drill/javascript",
-    status: "準備中",
-    description: "ブラウザとNode.jsの基礎問題を準備中です。",
-    available: false,
-    actionLabel: "問題を選ぶ",
-  },
 ];
 
 export default function DrillPage() {
@@ -45,7 +37,7 @@ export default function DrillPage() {
       activeKey="drill"
       highlightLabel="現在利用できるドリル"
       highlightTitle="Java・Python・C言語ドリルを公開中です"
-      highlightDescription="Java・Python・C言語の基礎問題から始められます。未公開の言語は準備中として表示し、存在しないページへ移動しないようにしています。"
+      highlightDescription="Java・Python・C言語の基礎問題から始められます。"
       countLabel="公開中"
       countDescription="言語のドリルが利用できます。"
       languages={languages}

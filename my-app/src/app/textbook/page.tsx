@@ -34,14 +34,6 @@ export default async function TextbookPage() {
       available: false,
       actionLabel: "教科書を読む",
     },
-    {
-      name: "JavaScript",
-      href: "/textbook/javascript",
-      status: "準備中",
-      description: "JavaScriptの基礎教科書を準備中です。",
-      available: false,
-      actionLabel: "教科書を読む",
-    },
   ];
 
   return (

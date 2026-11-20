@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { signOut, onAuthStateChanged, User } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
@@ -12,6 +13,9 @@ import { javaQuestionMap, javaQuestionEntriesById } from "@/data/javaQuestions";
 import { pythonQuestionMap, pythonQuestionEntriesById } from "@/data/pythonQuestions";
 import { cCoreQuestionMap, cRequiredQuestionEntriesById } from "@/data/cQuestions";
 import { calculateLearningProgress } from "@/lib/learningProgress";
+import textbookIcon from "../../../public/images/dashboard-textbook.png";
+import drillIcon from "../../../public/images/dashboard-drill.png";
+import typingIcon from "../../../public/images/dashboard-typing.png";
 
 type UserProgress = {
   correctAnswers?: number;
@@ -28,6 +32,12 @@ type UserData = {
   userName?: string;
   progress?: UserProgress;
 };
+
+const learningCards = [
+  { href: "/textbook", title: "教科書", icon: textbookIcon, description: "各プログラミング言語の特徴や用途を学べます。" },
+  { href: "/drill", title: "ドリル", icon: drillIcon, description: "問題を解いて理解度を確認できます。" },
+  { href: "/typing", title: "タイピング練習", icon: typingIcon, description: "タイピング練習で入力速度を高められます。" },
+];
 
 export default function DashboardPage() {
   const [user, setUser] = useState<User | null>(null);
@@ -270,35 +280,19 @@ export default function DashboardPage() {
               </div>
 
               <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
-                <Link
-                  href="/textbook"
-                  className="rounded-2xl bg-white p-8 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-                >
-                  <h3 className="text-2xl font-bold">教科書</h3>
-                  <p className="mt-3 text-sm leading-7 text-gray-600">
-                    各プログラミング言語の特徴や用途を学べます。
-                  </p>
-                </Link>
-
-                <Link
-                  href="/drill"
-                  className="rounded-2xl bg-white p-8 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-                >
-                  <h3 className="text-2xl font-bold">ドリル</h3>
-                  <p className="mt-3 text-sm leading-7 text-gray-600">
-                    問題を解いて理解度を確認できます。
-                  </p>
-                </Link>
-
-                <Link
-                  href="/typing"
-                  className="rounded-2xl bg-white p-8 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-                >
-                  <h3 className="text-2xl font-bold">タイピング練習</h3>
-                  <p className="mt-3 text-sm leading-7 text-gray-600">
-                    タイピング練習で入力速度を高められます。
-                  </p>
-                </Link>
+                {learningCards.map(({ href, title, icon, description }) => (
+                  <Link
+                    key={href}
+                    href={href}
+                    className="rounded-2xl bg-white p-8 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                  >
+                    <span className="mb-4 grid size-16 place-items-center overflow-hidden rounded-xl bg-indigo-50">
+                      <Image src={icon} alt="" width={64} height={64} />
+                    </span>
+                    <h3 className="text-2xl font-bold">{title}</h3>
+                    <p className="mt-3 text-sm leading-7 text-gray-600">{description}</p>
+                  </Link>
+                ))}
               </div>
             </section>
           </div>
